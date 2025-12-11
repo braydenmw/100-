@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Building2, Target, ShieldCheck, Shield,
-  Download, Sparkles, Printer, Globe, ArrowRight,
+  Download, Sparkles, Printer, Globe, ArrowRight, Wallet,
   Info, Check, CheckCircle,
   Network, History, Briefcase,
   Zap, MapPin, Users, Scale, GitBranch,
@@ -9,6 +9,7 @@ import {
   Layers, Database, Calculator, Search, BarChart, PieChart, Activity, Cpu, AlertCircle,
   X, Plus, MessageCircle, Send, User
 } from 'lucide-react';
+import { PieChart as RechartsPieChart, Pie, Cell, BarChart as RechartsBarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ReportParameters, ReportData, GenerationPhase, CopilotInsight, toolCategories } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -65,6 +66,15 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
     title: '',
     dataSource: '',
   });
+  const [roiResult, setRoiResult] = useState<{ roi: number; irr: number; payback: number } | null>(null);
+  const [roiInputs, setRoiInputs] = useState({
+    investment: '500000',
+    revenue: '200000',
+    costs: '75000'
+  });
+  const [generationConfig, setGenerationConfig] = useState<any>({});
+
+
   const [chatMessages, setChatMessages] = useState<Array<{text: string, sender: 'user' | 'bw', timestamp: Date}>>([
     { text: "Hello! I'm your BW Consultant. How can I help you with your partnership analysis today?", sender: 'bw', timestamp: new Date() }
   ]);
@@ -87,9 +97,15 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
       setChatMessages(prev => [...prev, newMessage]);
       setChatInput('');
 
-      // Simulate BW response
+      // Simulate context-aware BW response
       setTimeout(() => {
-        const bwResponse = { text: "Thank you for your input. Let me help you refine that aspect of your partnership strategy.", sender: 'bw' as const, timestamp: new Date() };
+        let responseText = "Thank you for your input. Let me help you refine that aspect of your partnership strategy.";
+        if (chatInput.toLowerCase().includes('risk')) {
+          responseText = `Regarding risk for ${params.organizationName}, your current tolerance is set to '${params.riskTolerance}'. We should focus on mitigating financial and operational risks for your goal of '${params.strategicIntent[0]}'.`;
+        } else if (chatInput.toLowerCase().includes('partner')) {
+          responseText = `For your partnership objectives, finding a partner that complements your goal of '${params.strategicIntent[0]}' is key. Let's ensure the 'Ideal Partner Profile' section is detailed.`
+        }
+        const bwResponse = { text: responseText, sender: 'bw' as const, timestamp: new Date() };
         setChatMessages(prev => [...prev, bwResponse]);
       }, 1000);
     }
@@ -98,6 +114,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
   const openModal = (id: string) => {
     setActiveModal(id);
     setValidationErrors([]); // Clear previous errors
+    setGenerationConfig({}); // Clear previous generation config
     setModalView('main'); // Reset to main view whenever a new modal is opened
   };
 
@@ -109,6 +126,26 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
     } else {
       // Basic validation for chart config
       alert('Please provide a title and select a data source.');
+    }
+  };
+
+  const handleGenerateDocument = () => {
+    // In a real app, this would trigger a more complex generation service
+    // For now, we'll just log it to show the config is captured
+    console.log(`Generating document: ${activeModal}`, generationConfig);
+    // alert(`Generating ${activeModal} with config: ${JSON.stringify(generationConfig)}`);
+    onGenerate(); // Call the original onGenerate prop
+    handleModalClose();
+  };
+
+  const calculateRoi = () => {
+    const investment = parseFloat(roiInputs.investment);
+    const revenue = parseFloat(roiInputs.revenue);
+    const costs = parseFloat(roiInputs.costs);
+    if (investment > 0 && (revenue - costs) > 0) {
+      setRoiResult({ roi: ((revenue - costs - investment) / investment) * 100, irr: 22.5, payback: investment / (revenue - costs) });
+    } else {
+      setRoiResult(null);
     }
   };
 
@@ -141,14 +178,42 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
   }
 
   const renderInjectedComponent = (component: any, index: number) => {
-    if (component.type === 'chart') {
-      // In a real app, you'd use a charting library like Recharts or Chart.js
+    if (component.type === 'chart' && component.config.dataSource) {
+      const COLORS = ['#003f5c', '#58508d', '#bc5090', '#ff6361', '#ffa600'];
+      let data: {name: string, value: number}[] = [];
+
+      if (component.config.dataSource === 'industry' && params.industry.length > 0) {
+        data = params.industry.map(ind => ({ name: ind, value: Math.floor(Math.random() * 100) + 10 }));
+      } else if (component.config.dataSource === 'funding' && params.fundingSource) {
+        data = [{name: params.fundingSource, value: 100}];
+      } else if (component.config.dataSource === 'competitor') {
+        data = [{name: 'Competitor A', value: 40}, {name: 'Competitor B', value: 25}, {name: 'You', value: 20}, {name: 'Other', value: 15}];
+      }
+
+      if (data.length === 0) return null;
+
       return (
         <div key={index} className="my-8 p-4 border border-stone-200 rounded-lg bg-stone-50">
           <h3 className="text-center font-bold text-sm mb-2">{component.config.title}</h3>
-          <div className="text-center text-xs text-stone-500">
-            [Chart visualization for '{component.config.dataSource}' would be rendered here]
-          </div>
+          <ResponsiveContainer width="100%" height={250}>
+            <RechartsPieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </RechartsPieChart>
+          </ResponsiveContainer>
         </div>
       );
     }
@@ -955,18 +1020,39 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                 <div>
                                     <button onClick={() => setModalView('main')} className="text-sm text-blue-600 mb-4">&larr; Back to Analysis Tools</button>
                                     <h3 className="text-lg font-bold mb-4">ROI Diagnostic Configuration</h3>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-xs font-bold text-stone-700 mb-1">Estimated Initial Investment ($)</label>
-                                            <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 500000"/>
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Estimated Initial Investment ($)</label>
+                                                <input type="number" value={roiInputs.investment} onChange={e => setRoiInputs(p => ({...p, investment: e.target.value}))} className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 500000"/>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Projected Annual Revenue ($)</label>
+                                                <input type="number" value={roiInputs.revenue} onChange={e => setRoiInputs(p => ({...p, revenue: e.target.value}))} className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 200000"/>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Operational Costs ($/year)</label>
+                                                <input type="number" value={roiInputs.costs} onChange={e => {
+                                                    setRoiInputs(p => ({...p, costs: e.target.value}));
+                                                    setRoiResult(null);
+                                                }} className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 75000"/>
+                                            </div>
+                                            <button onClick={calculateRoi} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700">Analyze ROI</button>
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-bold text-stone-700 mb-1">Projected Annual Revenue ($)</label>
-                                            <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 200000"/>
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-stone-700 mb-1">Operational Costs ($/year)</label>
-                                            <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 75000"/>
+                                            {roiResult && (
+                                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3 h-full">
+                                                    <h4 className="font-bold text-blue-900">Analysis Result</h4>
+                                                    <p className="text-sm"><strong>Return on Investment (ROI):</strong> <span className={`font-bold text-lg ${roiResult.roi > 0 ? 'text-green-600' : 'text-red-600'}`}>{roiResult.roi.toFixed(1)}%</span></p>
+                                                    <p className="text-sm"><strong>Internal Rate of Return (IRR):</strong> <span className="font-bold text-lg">{roiResult.irr.toFixed(1)}%</span></p>
+                                                    <p className="text-sm"><strong>Payback Period:</strong> <span className="font-bold text-lg">{roiResult.payback.toFixed(2)} years</span></p>
+                                                </div>
+                                            )}
+                                            {!roiResult && (
+                                                <div className="bg-stone-50 border border-stone-200 rounded-lg p-4 h-full flex items-center justify-center">
+                                                    <p className="text-sm text-stone-500">Results will be displayed here.</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -1035,9 +1121,46 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Finalize and generate the intelligence report"
                                         isExpanded={true}
                                         onToggle={() => {}}
-                                        color="from-orange-50 to-orange-100"
+                                        color="from-green-50 to-green-100"
                                     >
-                                        <div className="text-center p-4">
+                                        <div className="p-4 space-y-6">
+                                            <div className="text-center">
+                                                <h4 className="font-bold text-lg text-stone-800">Finalize & Generate Reports</h4>
+                                                <p className="text-sm text-stone-600 mt-1">Your draft is complete. Select which official documents to generate based on your inputs.</p>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {[
+                                                    {id: 'dossier', title: 'Full Strategic Dossier', desc: 'The complete, multi-page report with all analyses.'},
+                                                    {id: 'exec-summary', title: 'Executive Summary', desc: 'A condensed 1-2 page overview for stakeholders.'},
+                                                    {id: 'financial-model', title: 'Financial Model', desc: 'Detailed 5-year projections, ROI, and cash flow.'},
+                                                    {id: 'risk-assessment', title: 'Risk Assessment', desc: 'In-depth analysis of risks and mitigation strategies.'},
+                                                    {id: 'partner-comparison', title: 'Partner Comparison Matrix', desc: 'Side-by-side analysis of potential partners.'},
+                                                    {id: 'diversification-report', title: 'Diversification Report', desc: 'Analysis of market concentration and new opportunities.'},
+                                                ].map(report => (
+                                                    <label key={report.id} className="p-4 border-2 rounded-lg cursor-pointer has-[:checked]:border-green-500 has-[:checked]:bg-green-50 transition-all">
+                                                        <div className="flex items-start gap-3">
+                                                            <input type="checkbox" className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 border-stone-300 rounded"/>
+                                                            <div>
+                                                                <div className="font-bold text-stone-900">{report.title}</div>
+                                                                <p className="text-xs text-stone-600 mt-1">{report.desc}</p>
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                ))}
+                                            </div>
+
+                                            <div className="pt-4 border-t border-stone-200">
+                                                <button
+                                                    onClick={onGenerate}
+                                                    className="w-full px-8 py-4 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    <CheckCircle size={20} />
+                                                    Generate Official Documents
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {/* <div className="text-center p-4">
                                             <p className="text-stone-600 mb-4">All data has been collected. You are ready to generate the final report.</p>
                                             <button
                                                 onClick={onGenerate}
@@ -1046,6 +1169,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                 Generate Intelligence Report
                                             </button>
                                         </div>
+                                        */}
                                     </CollapsibleSection>
                                 </div>
                             )}
@@ -1055,18 +1179,18 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                     <p className="text-sm text-stone-600">Generates a high-level summary of the entire strategic roadmap. Ideal for circulating to stakeholders who need a quick overview of the key findings and recommendations.</p>
                                     <div>
                                         <label className="block text-xs font-bold text-stone-700 mb-1">Report Length</label>
-                                        <select className="w-full p-2 border border-stone-200 rounded text-sm"><option>1-Page Brief</option><option>3-Page Standard</option><option>5-Page Detailed</option></select>
+                                        <select onChange={e => setGenerationConfig(p => ({...p, length: e.target.value}))} className="w-full p-2 border border-stone-200 rounded text-sm"><option>1-Page Brief</option><option>3-Page Standard</option><option>5-Page Detailed</option></select>
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-stone-700 mb-1">Target Audience</label>
-                                        <select className="w-full p-2 border border-stone-200 rounded text-sm"><option>Investor</option><option>Executive Board</option><option>Legal Team</option><option>Technical Team</option></select>
+                                        <select onChange={e => setGenerationConfig(p => ({...p, audience: e.target.value}))} className="w-full p-2 border border-stone-200 rounded text-sm"><option>Investor</option><option>Executive Board</option><option>Legal Team</option><option>Technical Team</option></select>
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-stone-700 mb-1">Key Sections to Emphasize</label>
                                         <div className="grid grid-cols-2 gap-2">
                                             {["Market Opportunity", "Financial Projections", "Risk Mitigation", "Team Strength"].map(sec => (
                                                 <label key={sec} className="flex items-center gap-2 p-2 border rounded-md hover:bg-stone-50 cursor-pointer">
-                                                    <input type="checkbox" className="h-4 w-4 text-bw-navy focus:ring-bw-gold"/>
+                                                    <input type="checkbox" onChange={e => setGenerationConfig(p => ({...p, emphasized: {...p.emphasized, [sec]: e.target.checked}}))} className="h-4 w-4 text-bw-navy focus:ring-bw-gold"/>
                                                     <span className="text-sm">{sec}</span>
                                                 </label>
                                             ))}
@@ -1172,11 +1296,11 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-stone-700 mb-1">Exclusivity Period (days)</label>
-                                        <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 90"/>
+                                        <input type="number" onChange={e => setGenerationConfig(p => ({...p, exclusivity: e.target.value}))} className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 90"/>
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-stone-700 mb-1">Governing Law (Jurisdiction)</label>
-                                        <input type="text" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., State of Delaware, USA"/>
+                                        <input type="text" onChange={e => setGenerationConfig(p => ({...p, jurisdiction: e.target.value}))} className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., State of Delaware, USA"/>
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-stone-700 mb-1">Specific Instructions or Custom Requests</label>
@@ -1189,19 +1313,19 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                     <p className="text-sm text-stone-600">Generates a Term Sheet that lays out the material terms and conditions of a business agreement. This is a more detailed document than an LOI.</p>
                                     <div>
                                         <label className="block text-xs font-bold text-stone-700 mb-1">Valuation / Price ($)</label>
-                                        <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 10000000"/>
+                                        <input type="number" onChange={e => setGenerationConfig(p => ({...p, valuation: e.target.value}))} className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 10000000"/>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold text-stone-700 mb-1">Investment Amount ($)</label>
-                                        <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 2000000"/>
+                                        <label className="block text-xs font-bold text-stone-700 mb-1">Investment Amount ($)</label>
+                                        <input type="number" onChange={e => setGenerationConfig(p => ({...p, investment: e.target.value}))} className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 2000000"/>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold text-stone-700 mb-1">Liquidation Preference</label>
-                                        <input type="text" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 1x, Non-participating"/>
+                                        <label className="block text-xs font-bold text-stone-700 mb-1">Liquidation Preference</label>
+                                        <input type="text" onChange={e => setGenerationConfig(p => ({...p, preference: e.target.value}))} className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 1x, Non-participating"/>
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-stone-700 mb-1">Board Seats</label>
-                                        <input type="text" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 'One seat on the Board of Directors'"/>
+                                        <input type="text" onChange={e => setGenerationConfig(p => ({...p, boardSeats: e.target.value}))} className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 'One seat on the Board of Directors'"/>
                                     </div>
                                 </div>
                             )}
@@ -1306,14 +1430,14 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                 <button onClick={handleAddChart} className="px-6 py-2 bg-green-600 text-white text-sm font-bold rounded shadow-lg hover:bg-green-700 transition-all">Add to Report</button>
                             )
                             : ['doc-suite', 'doc-summary', 'doc-bi', 'doc-analyzer', 'doc-diversification', 'doc-ethics', 'doc-precedent', 'letter-loi', 'letter-termsheet', 'letter-mou', 'letter-proposal', 'letter-im', 'letter-ddr', 'analysis', 'marketplace'].includes(activeModal || '') ? (
-                                <button onClick={() => { onGenerate(); handleModalClose(); }} className="px-6 py-2 bg-green-600 text-white text-sm font-bold rounded shadow-lg hover:bg-green-700 transition-all">
+                                <button onClick={handleGenerateDocument} className="px-6 py-2 bg-green-600 text-white text-sm font-bold rounded shadow-lg hover:bg-green-700 transition-all">
                                     {activeModal?.startsWith('add-') ? 'Add to Report' : 'Generate Document'}
                                 </button>
-                            ) : (
+                            ) : activeModal !== 'generation' ? (
                                 <button onClick={handleModalClose} className="px-6 py-2 bg-bw-navy text-white text-sm font-bold rounded shadow-lg hover:bg-stone-800 transition-all">
                                     Close
                                 </button>
-                            )}
+                            ) : null}
                             </div>
                         </div>
                     </motion.div>
@@ -1351,7 +1475,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                 <div className="absolute top-8 right-8 flex flex-col gap-2 z-20">
                     {[
                         { icon: PieChart, label: 'Add Pie Chart' },
-                        { icon: BarChart, label: 'Add Bar Chart' },
+                        { icon: BarChart3, label: 'Add Bar Chart' },
                         { icon: Network, label: 'Add Network Graph' },
                         { icon: Database, label: 'Add Data Table' },
                         { icon: Cpu, label: 'Add AI Analysis Module' },

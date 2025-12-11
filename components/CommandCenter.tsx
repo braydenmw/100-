@@ -23,8 +23,8 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
     const [accepted, setAccepted] = useState(false);
 
     return (
-        <div className="h-full w-full flex-1 bg-stone-50 flex items-start justify-center p-6 pt-16 pb-24 font-sans overflow-y-auto">
-            <div className="max-w-6xl w-full bg-white shadow-2xl border border-stone-200 rounded-sm overflow-hidden flex flex-col md:flex-row min-h-[650px]">
+        <div className="h-full w-full flex-1 bg-stone-50 flex justify-center p-6 font-sans overflow-y-auto py-16">
+            <div className="max-w-6xl w-full bg-white shadow-2xl border border-stone-200 rounded-sm overflow-hidden flex flex-col md:flex-row min-h-[900px]">
                 
                 {/* Left Panel: Introduction & Process */}
                 <div className="md:w-7/12 bg-bw-navy p-12 text-white flex flex-col relative overflow-hidden">
@@ -42,10 +42,10 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
                         
                         <div className="text-gray-300 text-sm leading-relaxed mb-10 border-l-2 border-bw-gold pl-6 max-w-xl space-y-4">
                             <p>
-                                <strong>Define your entity profile and available assets for leverage.</strong> All analytical modules activate after initial configuration and feed into the 6-stage report builder.
+                                The Nexus OS is a deterministic engine designed to translate the specific "blind spots" of regional expansion into the language of global capital. By defining your entity profile and strategic intent, you activate a suite of analytical modules that feed into a 7-stage report builder.
                             </p>
                             <p>
-                                Each module contributes intelligence layers that combine into your comprehensive Pre-Feasibility Dossier with Success Probability Scoring, Partner Shortlist, and regional complexity navigation.
+                                Each module—from the Partnership Compatibility Engine to the Multi-Scenario Planner—contributes intelligence layers that combine into a comprehensive Strategic Dossier. This output includes Success Probability Scoring, a validated Partner Shortlist, and a playbook for navigating regional complexity.
                             </p>
                         </div>
                     </div>
@@ -61,7 +61,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
                                     Input Context <Target size={14} className="text-bw-gold opacity-50" />
                                 </h4>
                                 <p className="text-xs text-gray-400 leading-relaxed max-w-md">
-                                    <strong>How to use:</strong> Define your target regional city (e.g., "Newcastle", "Da Nang") and your intent (e.g., "Manufacturing Hub"). The system calibrates against local economic physics.
+                                    <strong>How to use:</strong> Define your organization's identity, strategic mandate, and target market (e.g., "Newcastle", "Da Nang"). The system calibrates all subsequent analysis against these foundational economic and geopolitical inputs.
                                 </p>
                             </div>
                         </div>
@@ -76,7 +76,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
                                     Analytical Processing <Cpu size={14} className="text-bw-gold opacity-50" />
                                 </h4>
                                 <p className="text-xs text-gray-400 leading-relaxed max-w-md">
-                                    <strong>The Mechanism:</strong> Activate analytical modules (market comparison, compatibility scoring, cost modeling) to cross-reference intent against 100 years of regional data. Identify blind spots your current systems miss.
+                                    <strong>The Mechanism:</strong> Activate specialized modules like the Partnership Compatibility Engine, Multi-Scenario Planner, and AI-Powered Deal Recommendation to cross-reference your intent against our 100-year regional dataset. This process identifies opportunities and risks that conventional systems miss.
                                 </p>
                             </div>
                         </div>
@@ -91,7 +91,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
                                     Report Generation <FileText size={14} className="text-bw-gold opacity-50" />
                                 </h4>
                                 <p className="text-xs text-gray-400 leading-relaxed max-w-md">
-                                    <strong>The Deliverable:</strong> All modules feed into the 6-stage report builder: Executive Summary, Market Analysis, Recommendations, Implementation, Financials, and Risk Mitigation.
+                                    <strong>The Deliverable:</strong> All modules feed into the finalization stage, allowing you to generate a suite of official documents, including a Full Strategic Dossier, Financial Models, Risk Assessments, and specific legal documents like Letters of Intent or Term Sheets.
                                 </p>
                             </div>
                         </div>
@@ -105,20 +105,22 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
                             <ShieldAlert size={16} className="text-bw-gold" /> Terms of Engagement & Compliance
                         </h3>
 
-                        <div className="space-y-4 text-xs text-stone-600 bg-white p-6 rounded-sm border border-stone-200 h-64 overflow-y-auto shadow-inner">
-                            <p><strong className="text-stone-900 block mb-1">1. Complementary System Architecture</strong> This is an "Early-Stage Intelligence Layer" designed upstream of your CRM, ERP, or Investment Committee. It provides initial "Go/No-Go" signals for regional engagement.</p>
+                        <div className="space-y-4 text-xs text-stone-600 bg-white p-6 rounded-sm border border-stone-200 h-80 overflow-y-auto shadow-inner">
+                            <p><strong className="text-stone-900 block mb-1">1. Intelligence Layer, Not a CRM</strong> The Nexus OS is an "Early-Stage Intelligence Layer" designed to operate upstream of your CRM, ERP, or Investment Committee. It provides the initial "Go/No-Go" signals and strategic frameworks for regional engagement.</p>
                             
-                            <p><strong className="text-stone-900 block mb-1">2. Decision Support & Authority</strong> BW Global Advisory provides probabilistic insights. Users at 'Novice' levels should verify with 'Expert' domain holders. Strategic decisions remain your sole responsibility.</p>
+                            <p><strong className="text-stone-900 block mb-1">2. Decision Support, Not Authority</strong> The system provides probabilistic insights and data-driven recommendations. Users, especially at 'Novice' levels, should verify critical outputs with 'Expert' domain holders. Final strategic decisions remain your sole responsibility.</p>
                             
-                            <p><strong className="text-stone-900 block mb-1">3. Data Privacy & Sovereignty</strong> Strict GDPR and local data sovereignty compliance. Custom operational data and strategic intents are isolated. No user-specific data trains public models.</p>
+                            <p><strong className="text-stone-900 block mb-1">3. Data Sovereignty & Isolation</strong> The system adheres to strict GDPR and local data sovereignty protocols. Your custom operational data and strategic intents are cryptographically isolated and are never used to train public models.</p>
                             
-                            <p><strong className="text-stone-900 block mb-1">4. Financial & Operational Models</strong> SCF and IVAS models are simulations based on provided scale and historical benchmarks. Not financial advice. Scale dynamically with input granularity.</p>
+                            <p><strong className="text-stone-900 block mb-1">4. Financial & Operational Simulations</strong> All financial models (ROI, IRR, etc.) are simulations based on the data you provide and historical benchmarks. They are not to be construed as financial advice. The accuracy of these models scales dynamically with the granularity of your inputs.</p>
                             
-                            <p><strong className="text-stone-900 block mb-1">5. Historical Context & Predictive Limits</strong> Proprietary dataset spans ~1925-2025 (100 Years) to identify long-wave cycles and failure patterns. Black swan events may impact accuracy.</p>
+                            <p><strong className="text-stone-900 block mb-1">5. Predictive Limits</strong> Our proprietary dataset spans ~1925-2025, enabling the identification of long-wave economic cycles and historical failure patterns. However, unforeseen "black swan" events can impact predictive accuracy.</p>
                             
-                            <p><strong className="text-stone-900 block mb-1">6. Autonomous Agent Liability</strong> Semi-autonomous AI agents ("Scout", "Diplomat", "Strategist") construct intelligence dossiers within ethical guardrails. Users must validate critical data points.</p>
+                            <p><strong className="text-stone-900 block mb-1">6. AI Agent Validation</strong> Semi-autonomous AI agents construct intelligence dossiers within strict ethical and logical guardrails. It is the user's responsibility to validate critical data points before making final commitments.</p>
                             
-                            <p><strong className="text-stone-900 block mb-1">7. Neuro-Symbolic Logic Gatekeepers</strong> Gatekeeper Protocol enforces logical consistency. System halts if inputs contradict economic physics or fail integrity checks.</p>
+                            <p><strong className="text-stone-900 block mb-1">7. No Guarantees & User Responsibility</strong> While great effort has been made to ensure the accuracy of the data and analyses, this system is a decision-support tool, not a final say. The onus is on the user to verify all information before making financial or strategic commitments. We welcome feedback to help build a better service.</p>
+
+                            <p><strong className="text-stone-900 block mb-1">8. Logical Integrity Protocol</strong> The Neuro-Symbolic core enforces logical consistency. The system will flag or halt processes if user inputs fundamentally contradict established economic principles or fail data integrity checks.</p>
                         </div>
                     </div>
 

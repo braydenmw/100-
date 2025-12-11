@@ -30,7 +30,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenSystem }) => {
       </div>
 
       {/* Content - Increased pt-64 to pt-80 for more top spacing */}
-      <div className="relative z-10 max-w-screen-2xl mx-auto px-8 md:px-12 pt-80 pb-32">
+      <div className="relative z-10 max-w-screen-2xl mx-auto px-8 md:px-12 pt-48 pb-32">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
             
             {/* Left: The Narrative */}
