@@ -216,7 +216,7 @@ export const Footer: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-4xl bg-bw-navy border border-gray-700 rounded-lg shadow-2xl max-h-[90vh] flex flex-col overflow-hidden"
+              className="relative w-full max-w-5xl bg-bw-navy border border-gray-700 rounded-lg shadow-2xl h-[95vh] flex flex-col overflow-hidden"
             >
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-700 bg-bw-navy/50">
@@ -233,8 +233,10 @@ export const Footer: React.FC = () => {
               </div>
 
               {/* Content */}
-              <div className="flex-1 p-6 overflow-y-auto custom-scrollbar min-h-0">
-                {activeModal === 'privacy' ? <PrivacyContent /> : <TermsContent />}
+              <div className="flex-1 p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 min-h-0">
+                <div className="max-w-none">
+                  {activeModal === 'privacy' ? <PrivacyContent /> : <TermsContent />}
+                </div>
               </div>
 
               {/* Footer */}
