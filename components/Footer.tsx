@@ -47,10 +47,78 @@ export const Footer: React.FC = () => {
 
   const TermsContent = () => (
     <div className="space-y-8">
+      {/* System Overview */}
       <div>
+        <h3 className="text-xl font-serif font-bold text-bw-gold mb-2">BW Nexus AI System Overview</h3>
+        <p className="text-sm text-gray-400 mb-6">7-Stage Strategic Intelligence Platform | Version 4.1</p>
+
+        <div className="space-y-6 text-sm text-gray-300">
+          <div className="border border-gray-700 rounded-lg p-4 bg-gray-800/50">
+            <h4 className="font-bold text-bw-gold mb-2 text-lg">01 Input Context</h4>
+            <p className="mb-2"><strong className="text-white">What it is:</strong> This is the foundational data-gathering phase. You will be guided through the "Primary Steps" (Identity, Mandate, Market, Risk) to build a comprehensive profile of your strategic goals.</p>
+            <p><strong className="text-white">What you get:</strong> A complete, data-rich draft of your Strategic Roadmap that populates in real-time, serving as the single source of truth for all subsequent analysis.</p>
+          </div>
+
+          <div className="border border-gray-700 rounded-lg p-4 bg-gray-800/50">
+            <h4 className="font-bold text-bw-gold mb-2 text-lg">02 Analytical Processing</h4>
+            <p className="mb-2"><strong className="text-white">What it is:</strong> The interactive analysis phase where you leverage the system's core intelligence. Here you can stress-test your strategy and uncover hidden insights using a suite of powerful analytical tools.</p>
+            <p><strong className="text-white">What you get:</strong> Deeper, actionable insights by modeling financial outcomes with the "ROI Diagnostic", exploring possibilities with the "Scenario Planner", or scoring potential partners with the "Compatibility Engine".</p>
+          </div>
+
+          <div className="border border-gray-700 rounded-lg p-4 bg-gray-800/50">
+            <h4 className="font-bold text-bw-gold mb-2 text-lg">03 Report Generation</h4>
+            <p className="mb-2"><strong className="text-white">What it is:</strong> The final output stage where you transition from the live draft to generating a suite of official, stakeholder-ready documents.</p>
+            <p><strong className="text-white">What you get:</strong> After accepting the finalized draft, you unlock a comprehensive menu to generate tangible artifacts like a Full Strategic Dossier, Financial Models, and formal Letters of Intent, all tailored to specific audiences.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Terms of Engagement & Compliance */}
+      <div className="border-t border-gray-700 pt-6">
+        <h3 className="text-xl font-serif font-bold text-bw-gold mb-2">Terms of Engagement & Compliance</h3>
+        <p className="text-sm text-gray-400 mb-4">Legal Framework & User Responsibilities</p>
+
+        <div className="space-y-4 text-sm text-gray-300">
+          <div>
+            <strong className="text-white block mb-1">1. Intelligence Layer, Not a CRM</strong>
+            <p>The Nexus OS is an "Early-Stage Intelligence Layer" designed to operate upstream of your CRM, ERP, or Investment Committee. It provides the initial "Go/No-Go" signals and strategic frameworks for regional engagement.</p>
+          </div>
+          <div>
+            <strong className="text-white block mb-1">2. Decision Support, Not Authority</strong>
+            <p>The system provides probabilistic insights and data-driven recommendations. Users, especially at 'Novice' levels, should verify critical outputs with 'Expert' domain holders. Final strategic decisions remain your sole responsibility.</p>
+          </div>
+          <div>
+            <strong className="text-white block mb-1">3. Data Sovereignty & Isolation</strong>
+            <p>The system adheres to strict GDPR and local data sovereignty protocols. Your custom operational data and strategic intents are cryptographically isolated and are never used to train public models.</p>
+          </div>
+          <div>
+            <strong className="text-white block mb-1">4. Financial & Operational Simulations</strong>
+            <p>All financial models (ROI, IRR, etc.) are simulations based on the data you provide and historical benchmarks. They are not to be construed as financial advice. The accuracy of these models scales dynamically with the granularity of your inputs.</p>
+          </div>
+          <div>
+            <strong className="text-white block mb-1">5. Predictive Limits</strong>
+            <p>Our proprietary dataset spans ~1925-2025, enabling the identification of long-wave economic cycles and historical failure patterns. However, unforeseen "black swan" events can impact predictive accuracy.</p>
+          </div>
+          <div>
+            <strong className="text-white block mb-1">6. AI Agent Validation</strong>
+            <p>Semi-autonomous AI agents construct intelligence dossiers within strict ethical and logical guardrails. It is the user's responsibility to validate critical data points before making final commitments.</p>
+          </div>
+          <div>
+            <strong className="text-white block mb-1">7. No Guarantees & User Responsibility</strong>
+            <p>While great effort has been made to ensure the accuracy of the data and analyses, this system is a decision-support tool, not a final say. The onus is on the user to verify all information before making financial or strategic commitments. We welcome feedback to help build a better service.</p>
+          </div>
+          <div>
+            <strong className="text-white block mb-1">8. Logical Integrity Protocol</strong>
+            <p>The Neuro-Symbolic core enforces logical consistency. The system will flag or halt processes if user inputs fundamentally contradict established economic principles or fail data integrity checks.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Legal Agreement */}
+      <div className="border-t border-gray-700 pt-6">
         <h3 className="text-xl font-serif font-bold text-bw-gold mb-2">Legal Agreement</h3>
         <p className="text-sm text-gray-400 mb-4">Terms and Conditions of Service | Effective May 2025</p>
-        
+
         <div className="space-y-6 text-sm text-gray-300">
           <div>
             <strong className="text-white block mb-1">1. Authorized Use & Access Protocols</strong>
@@ -83,6 +151,7 @@ export const Footer: React.FC = () => {
         </div>
       </div>
 
+      {/* About The Firm */}
       <div className="border-t border-gray-700 pt-6">
         <h3 className="text-xl font-serif font-bold text-bw-gold mb-4">About The Firm</h3>
         <div className="space-y-6 text-sm text-gray-300">
@@ -143,11 +212,11 @@ export const Footer: React.FC = () => {
               onClick={() => setActiveModal(null)}
               className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-2xl bg-bw-navy border border-gray-700 rounded-lg shadow-2xl max-h-[85vh] flex flex-col overflow-hidden"
+              className="relative w-full max-w-4xl bg-bw-navy border border-gray-700 rounded-lg shadow-2xl max-h-[90vh] flex flex-col overflow-hidden"
             >
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-700 bg-bw-navy/50">
@@ -164,7 +233,7 @@ export const Footer: React.FC = () => {
               </div>
 
               {/* Content */}
-              <div className="p-6 overflow-y-auto custom-scrollbar">
+              <div className="flex-1 p-6 overflow-y-auto custom-scrollbar min-h-0">
                 {activeModal === 'privacy' ? <PrivacyContent /> : <TermsContent />}
               </div>
 
