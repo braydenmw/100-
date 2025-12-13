@@ -1,6 +1,6 @@
 import React from 'react';
-import { 
-  ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine 
+import {
+  ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell
 } from 'recharts';
 import { Target, Trophy, TrendingUp } from 'lucide-react';
 
@@ -67,7 +67,7 @@ const CompetitorMap: React.FC<{ clientName?: string }> = ({ clientName = "Your O
                     <ReferenceLine y={50} stroke="#cbd5e1" strokeDasharray="3 3" />
                     <Scatter name="Competitors" data={data} fill="#8884d8">
                         {data.map((entry, index) => (
-                            <cell key={`cell-${index}`} fill={entry.type === 'Client' ? '#2563eb' : '#94a3b8'} />
+                            <Cell key={`cell-${index}`} fill={entry.type === 'Client' ? '#2563eb' : '#94a3b8'} />
                         ))}
                     </Scatter>
                 </ScatterChart>

@@ -186,7 +186,7 @@ const AIPoweredDealRecommendation: React.FC = () => {
       const strategicAlignment = Math.min(100, strategicMatch + typeMatch);
 
       // Risk Alignment (0-100)
-      const riskMap: { [key: string]: number } = {
+      const riskMap: { [key: string]: { [key: string]: number } } = {
         'Low': { 'Low': 100, 'Medium': 50, 'High': 20 },
         'Medium': { 'Low': 70, 'Medium': 100, 'High': 60 },
         'High': { 'Low': 40, 'Medium': 70, 'High': 100 }

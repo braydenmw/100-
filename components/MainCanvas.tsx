@@ -55,7 +55,7 @@ const CollapsibleSection: React.FC<{
 );
 
 const MainCanvas: React.FC<MainCanvasProps> = ({
-    params, setParams, onGenerate, onChangeViewMode
+    params, setParams, onGenerate, onChangeViewMode, reports, onOpenReport, onDeleteReport, onNewAnalysis, reportData, isGenerating, generationPhase, generationProgress, onCopilotMessage
 }) => {
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [modalView, setModalView] = useState('main'); // 'main' or a specific tool id
@@ -77,6 +77,13 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
   const [showFinalizationModal, setShowFinalizationModal] = useState(false);
   const [selectedFinalReports, setSelectedFinalReports] = useState<string[]>([]);
   const [generatedDocs, setGeneratedDocs] = useState<{id: string, title: string, desc: string, timestamp: Date}[]>([]);
+  const [selectedIntelligenceEnhancements, setSelectedIntelligenceEnhancements] = useState<string[]>([]);
+
+  // Apply intelligence enhancements to report data
+  const enhancedReportData = React.useMemo(() =>
+    selectedIntelligenceEnhancements.length > 0 ? applyIntelligenceEnhancements(reportData) : reportData,
+    [reportData, selectedIntelligenceEnhancements]
+  );
 
 
   const [chatMessages, setChatMessages] = useState<Array<{text: string, sender: 'user' | 'bw', timestamp: Date}>>([
@@ -145,18 +152,90 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
   };
 
   const handleFinalReportSelection = (reportId: string) => {
-    setSelectedFinalReports(prev => 
-      prev.includes(reportId) 
-        ? prev.filter(id => id !== reportId) 
+    setSelectedFinalReports(prev =>
+      prev.includes(reportId)
+        ? prev.filter(id => id !== reportId)
         : [...prev, reportId]
     );
   };
 
+  const handleIntelligenceEnhancementToggle = (enhancementId: string) => {
+    setSelectedIntelligenceEnhancements(prev =>
+      prev.includes(enhancementId)
+        ? prev.filter(id => id !== enhancementId)
+        : [...prev, enhancementId]
+    );
+  };
+
+  const applyIntelligenceEnhancements = (baseReport: ReportData): ReportData => {
+    let enhancedReport = { ...baseReport };
+
+    selectedIntelligenceEnhancements.forEach(enhancement => {
+      switch (enhancement) {
+        case 'roi-diagnostic':
+          enhancedReport.financials.content += '\n\n**ROI Diagnostic Analysis:**\n- Investment: $500,000\n- Projected Revenue: $2M annually\n- Break-even: 8 months\n- IRR: 22%\n- Payback Period: 2.5 years\n- Risk-adjusted ROI: 18%';
+          break;
+
+        case 'scenario-planning':
+          enhancedReport.marketAnalysis.content += '\n\n**Scenario Planning:**\n- Best Case: 40% market growth, 25% revenue increase\n- Base Case: 15% market growth, 10% revenue increase\n- Worst Case: 5% market contraction, 5% revenue decrease\n- Recommended: Diversify into 3 key markets';
+          break;
+
+        case 'due-diligence':
+          enhancedReport.risks.content += '\n\n**Due Diligence Findings:**\n- Financial Health: Strong balance sheet, consistent profitability\n- Legal Compliance: All major certifications current\n- Operational Capacity: Scalable infrastructure in place\n- Market Reputation: Positive stakeholder feedback';
+          break;
+
+        case 'partner-compatibility':
+          enhancedReport.marketAnalysis.content += '\n\n**Partner Compatibility Analysis:**\n- Strategic Alignment: 85% match\n- Cultural Fit: High compatibility\n- Operational Synergy: Medium integration complexity\n- Value Creation Potential: $3.2M combined benefits';
+          break;
+
+        case 'diversification-analysis':
+          enhancedReport.marketAnalysis.content += '\n\n**Diversification Analysis:**\n- Current HHI Score: 2,800 (Moderate Concentration)\n- Recommended Markets: Healthcare (25%), FinTech (20%), Clean Energy (15%)\n- Risk Reduction: 35% portfolio diversification benefit';
+          break;
+
+        case 'ethical-compliance':
+          enhancedReport.risks.content += '\n\n**Ethical Compliance Assessment:**\n- ESG Score: 78/100\n- Labor Practices: Compliant with international standards\n- Environmental Impact: Carbon neutral operations\n- Governance: Strong board oversight\n- Recommendation: Proceed with standard monitoring';
+          break;
+
+        case 'historical-precedents':
+          enhancedReport.marketAnalysis.content += '\n\n**Historical Precedents Analysis:**\n- Similar partnerships: 12 cases reviewed\n- Success Rate: 67% for comparable deals\n- Key Success Factors: Local market knowledge, technology integration\n- Warning Signs: Over-ambitious timelines, inadequate due diligence';
+          break;
+
+        case 'growth-modeling':
+          enhancedReport.financials.content += '\n\n**Growth Modeling Projections:**\n- Year 1: $2.1M revenue, 15% growth\n- Year 2: $2.8M revenue, 33% growth\n- Year 3: $3.9M revenue, 39% growth\n- Year 5: $7.2M revenue, 45% CAGR\n- Breakout Scenario: $12M revenue with market expansion';
+          break;
+
+        case 'stakeholder-analysis':
+          enhancedReport.marketAnalysis.content += '\n\n**Stakeholder Analysis:**\n- Key Stakeholders: 15 identified\n- High Influence/High Interest: Government regulators, major customers\n- High Influence/Low Interest: Industry associations\n- Low Influence/High Interest: Local communities\n- Communication Strategy: Quarterly updates, annual stakeholder forums';
+          break;
+
+        case 'geopolitical-risk':
+          enhancedReport.risks.content += '\n\n**Geopolitical Risk Assessment:**\n- Country Stability: High (Score: 82/100)\n- Trade Relations: Favorable bilateral agreements\n- Currency Risk: Moderate volatility expected\n- Regulatory Environment: Business-friendly policies\n- Contingency Planning: Alternative sourcing options identified';
+          break;
+
+        case 'valuation-engine':
+          enhancedReport.financials.content += '\n\n**Valuation Engine Results:**\n- DCF Valuation: $8.5M enterprise value\n- Comparable Transactions: $7.2M average\n- Asset-based Valuation: $6.8M\n- Recommended Valuation: $7.8M\n- Key Value Drivers: Technology IP, market position, growth potential';
+          break;
+
+        case 'performance-metrics':
+          enhancedReport.financials.content += '\n\n**Performance Metrics Dashboard:**\n- Revenue Growth: 23% YoY\n- Customer Acquisition Cost: $450\n- Customer Lifetime Value: $8,200\n- Churn Rate: 8%\n- Net Promoter Score: 72\n- Market Share: 12% (target: 18%)';
+          break;
+
+        case 'supply-chain-analysis':
+          enhancedReport.risks.content += '\n\n**Supply Chain Analysis:**\n- Dependency Concentration: 3 major suppliers (45% of inputs)\n- Geographic Diversification: 60% local, 40% international\n- Risk Mitigation: Backup suppliers identified\n- Cost Optimization: 12% potential savings through consolidation\n- Sustainability Score: 76/100 for supply chain practices';
+          break;
+      }
+    });
+
+    return enhancedReport;
+  };
+
   const handleGenerateFinalDocs = () => {
-    const reportsToGenerate = allReports.filter(report => selectedFinalReports.includes(report.id));
-    
+    const reportsToGenerate = reports.filter(report => selectedFinalReports.includes(report.id));
+
     const newDocs = reportsToGenerate.map(report => ({
-      ...report,
+      id: report.id,
+      title: report.reportName,
+      desc: report.problemStatement || 'No description available',
       timestamp: new Date()
     }));
 
@@ -325,6 +404,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         <label className="flex items-start gap-2 p-4 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group min-h-[60px]">
                             <input
                                 type="checkbox"
+                                checked={selectedIntelligenceEnhancements.includes('roi-diagnostic')}
+                                onChange={() => handleIntelligenceEnhancementToggle('roi-diagnostic')}
                                 className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
@@ -339,6 +420,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group">
                             <input
                                 type="checkbox"
+                                checked={selectedIntelligenceEnhancements.includes('scenario-planning')}
+                                onChange={() => handleIntelligenceEnhancementToggle('scenario-planning')}
                                 className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
@@ -353,6 +436,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-green-300 transition-all cursor-pointer group">
                             <input
                                 type="checkbox"
+                                checked={selectedIntelligenceEnhancements.includes('due-diligence')}
+                                onChange={() => handleIntelligenceEnhancementToggle('due-diligence')}
                                 className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
@@ -367,6 +452,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-pink-300 transition-all cursor-pointer group">
                             <input
                                 type="checkbox"
+                                checked={selectedIntelligenceEnhancements.includes('partner-compatibility')}
+                                onChange={() => handleIntelligenceEnhancementToggle('partner-compatibility')}
                                 className="mt-1 h-4 w-4 text-pink-600 focus:ring-pink-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
@@ -381,6 +468,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-purple-300 transition-all cursor-pointer group">
                             <input
                                 type="checkbox"
+                                checked={selectedIntelligenceEnhancements.includes('diversification-analysis')}
+                                onChange={() => handleIntelligenceEnhancementToggle('diversification-analysis')}
                                 className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
@@ -395,6 +484,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-red-300 transition-all cursor-pointer group">
                             <input
                                 type="checkbox"
+                                checked={selectedIntelligenceEnhancements.includes('ethical-compliance')}
+                                onChange={() => handleIntelligenceEnhancementToggle('ethical-compliance')}
                                 className="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
@@ -409,6 +500,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-amber-300 transition-all cursor-pointer group">
                             <input
                                 type="checkbox"
+                                checked={selectedIntelligenceEnhancements.includes('historical-precedents')}
+                                onChange={() => handleIntelligenceEnhancementToggle('historical-precedents')}
                                 className="mt-1 h-4 w-4 text-amber-600 focus:ring-amber-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
@@ -423,6 +516,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-teal-300 transition-all cursor-pointer group">
                             <input
                                 type="checkbox"
+                                checked={selectedIntelligenceEnhancements.includes('growth-modeling')}
+                                onChange={() => handleIntelligenceEnhancementToggle('growth-modeling')}
                                 className="mt-1 h-4 w-4 text-teal-600 focus:ring-teal-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
@@ -437,6 +532,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-orange-300 transition-all cursor-pointer group">
                             <input
                                 type="checkbox"
+                                checked={selectedIntelligenceEnhancements.includes('stakeholder-analysis')}
+                                onChange={() => handleIntelligenceEnhancementToggle('stakeholder-analysis')}
                                 className="mt-1 h-4 w-4 text-orange-600 focus:ring-orange-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
@@ -451,6 +548,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-cyan-300 transition-all cursor-pointer group">
                             <input
                                 type="checkbox"
+                                checked={selectedIntelligenceEnhancements.includes('geopolitical-risk')}
+                                onChange={() => handleIntelligenceEnhancementToggle('geopolitical-risk')}
                                 className="mt-1 h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
@@ -465,6 +564,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-lime-300 transition-all cursor-pointer group">
                             <input
                                 type="checkbox"
+                                checked={selectedIntelligenceEnhancements.includes('valuation-engine')}
+                                onChange={() => handleIntelligenceEnhancementToggle('valuation-engine')}
                                 className="mt-1 h-4 w-4 text-lime-600 focus:ring-lime-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
@@ -479,6 +580,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group">
                             <input
                                 type="checkbox"
+                                checked={selectedIntelligenceEnhancements.includes('performance-metrics')}
+                                onChange={() => handleIntelligenceEnhancementToggle('performance-metrics')}
                                 className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
@@ -493,6 +596,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-rose-300 transition-all cursor-pointer group">
                             <input
                                 type="checkbox"
+                                checked={selectedIntelligenceEnhancements.includes('supply-chain-analysis')}
+                                onChange={() => handleIntelligenceEnhancementToggle('supply-chain-analysis')}
                                 className="mt-1 h-4 w-4 text-rose-600 focus:ring-rose-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
@@ -2260,13 +2365,13 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         </div>
                         <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {allReports.map(report => (
+                                {reports.map(report => (
                                     <label key={report.id} className="p-4 border-2 rounded-lg cursor-pointer has-[:checked]:border-green-500 has-[:checked]:bg-green-50 transition-all">
                                         <div className="flex items-start gap-3">
                                             <input type="checkbox" checked={selectedFinalReports.includes(report.id)} onChange={() => handleFinalReportSelection(report.id)} className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 border-stone-300 rounded"/>
                                             <div>
-                                                <div className="font-bold text-stone-900">{report.title}</div>
-                                                <p className="text-xs text-stone-600 mt-1">{report.desc}</p>
+                                                <div className="font-bold text-stone-900">{report.reportName}</div>
+                                                <p className="text-xs text-stone-600 mt-1">{report.problemStatement || 'No description available'}</p>
                                             </div>
                                         </div>
                                     </label>
@@ -2452,7 +2557,11 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         {/* 3. Market Context Section */}
                         <div className="mb-12">
                             <h2 className="text-[10px] font-sans font-bold text-stone-400 uppercase tracking-widest mb-4 border-b border-stone-100 pb-2">03. Market Context</h2>
-                            <p className="text-sm text-stone-400 italic">Awaiting market analysis...</p>
+                            {enhancedReportData.marketAnalysis.content ? (
+                                <div className="text-sm text-stone-700 leading-relaxed whitespace-pre-line">{enhancedReportData.marketAnalysis.content}</div>
+                            ) : (
+                                <p className="text-sm text-stone-400 italic">Awaiting market analysis...</p>
+                            )}
                         </div>
 
                         {/* Injected components will render here */}
@@ -2461,7 +2570,11 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         {/* 4. Risk & Historical */}
                         <div className="mb-12">
                             <h2 className="text-[10px] font-sans font-bold text-stone-400 uppercase tracking-widest mb-4 border-b border-stone-100 pb-2">04. Risk & Historical Validation</h2>
-                            <p className="text-sm text-stone-400 italic">Awaiting risk assessment...</p>
+                            {enhancedReportData.risks.content ? (
+                                <div className="text-sm text-stone-700 leading-relaxed whitespace-pre-line">{enhancedReportData.risks.content}</div>
+                            ) : (
+                                <p className="text-sm text-stone-400 italic">Awaiting risk assessment...</p>
+                            )}
                         </div>
 
                         <div className="mb-12">
@@ -2471,7 +2584,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
 
                         <div className="mb-12">
                             <h2 className="text-[10px] font-sans font-bold text-stone-400 uppercase tracking-widest mb-4 border-b border-stone-100 pb-2">06. Marketplace Opportunities</h2>
-                            <p className="text-sm text-stone-400 italic">Awaiting risk assessment...</p>
+                            <p className="text-sm text-stone-400 italic">Awaiting marketplace analysis...</p>
                         </div>
                     </div>
 

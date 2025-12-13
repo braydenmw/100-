@@ -332,7 +332,7 @@ const AdvancedStepExpansionSystem: React.FC = () => {
                               <div className="flex gap-2 items-center">
                                 {field.type === 'select' ? (
                                   <select
-                                    value={field.value}
+                                    value={String(field.value)}
                                     onChange={(e) => updateCustomField(section.id, field.id, e.target.value)}
                                     disabled={field.locked || section.isLocked}
                                     className="flex-1 px-2 py-1 border border-stone-300 rounded text-sm disabled:bg-stone-100 disabled:cursor-not-allowed"
@@ -344,8 +344,8 @@ const AdvancedStepExpansionSystem: React.FC = () => {
                                 ) : (
                                   <input
                                     type={field.type === 'percentage' || field.type === 'number' || field.type === 'currency' ? 'number' : field.type}
-                                    value={field.value}
-                                    onChange={(e) => updateCustomField(section.id, field.id, 
+                                    value={typeof field.value === 'boolean' ? '' : field.value}
+                                    onChange={(e) => updateCustomField(section.id, field.id,
                                       field.type === 'number' || field.type === 'percentage' || field.type === 'currency'
                                         ? parseFloat(e.target.value) || 0
                                         : e.target.value

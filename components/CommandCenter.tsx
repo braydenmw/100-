@@ -9,13 +9,17 @@ import {
 } from 'lucide-react';
 
 interface CommandCenterProps {
+    savedReports: ReportParameters[];
     onCreateNew: () => void;
+    onLoadReport: (report: ReportParameters) => void;
     onOpenInstant: () => void;
     onOpenSimulator: () => void;
 }
 
-const CommandCenter: React.FC<CommandCenterProps> = ({ 
+const CommandCenter: React.FC<CommandCenterProps> = ({
+    savedReports,
     onCreateNew,
+    onLoadReport,
     onOpenSimulator
 }) => {
     const [accepted, setAccepted] = useState(false);
