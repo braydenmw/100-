@@ -40,10 +40,10 @@ export const Hero: React.FC<HeroProps> = ({ onOpenSystem }) => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1, ease: "easeOut" }}
                 >
-                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold text-white leading-[1.1] mb-8">
-                        We didn't just build a database. <br/>
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-bw-gold to-white">
-                            We codified the physics of an invisible economy.
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-bold text-white leading-[1.1]">
+                        Beyond Data. Beyond Consulting.
+                        <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-bw-gold to-white">
+                            The Physics of Invisible Economies.
                         </span>
                     </h1>
 
@@ -51,7 +51,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenSystem }) => {
                         <p className="text-white font-medium">
                             Regional markets are not chaotic; they are simply complex. They operate on a different frequency than global capitals, driven by relationships and informal networks.
                         </p>
-                        <p>
+                        <p className="mt-8">
                             We architected the <strong className="text-bw-gold">Regional Intelligence Core</strong> to decode this frequency. It is not a passive consultancy tool; it is a deterministic engine designed to translate the specific "blind spots" of regional expansion into the language of global capital.
                         </p>
                     </div>
