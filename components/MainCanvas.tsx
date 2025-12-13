@@ -321,18 +321,18 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                 <div>
                     <h3 className="text-sm font-bold text-stone-500 uppercase tracking-wider mb-3">Optional Intelligence Enhancements</h3>
                     <p className="text-xs text-stone-500 mb-4">Enhance your Strategic Roadmap draft with specialized analysis. Select any combination to add depth and insights that will improve your final reports and letters.</p>
-                    <div className="grid grid-cols-3 gap-3">
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group">
+                    <div className="grid grid-cols-2 gap-3">
+                        <label className="flex items-start gap-2 p-4 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group min-h-[60px]">
                             <input
                                 type="checkbox"
                                 className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <BarChart3 className="w-4 h-4 text-indigo-600" />
-                                    <span className="text-xs font-bold text-stone-900">ROI Diagnostic</span>
+                                    <BarChart3 className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                                    <span className="text-xs font-bold text-stone-900 leading-tight">ROI Diagnostic</span>
                                 </div>
-                                <p className="text-[10px] text-stone-600">Financial viability assessment</p>
+                                <p className="text-[10px] text-stone-600 leading-tight">Financial viability assessment</p>
                             </div>
                         </label>
 
@@ -557,18 +557,18 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                     <h3 className="text-sm font-bold text-stone-500 uppercase tracking-wider mb-3">Document Generation Suite</h3>
                     <p className="text-xs text-stone-500 mb-4">Generate official documents from your finalized Strategic Roadmap. Choose from these professional document types:</p>
 
-                    <div className="grid grid-cols-3 gap-3">
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group">
+                    <div className="grid grid-cols-2 gap-3">
+                        <label className="flex items-start gap-2 p-4 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group min-h-[60px]">
                             <input
                                 type="checkbox"
                                 className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <FileText className="w-4 h-4 text-blue-600" />
-                                    <span className="text-xs font-bold text-stone-900">Letter of Intent</span>
+                                    <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                    <span className="text-xs font-bold text-stone-900 leading-tight">Letter of Intent</span>
                                 </div>
-                                <p className="text-[10px] text-stone-600">LOI document generation</p>
+                                <p className="text-[10px] text-stone-600 leading-tight">LOI document generation</p>
                             </div>
                         </label>
 
@@ -788,18 +788,18 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                 <div>
                     <h3 className="text-sm font-bold text-stone-500 uppercase tracking-wider mb-3">Letter Generation Suite</h3>
                     <p className="text-xs text-stone-500 mb-4">After finalizing your strategic dossier, generate formal letters and legal documents here. These outputs are pre-populated with the key terms, entities, and objectives from your analysis, ready for negotiation and engagement.</p>
-                    <div className="grid grid-cols-3 gap-3">
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-green-300 transition-all cursor-pointer group">
+                    <div className="grid grid-cols-2 gap-3">
+                        <label className="flex items-start gap-2 p-4 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-green-300 transition-all cursor-pointer group min-h-[60px]">
                             <input
                                 type="checkbox"
                                 className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 border-stone-300 rounded"
                             />
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <FileText className="w-4 h-4 text-green-600" />
-                                    <span className="text-xs font-bold text-stone-900">Letter of Intent</span>
+                                    <FileText className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                    <span className="text-xs font-bold text-stone-900 leading-tight">Letter of Intent</span>
                                 </div>
-                                <p className="text-[10px] text-stone-600">Formal LOI document</p>
+                                <p className="text-[10px] text-stone-600 leading-tight">Formal LOI document</p>
                             </div>
                         </label>
 
