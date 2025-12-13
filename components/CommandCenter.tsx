@@ -21,11 +21,11 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
     const [accepted, setAccepted] = useState(false);
 
     return (
-        <div className="w-full min-h-screen bg-stone-100 p-6 sm:p-8 md:p-12 font-sans">
-            <div className="max-w-7xl mx-auto bg-white shadow-2xl border border-stone-200 rounded-lg overflow-hidden flex flex-col md:flex-row">
+        <div className="w-full min-h-screen bg-stone-100 p-4 sm:p-6 md:p-8 lg:p-12 font-sans">
+            <div className="max-w-7xl mx-auto bg-white shadow-2xl border border-stone-200 rounded-lg overflow-hidden flex flex-col lg:flex-row">
                 
                 {/* Left Panel: Introduction & Process */}
-                <div className="md:w-7/12 bg-bw-navy p-12 text-white flex flex-col relative overflow-hidden">
+                <div className="lg:w-7/12 bg-bw-navy p-8 sm:p-10 lg:p-12 text-white flex flex-col relative overflow-hidden">
                     <div className="relative z-10 mb-auto">
                         <div className="flex items-center gap-2 text-bw-gold font-bold tracking-widest text-xs uppercase mb-6">
                             <Layers size={14} /> Nexus Intelligence OS v4.2
@@ -94,7 +94,7 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
                 </div>
 
                 {/* Right Panel: Terms & Actions */}
-                <div className="md:w-5/12 p-10 flex flex-col bg-stone-50 border-l border-stone-200">
+                <div className="lg:w-5/12 p-6 sm:p-8 lg:p-10 flex flex-col bg-stone-50 border-l border-stone-200">
                     <div className="flex-1">
                         <h3 className="text-bw-navy font-bold uppercase tracking-widest text-xs mb-6 flex items-center gap-2">
                             <ShieldAlert size={16} className="text-bw-gold" /> Terms of Engagement & Compliance
