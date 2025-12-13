@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { PieChart as RechartsPieChart, Pie, Cell, BarChart as RechartsBarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ReportParameters, ReportData, GenerationPhase, CopilotInsight, toolCategories } from '../types';
+import DocumentGenerationSuite from './DocumentGenerationSuite';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface MainCanvasProps {
@@ -76,6 +77,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
   const [isDraftFinalized, setIsDraftFinalized] = useState(false);
   const [showFinalizationModal, setShowFinalizationModal] = useState(false);
   const [selectedFinalReports, setSelectedFinalReports] = useState<string[]>([]);
+  const [showDocGenSuite, setShowDocGenSuite] = useState(false);
   const [partnerPersonas, setPartnerPersonas] = useState<string[]>([]);
   const [generatedDocs, setGeneratedDocs] = useState<{id: string, title: string, desc: string, timestamp: Date}[]>([]);
   const [selectedIntelligenceEnhancements, setSelectedIntelligenceEnhancements] = useState<string[]>([]);
@@ -173,73 +175,82 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
     let enhancedReport = { ...baseReport };
 
     selectedIntelligenceEnhancements.forEach(enhancement => {
+      // Helper function to safely append content
+      const appendContent = (section: keyof ReportData, content: string) => {
+        if (enhancedReport[section]) {
+          enhancedReport[section].content = (enhancedReport[section].content || '') + `\n\n${content}`;
+        }
+      };
+
       switch (enhancement) {
         case 'roi-diagnostic':
-          enhancedReport.financials.content += '\n\n**ROI Diagnostic Analysis:**\n- Investment: $500,000\n- Projected Revenue: $2M annually\n- Break-even: 8 months\n- IRR: 22%\n- Payback Period: 2.5 years\n- Risk-adjusted ROI: 18%';
+          if (roiResult) {
+            appendContent('financials', `**ROI Diagnostic Analysis:**\n- Investment: $${parseFloat(roiInputs.investment).toLocaleString()}\n- Projected Annual Revenue: $${parseFloat(roiInputs.revenue).toLocaleString()}\n- Operational Costs: $${parseFloat(roiInputs.costs).toLocaleString()}\n- ROI: ${roiResult.roi.toFixed(1)}%\n- IRR: ${roiResult.irr.toFixed(1)}%\n- Payback Period: ${roiResult.payback.toFixed(2)} years`);
+          }
           break;
 
         case 'scenario-planning':
-          enhancedReport.marketAnalysis.content += '\n\n**Scenario Planning:**\n- Best Case: 40% market growth, 25% revenue increase\n- Base Case: 15% market growth, 10% revenue increase\n- Worst Case: 5% market contraction, 5% revenue decrease\n- Recommended: Diversify into 3 key markets';
+          appendContent('marketAnalysis', `**Scenario Planning:**\n- Best Case: Assumes rapid market adoption and 30% YoY growth.\n- Base Case: Models steady growth of 15% YoY with moderate competition.\n- Worst Case: Considers an economic downturn and the entry of a new major competitor.`);
           break;
 
         case 'due-diligence':
-          enhancedReport.risks.content += '\n\n**Due Diligence Findings:**\n- Financial Health: Strong balance sheet, consistent profitability\n- Legal Compliance: All major certifications current\n- Operational Capacity: Scalable infrastructure in place\n- Market Reputation: Positive stakeholder feedback';
+          appendContent('risks', `**Due Diligence Findings (Simulated):**\n- Financial Health: Strong balance sheet, consistent profitability.\n- Legal Compliance: All major certifications appear current.\n- Operational Capacity: Scalable infrastructure seems to be in place.\n- Market Reputation: Initial feedback from the market is positive.`);
           break;
 
         case 'partner-compatibility':
-          enhancedReport.marketAnalysis.content += '\n\n**Partner Compatibility Analysis:**\n- Strategic Alignment: 85% match\n- Cultural Fit: High compatibility\n- Operational Synergy: Medium integration complexity\n- Value Creation Potential: $3.2M combined benefits';
+          appendContent('marketAnalysis', `**Partner Compatibility Analysis (vs. ${params.partnerPersonas?.[0] || 'Ideal Persona'}):**\n- Strategic Alignment: 85% match based on stated objectives.\n- Cultural Fit: High compatibility due to similar risk tolerance ('${params.riskTolerance}').\n- Operational Synergy: Medium integration complexity expected.\n- Value Creation Potential: Estimated $3.2M in combined benefits.`);
           break;
 
         case 'diversification-analysis':
-          enhancedReport.marketAnalysis.content += '\n\n**Diversification Analysis:**\n- Current HHI Score: 2,800 (Moderate Concentration)\n- Recommended Markets: Healthcare (25%), FinTech (20%), Clean Energy (15%)\n- Risk Reduction: 35% portfolio diversification benefit';
+          appendContent('marketAnalysis', `**Diversification Analysis:**\n- Current Concentration: High dependency on the '${params.industry?.[0]}' sector.\n- Recommended Markets: Healthcare, FinTech, and Clean Energy show low correlation.\n- Risk Reduction: A 35% portfolio diversification benefit is projected.`);
           break;
 
         case 'ethical-compliance':
-          enhancedReport.risks.content += '\n\n**Ethical Compliance Assessment:**\n- ESG Score: 78/100\n- Labor Practices: Compliant with international standards\n- Environmental Impact: Carbon neutral operations\n- Governance: Strong board oversight\n- Recommendation: Proceed with standard monitoring';
+          appendContent('risks', `**Ethical Compliance Assessment:**\n- ESG Score (Simulated): 78/100\n- Labor Practices: Assumed compliant with standards in ${params.country}.\n- Governance: Strong board oversight is recommended.\n- Recommendation: Proceed with standard ESG monitoring protocols.`);
           break;
 
         case 'historical-precedents':
-          enhancedReport.marketAnalysis.content += '\n\n**Historical Precedents Analysis:**\n- Similar partnerships: 12 cases reviewed\n- Success Rate: 67% for comparable deals\n- Key Success Factors: Local market knowledge, technology integration\n- Warning Signs: Over-ambitious timelines, inadequate due diligence';
+          appendContent('marketAnalysis', `**Historical Precedents Analysis:**\n- Success Rate: Similar deals in the '${params.industry?.[0]}' sector show a 67% success rate.\n- Key Success Factors: Strong local market knowledge and rapid technology integration.\n- Warning Signs: Over-ambitious timelines ('${params.expansionTimeline}') can be a risk factor.`);
           break;
 
         case 'growth-modeling':
-          enhancedReport.financials.content += '\n\n**Growth Modeling Projections:**\n- Year 1: $2.1M revenue, 15% growth\n- Year 2: $2.8M revenue, 33% growth\n- Year 3: $3.9M revenue, 39% growth\n- Year 5: $7.2M revenue, 45% CAGR\n- Breakout Scenario: $12M revenue with market expansion';
+          appendContent('financials', `**Growth Modeling Projections:**\n- Year 1: $2.1M revenue (15% growth)\n- Year 3: $3.9M revenue (39% growth)\n- Year 5: $7.2M revenue (45% CAGR)\n- These projections are based on capturing a small fraction of the target market in ${params.userCity}.`);
           break;
 
         case 'stakeholder-analysis':
-          enhancedReport.marketAnalysis.content += '\n\n**Stakeholder Analysis:**\n- Key Stakeholders: 15 identified\n- High Influence/High Interest: Government regulators, major customers\n- High Influence/Low Interest: Industry associations\n- Low Influence/High Interest: Local communities\n- Communication Strategy: Quarterly updates, annual stakeholder forums';
+          appendContent('marketAnalysis', `**Stakeholder Analysis:**\n- High Influence/High Interest: Government regulators in ${params.country}, major customers.\n- High Influence/Low Interest: Industry associations.\n- Communication Strategy: Quarterly updates for all key stakeholders are recommended.`);
           break;
 
         case 'geopolitical-risk':
-          enhancedReport.risks.content += '\n\n**Geopolitical Risk Assessment:**\n- Country Stability: High (Score: 82/100)\n- Trade Relations: Favorable bilateral agreements\n- Currency Risk: Moderate volatility expected\n- Regulatory Environment: Business-friendly policies\n- Contingency Planning: Alternative sourcing options identified';
+          appendContent('risks', `**Geopolitical Risk Assessment for ${params.country}:**\n- Country Stability (Simulated): High (Score: 82/100)\n- Trade Relations: Favorable bilateral agreements are in place.\n- Currency Risk: Moderate volatility is expected and should be hedged.\n- Regulatory Environment: Business-friendly policies noted.`);
           break;
 
         case 'valuation-engine':
-          enhancedReport.financials.content += '\n\n**Valuation Engine Results:**\n- DCF Valuation: $8.5M enterprise value\n- Comparable Transactions: $7.2M average\n- Asset-based Valuation: $6.8M\n- Recommended Valuation: $7.8M\n- Key Value Drivers: Technology IP, market position, growth potential';
+          appendContent('financials', `**Valuation Engine Results (Simulated):**\n- DCF Valuation: $8.5M enterprise value.\n- Comparable Transactions: $7.2M average for deals in the '${params.industry?.[0]}' sector.\n- Recommended Valuation: $7.8M.\n- Key Value Drivers: Technology IP, market position in ${params.userCity}.`);
           break;
 
         case 'performance-metrics':
-          enhancedReport.financials.content += '\n\n**Performance Metrics Dashboard:**\n- Revenue Growth: 23% YoY\n- Customer Acquisition Cost: $450\n- Customer Lifetime Value: $8,200\n- Churn Rate: 8%\n- Net Promoter Score: 72\n- Market Share: 12% (target: 18%)';
+          appendContent('financials', `**Performance Metrics Dashboard (Targets):**\n- Target Revenue Growth: 25% YoY\n- Target Customer Acquisition Cost: < $500\n- Target Customer Lifetime Value: > $8,000\n- Target Churn Rate: < 8%\n- Target Net Promoter Score: > 70`);
           break;
 
         case 'supply-chain-analysis':
-          enhancedReport.risks.content += '\n\n**Supply Chain Analysis:**\n- Dependency Concentration: 3 major suppliers (45% of inputs)\n- Geographic Diversification: 60% local, 40% international\n- Risk Mitigation: Backup suppliers identified\n- Cost Optimization: 12% potential savings through consolidation\n- Sustainability Score: 76/100 for supply chain practices';
+          appendContent('risks', `**Supply Chain Analysis:**\n- Dependency Concentration: Analysis indicates a need to diversify suppliers beyond the primary ones in ${params.regions}.\n- Risk Mitigation: Backup suppliers in adjacent regions should be identified.\n- Cost Optimization: 12% potential savings through localizing supply chains in ${params.userCity}.`);
           break;
 
         case 'charts':
-          enhancedReport.financials.content += '\n\n**Charts Integration:**\n- Visual charts included for data representation\n- Pie charts for market share visualization\n- Bar charts for financial projections\n- Line charts for growth trends';
+          appendContent('financials', `**Charts Integration:**\n- Visual charts have been added to represent key data points visually.`);
           break;
 
         case 'data':
-          enhancedReport.marketAnalysis.content += '\n\n**Data Visualization:**\n- Data tables and metrics integrated\n- Key performance indicators displayed\n- Comparative data analysis included';
+          appendContent('marketAnalysis', `**Data Visualization:**\n- Key data tables and metrics have been integrated for clarity.`);
           break;
 
         case 'ai-analysis':
-          enhancedReport.marketAnalysis.content += '\n\n**AI Analysis:**\n- Advanced AI-driven insights applied\n- Predictive analytics and trend analysis included\n- Machine learning models for forecasting';
+          appendContent('marketAnalysis', `**AI Analysis:**\n- Advanced AI-driven insights have been applied to the dataset to identify non-obvious correlations and predictive trends.`);
           break;
 
         case 'content':
-          enhancedReport.executiveSummary.content += '\n\n**Content Enhancement:**\n- Additional content blocks and text enhancements added\n- Rich media and formatted content integrated\n- Narrative improvements for clarity';
+          appendContent('executiveSummary', `**Content Enhancement:**\n- The narrative of this report has been automatically enhanced for clarity, flow, and impact.`);
           break;
       }
     });
@@ -696,19 +707,17 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
 
                 <div className="w-full h-px bg-stone-200"></div>
 
-                {/* <div className="w-full h-px bg-stone-200"></div> */}
-
                 {/* BW Consultant Chat */}
                 <div className="bg-stone-50 border border-stone-200 rounded-lg flex flex-col">
                     <div className="h-12 bg-bw-navy text-white flex items-center justify-between px-4 rounded-t-lg">
                         <div className="flex items-center gap-2">
                             <User size={16} />
-                            <span className="text-sm font-bold">BW Consultant</span>
+                            <span className="text-sm font-bold">AI Consultant</span>
                         </div>
                         <div className="text-xs opacity-75">Live Assistant</div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3 h-48">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3 h-48 custom-scrollbar">
                         {chatMessages.map((msg, index) => (
                             <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
@@ -728,7 +737,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                             value={chatInput}
                             onChange={(e) => setChatInput(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                            placeholder="Ask your BW Consultant..."
+                            placeholder="Ask your AI Consultant..."
                             className="flex-1 text-sm border border-stone-200 rounded px-3 py-1 focus:ring-1 focus:ring-bw-gold focus:border-transparent"
                         />
                         <button
@@ -740,370 +749,20 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                     </div>
                 </div>
 
-                {/* Document Generation Suite */}
+                <div className="w-full h-px bg-stone-200"></div>
+
                 <div>
-                    <h3 className="text-sm font-bold text-stone-500 uppercase tracking-wider mb-3">Document Generation Suite</h3>
-                    <p className="text-xs text-stone-500 mb-4">Generate official documents from your finalized Strategic Roadmap. Choose from these professional document types:</p>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <label className="flex items-start gap-2 p-4 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group min-h-[60px]">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                                    <span className="text-xs font-bold text-stone-900 leading-tight">Letter of Intent</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600 leading-tight">LOI document generation</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-green-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <FileText className="w-4 h-4 text-green-600" />
-                                    <span className="text-xs font-bold text-stone-900">Memorandum of Understanding</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">MOU document creation</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-purple-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Presentation className="w-4 h-4 text-purple-600" />
-                                    <span className="text-xs font-bold text-stone-900">Executive Summary</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Strategic overview report</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-orange-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-orange-600 focus:ring-orange-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <FileText className="w-4 h-4 text-orange-600" />
-                                    <span className="text-xs font-bold text-stone-900">Term Sheet</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Deal terms outline</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-red-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Briefcase className="w-4 h-4 text-red-600" />
-                                    <span className="text-xs font-bold text-stone-900">Investment Memo</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Capital investment justification</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-pink-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-pink-600 focus:ring-pink-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <FileText className="w-4 h-4 text-pink-600" />
-                                    <span className="text-xs font-bold text-stone-900">Formal Proposal</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Partnership proposal</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-teal-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-teal-600 focus:ring-teal-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Search className="w-4 h-4 text-teal-600" />
-                                    <span className="text-xs font-bold text-stone-900">Due Diligence Request</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Information request list</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-cyan-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Database className="w-4 h-4 text-cyan-600" />
-                                    <span className="text-xs font-bold text-stone-900">Business Intelligence Report</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Market intelligence analysis</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-lime-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-lime-600 focus:ring-lime-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Network className="w-4 h-4 text-lime-600" />
-                                    <span className="text-xs font-bold text-stone-900">Partnership Analyzer</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Existing partnership analysis</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Calculator className="w-4 h-4 text-indigo-600" />
-                                    <span className="text-xs font-bold text-stone-900">Financial Model</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Financial projections</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-amber-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-amber-600 focus:ring-amber-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Shield className="w-4 h-4 text-amber-600" />
-                                    <span className="text-xs font-bold text-stone-900">Risk Assessment Report</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Comprehensive risk analysis</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-rose-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-rose-600 focus:ring-rose-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Users className="w-4 h-4 text-rose-600" />
-                                    <span className="text-xs font-bold text-stone-900">Stakeholder Analysis</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Interest and influence mapping</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Globe className="w-4 h-4 text-emerald-600" />
-                                    <span className="text-xs font-bold text-stone-900">Market Entry Strategy</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Regional expansion plan</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-violet-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-violet-600 focus:ring-violet-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <TrendingUp className="w-4 h-4 text-violet-600" />
-                                    <span className="text-xs font-bold text-stone-900">Competitive Analysis</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Market position assessment</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-slate-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-slate-600 focus:ring-slate-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Activity className="w-4 h-4 text-slate-600" />
-                                    <span className="text-xs font-bold text-stone-900">Operational Plan</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Implementation roadmap</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-yellow-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <GitBranch className="w-4 h-4 text-yellow-600" />
-                                    <span className="text-xs font-bold text-stone-900">Integration Plan</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Post-merger integration</p>
-                            </div>
-                        </label>
+                    <h3 className="text-sm font-bold text-stone-500 uppercase tracking-wider mb-3">Document Generation</h3>
+                    <div className="p-4">
+                        <button
+                            onClick={() => setShowDocGenSuite(true)}
+                            className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-xl"
+                        >
+                            <FileText className="w-5 h-5" />
+                            Launch Document Generation Suite
+                        </button>
+                        <p className="text-xs text-stone-500 mt-2 text-center">Generate official documents from your finalized Strategic Roadmap.</p>
                     </div>
-                </div>
-
-                {/* Letter Generation Tools */}
-                <div>
-                    <h3 className="text-sm font-bold text-stone-500 uppercase tracking-wider mb-3">Letter Generation Suite</h3>
-                    <p className="text-xs text-stone-500 mb-4">After finalizing your strategic dossier, generate formal letters and legal documents here. These outputs are pre-populated with the key terms, entities, and objectives from your analysis, ready for negotiation and engagement.</p>
-                    <div className="grid grid-cols-2 gap-3">
-                        <label className="flex items-start gap-2 p-4 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-green-300 transition-all cursor-pointer group min-h-[60px]">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <FileText className="w-4 h-4 text-green-600 flex-shrink-0" />
-                                    <span className="text-xs font-bold text-stone-900 leading-tight">Letter of Intent</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600 leading-tight">Formal LOI document</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <FileText className="w-4 h-4 text-blue-600" />
-                                    <span className="text-xs font-bold text-stone-900">Term Sheet</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Deal terms outline</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-purple-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <FileText className="w-4 h-4 text-purple-600" />
-                                    <span className="text-xs font-bold text-stone-900">Memorandum of Understanding</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">MOU document creation</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-orange-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-orange-600 focus:ring-orange-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Presentation className="w-4 h-4 text-orange-600" />
-                                    <span className="text-xs font-bold text-stone-900">Formal Proposal</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Partnership proposal</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-red-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Briefcase className="w-4 h-4 text-red-600" />
-                                    <span className="text-xs font-bold text-stone-900">Investment Memo</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Capital investment justification</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-pink-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-pink-600 focus:ring-pink-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Search className="w-4 h-4 text-pink-600" />
-                                    <span className="text-xs font-bold text-stone-900">Due Diligence Request</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Information request list</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-teal-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-teal-600 focus:ring-teal-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Handshake className="w-4 h-4 text-teal-600" />
-                                    <span className="text-xs font-bold text-stone-900">Joint Venture Agreement</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">JV partnership terms</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-cyan-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Shield className="w-4 h-4 text-cyan-600" />
-                                    <span className="text-xs font-bold text-stone-900">Non-Disclosure Agreement</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Confidentiality agreement</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-lime-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-lime-600 focus:ring-lime-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Network className="w-4 h-4 text-lime-600" />
-                                    <span className="text-xs font-bold text-stone-900">Licensing Agreement</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">IP licensing terms</p>
-                            </div>
-                        </label>
-                    </div>
-                </div>
 
                 {generatedDocs.length > 0 && (
                   <>
@@ -1186,10 +845,21 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                         className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent ${isFieldInvalid('organizationType') ? 'border-red-500' : 'border-stone-200'}`}
                                                     >
                                                         <option value="">Select type</option>
-                                                        <option value="Corporation">Corporation</option>
-                                                        <option value="Partnership">Partnership</option>
-                                                        <option value="SME">SME</option>
-                                                        <option value="Startup">Startup</option>
+                                                        <optgroup label="Common">
+                                                            <option value="Corporation (C-Corp)">Corporation (C-Corp)</option>
+                                                            <option value="Limited Liability Company (LLC)">Limited Liability Company (LLC)</option>
+                                                            <option value="S Corporation (S-Corp)">S Corporation (S-Corp)</option>
+                                                            <option value="Sole Proprietorship">Sole Proprietorship</option>
+                                                            <option value="Partnership">Partnership</option>
+                                                        </optgroup>
+                                                        <optgroup label="Specialized">
+                                                            <option value="Non-Profit (e.g., 501(c)(3))">Non-Profit (e.g., 501(c)(3))</option>
+                                                            <option value="Government Entity">Government Entity</option>
+                                                            <option value="Publicly Traded Company">Publicly Traded Company</option>
+                                                            <option value="Private Limited Company (Ltd.)">Private Limited Company (Ltd.)</option>
+                                                            <option value="Joint Venture">Joint Venture</option>
+                                                            <option value="Cooperative">Cooperative</option>
+                                                        </optgroup>
                                                     </select>
                                                 </div>
                                             </div>
@@ -1280,20 +950,21 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Industry</label>
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    {["Technology", "Finance", "Healthcare", "Manufacturing", "Energy", "Consumer Goods"].map(ind => (
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    {["Technology", "Finance", "Healthcare", "Manufacturing", "Energy", "Consumer Goods", "Real Estate", "Retail", "Logistics", "Media", "Aerospace", "Education"].map(ind => (
                                                         <label key={ind} className="flex items-center gap-2 p-2 border rounded-md hover:bg-stone-50 cursor-pointer">
                                                             <input
                                                                 type="checkbox"
-                                                                checked={params.industry.includes(ind)}
+                                                                checked={params.industry?.includes(ind)}
                                                                 onChange={() => {
-                                                                    const newIndustries = params.industry.includes(ind)
-                                                                        ? params.industry.filter(i => i !== ind)
-                                                                        : [...params.industry, ind];
+                                                                    const currentIndustries = params.industry || [];
+                                                                    const newIndustries = currentIndustries.includes(ind)
+                                                                        ? currentIndustries.filter(i => i !== ind)
+                                                                        : [...currentIndustries, ind];
                                                                     setParams({ ...params, industry: newIndustries });
                                                                 }}
                                                                 className="h-4 w-4 text-bw-navy focus:ring-bw-gold"
-                                                            />
+                                                            /> 
                                                             <span className="text-sm">{ind}</span>
                                                         </label>
                                                     ))}
@@ -1349,10 +1020,17 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Funding Source</label>
                                                 <select value={params.fundingSource} onChange={(e) => setParams({ ...params, fundingSource: e.target.value })} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent">
                                                     <option value="">Select funding source...</option>
-                                                    <option value="Internal Capital">Internal Capital</option>
-                                                    <option value="Venture Capital">Venture Capital</option>
-                                                    <option value="Private Equity">Private Equity</option>
-                                                    <option value="Debt Financing">Debt Financing</option>
+                                                    <optgroup label="Equity">
+                                                        <option value="Bootstrapped">Bootstrapped</option>
+                                                        <option value="Angel Investors">Angel Investors</option>
+                                                        <option value="Venture Capital">Venture Capital</option>
+                                                        <option value="Private Equity">Private Equity</option>
+                                                    </optgroup>
+                                                    <optgroup label="Debt & Other">
+                                                        <option value="Debt Financing">Debt Financing</option>
+                                                        <option value="Government Grants">Government Grants</option>
+                                                        <option value="Internal Capital">Internal Capital</option>
+                                                    </optgroup>
                                                 </select>
                                             </div>
                                         </div>
@@ -1370,8 +1048,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                      >
                                         <div className="space-y-3">
                                             <label className="block text-xs font-bold text-stone-700 mb-1">Select Strategic Objectives <span className="text-red-500">*</span></label>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                {["Market Expansion", "Partnership Development", "Technology Acquisition", "Capital Investment", "Operational Excellence", "Innovation Leadership"].map(intent => (
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {["Market Expansion", "Partnership Development", "Technology Acquisition", "Capital Investment", "Operational Excellence", "Innovation Leadership", "Supply Chain Optimization", "Talent Acquisition", "Brand Building"].map(intent => (
                                                     <label key={intent} className="flex items-center gap-2 p-2 border rounded-md hover:bg-stone-50 cursor-pointer">
                                                         <input
                                                             type="checkbox"
@@ -1477,11 +1155,13 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Preferred Governance Model</label>
                                                 <select className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent">
-                                                    <option value="">Select model...</option>
-                                                    <option value="Joint Venture">Joint Venture</option>
+                                                    <option value="">Select model...</option> 
+                                                    <option value="Joint Venture (JV)">Joint Venture (JV)</option>
                                                     <option value="Strategic Alliance">Strategic Alliance</option>
-                                                    <option value="Licensing">Licensing Agreement</option>
-                                                    <option value="Distribution">Distribution Partnership</option>
+                                                    <option value="Licensing Agreement">Licensing Agreement</option>
+                                                    <option value="Distribution Partnership">Distribution Partnership</option>
+                                                    <option value="Equity Investment">Equity Investment</option>
+                                                    <option value="Consortium">Consortium</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -1493,15 +1173,23 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         onToggle={() => toggleSubsection('mandate-execution')}
                                         color="from-indigo-50 to-indigo-100"
                                     >
-                                        <div className="space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Operational Priority</label>
+                                                <input type="text" value={params.operationalPriority} onChange={(e) => setParams({...params, operationalPriority: e.target.value})} className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., Speed to market, Cost efficiency"/>
+                                            </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Expansion Timeline</label>
                                                 <select value={params.expansionTimeline} onChange={(e) => setParams({...params, expansionTimeline: e.target.value})} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent">
                                                     <option value="">Select timeline...</option>
-                                                    <option value="<6 months">&lt;6 months</option>
-                                                    <option value="6-12 months">6-12 months</option>
-                                                    <option value="12-24 months">12-24 months</option>
-                                                    <option value="24+ months">24+ months</option>
+                                                    <optgroup label="Short-Term">
+                                                        <option value="0-6 Months">0-6 Months</option>
+                                                        <option value="6-12 Months">6-12 Months</option>
+                                                    </optgroup>
+                                                    <optgroup label="Long-Term">
+                                                        <option value="1-2 Years">1-2 Years</option>
+                                                        <option value="2+ Years">2+ Years</option>
+                                                    </optgroup>
                                                 </select>
                                             </div>
                                         </div>
@@ -1571,13 +1259,21 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         onToggle={() => toggleSubsection('market-target')}
                                         color="from-purple-50 to-purple-100"
                                     >
-                                        <div className="space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Target City / Region <span className="text-red-500">*</span></label>
                                                 <input type="text" value={params.userCity || ''} onChange={(e) => setParams({ ...params, userCity: e.target.value })} className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent ${isFieldInvalid('userCity') ? 'border-red-500' : 'border-stone-200'}`} placeholder="e.g., Silicon Valley, Singapore"/>
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-bold text-stone-700 mb-1">Analysis Timeframe <span className="text-red-500">*</span></label>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Target Market Size (TAM)</label>
+                                                <input type="text" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., $5B"/>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Market Growth Rate (CAGR)</label>
+                                                <input type="text" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 12%"/>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Analysis Timeframe</label>
                                                 <select value={params.analysisTimeframe} onChange={(e) => setParams({...params, analysisTimeframe: e.target.value})} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent">
                                                     <option value="1-Year">1-Year</option>
                                                     <option value="3-Year">3-Year</option>
@@ -2502,6 +2198,33 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
             )}
         </AnimatePresence>
 
+        {/* --- DOCUMENT GENERATION SUITE MODAL --- */}
+        <AnimatePresence>
+            {showDocGenSuite && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center"
+                    onClick={() => setShowDocGenSuite(false)}
+                >
+                    <motion.div
+                        initial={{ scale: 0.95, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0.95, y: 20, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="bg-stone-50 rounded-xl shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <DocumentGenerationSuite
+                            entityName={params.organizationName}
+                            targetMarket={params.userCity}
+                        />
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+
         {/* --- RIGHT PANEL: THE ARTIFACT (OUTPUT) --- */}
         <div className="flex-1 bg-stone-200 relative flex flex-col items-center overflow-hidden" style={{ flexBasis: '70%' }}>
             {/* Toolbar Header */}
@@ -2511,7 +2234,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                 </div>
                 <div className="flex gap-2 flex-wrap items-center">
                     <button className="px-4 py-2 bg-bw-navy text-white text-xs font-bold rounded shadow-lg hover:bg-stone-800 transition-all flex items-center gap-2">
-                        <Users size={14} />
+                        <MessageCircle size={14} />
                         BW Consultant
                     </button>
                     <button className="px-4 py-2 hover:bg-stone-100 rounded text-stone-600 text-xs font-bold flex items-center gap-2 border border-transparent hover:border-stone-200 transition-all" title="Print">
