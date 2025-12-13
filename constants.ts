@@ -30,6 +30,7 @@ export const INITIAL_PARAMETERS: ReportParameters = {
   strategicLens: [],
   specificOpportunity: '', 
   targetIncentives: [], 
+  partnerPersonas: [],
   
   // Execution
   relationshipStage: 'New',

@@ -192,20 +192,31 @@ const AdvancedStepExpansionSystem: React.FC = () => {
     const variation = variations.find(v => v.id === variationId);
     if (!variation) return;
 
-    // Merge variation data with current sections
-    setSections(sections.map(section => {
-      const variationFields = variation.customFields.filter(f => 
-        section.customFields.some(cf => cf.id === f.id)
-      );
-      
-      return {
-        ...section,
-        customFields: section.customFields.map(field => {
-          const varField = variationFields.find(vf => vf.id === field.id);
-          return varField ? { ...varField, overriddenFrom: section.baselineData[field.name] as string } : field;
-        })
-      };
-    }));
+    setSections(prevSections => {
+      const newSections = prevSections.map(section => {
+        const updatedCustomFields = section.customFields.map(field => {
+          const variationField = variation.customFields.find(vf => vf.id === field.id);
+          if (variationField) {
+            return {
+              ...variationField,
+              overriddenFrom: field.value.toString(), // Use the current field value
+            };
+          }
+          return field;
+        });
+
+        const updatedScoreOverrides = variation.scoreOverrides.filter(
+          (override) => override.sectionId === section.id
+        );
+
+        return {
+          ...section,
+          customFields: updatedCustomFields,
+          scoreOverrides: updatedScoreOverrides.length > 0 ? updatedScoreOverrides : section.scoreOverrides,
+        };
+      });
+      return newSections;
+    });
 
     setActiveVariation(variationId);
   };

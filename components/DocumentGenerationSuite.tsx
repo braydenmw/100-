@@ -3,7 +3,7 @@ import { FileText, Download, Mail, Copy, CheckCircle, AlertCircle, Clock, Dollar
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-type DocumentType = 'loi' | 'mou' | 'proposal' | 'executive-summary' | 'financial-model' | 'risk-assessment' | 'dossier' | 'comparison';
+type DocumentType = 'loi' | 'mou' | 'proposal' | 'executive-summary' | 'financial-model' | 'risk-assessment' | 'dossier' | 'comparison' | 'term-sheet' | 'investment-memo' | 'due-diligence-request' | 'business-intelligence-report' | 'partnership-analyzer' | 'stakeholder-analysis' | 'market-entry-strategy' | 'competitive-analysis' | 'operational-plan' | 'integration-plan';
 
 interface DocumentTemplate {
   id: DocumentType;
@@ -101,6 +101,86 @@ const DocumentGenerationSuite: React.FC<DocumentGenerationSuiteProps> = ({
       icon: <FileText className="w-6 h-6" />,
       category: 'Comparative',
       timeToGenerate: '< 3 min'
+    },
+    {
+      id: 'term-sheet',
+      title: 'Term Sheet',
+      description: 'Outline of key deal terms and conditions for negotiation',
+      icon: <FileText className="w-6 h-6" />,
+      category: 'Foundation',
+      timeToGenerate: '< 2 min'
+    },
+    {
+      id: 'investment-memo',
+      title: 'Investment Memo',
+      description: 'Justification for capital investment with risk-return analysis',
+      icon: <DollarSign className="w-6 h-6" />,
+      category: 'Strategic',
+      timeToGenerate: '< 4 min'
+    },
+    {
+      id: 'due-diligence-request',
+      title: 'Due Diligence Request',
+      description: 'Comprehensive information request list for background verification',
+      icon: <FileText className="w-6 h-6" />,
+      category: 'Analysis',
+      timeToGenerate: '< 3 min'
+    },
+    {
+      id: 'business-intelligence-report',
+      title: 'Business Intelligence Report',
+      description: 'Market intelligence analysis with competitive insights',
+      icon: <FileText className="w-6 h-6" />,
+      category: 'Analysis',
+      timeToGenerate: '< 5 min'
+    },
+    {
+      id: 'partnership-analyzer',
+      title: 'Partnership Analyzer',
+      description: 'Analysis of existing partnership performance and opportunities',
+      icon: <FileText className="w-6 h-6" />,
+      category: 'Analysis',
+      timeToGenerate: '< 4 min'
+    },
+    {
+      id: 'stakeholder-analysis',
+      title: 'Stakeholder Analysis',
+      description: 'Mapping of interests, influence, and engagement strategies',
+      icon: <FileText className="w-6 h-6" />,
+      category: 'Strategic',
+      timeToGenerate: '< 3 min'
+    },
+    {
+      id: 'market-entry-strategy',
+      title: 'Market Entry Strategy',
+      description: 'Regional expansion plan with phased implementation',
+      icon: <FileText className="w-6 h-6" />,
+      category: 'Strategic',
+      timeToGenerate: '< 5 min'
+    },
+    {
+      id: 'competitive-analysis',
+      title: 'Competitive Analysis',
+      description: 'Market position assessment and competitive advantage framework',
+      icon: <FileText className="w-6 h-6" />,
+      category: 'Analysis',
+      timeToGenerate: '< 4 min'
+    },
+    {
+      id: 'operational-plan',
+      title: 'Operational Plan',
+      description: 'Implementation roadmap with timelines and milestones',
+      icon: <FileText className="w-6 h-6" />,
+      category: 'Strategic',
+      timeToGenerate: '< 4 min'
+    },
+    {
+      id: 'integration-plan',
+      title: 'Integration Plan',
+      description: 'Post-merger integration strategy and execution framework',
+      icon: <FileText className="w-6 h-6" />,
+      category: 'Strategic',
+      timeToGenerate: '< 5 min'
     }
   ];
 
@@ -139,6 +219,36 @@ const DocumentGenerationSuite: React.FC<DocumentGenerationSuiteProps> = ({
         break;
       case 'comparison':
         content = generateComparison();
+        break;
+      case 'term-sheet':
+        content = generateTermSheet();
+        break;
+      case 'investment-memo':
+        content = generateInvestmentMemo();
+        break;
+      case 'due-diligence-request':
+        content = generateDueDiligenceRequest();
+        break;
+      case 'business-intelligence-report':
+        content = generateBusinessIntelligenceReport();
+        break;
+      case 'partnership-analyzer':
+        content = generatePartnershipAnalyzer();
+        break;
+      case 'stakeholder-analysis':
+        content = generateStakeholderAnalysis();
+        break;
+      case 'market-entry-strategy':
+        content = generateMarketEntryStrategy();
+        break;
+      case 'competitive-analysis':
+        content = generateCompetitiveAnalysis();
+        break;
+      case 'operational-plan':
+        content = generateOperationalPlan();
+        break;
+      case 'integration-plan':
+        content = generateIntegrationPlan();
         break;
     }
 
@@ -616,6 +726,716 @@ ${targetPartnerName} offers the optimal balance of:
 
 RECOMMENDATION: Proceed with ${targetPartnerName} as primary partner.
 Establish backup discussions with Alternative A (contingency planning).
+  `;
+
+  const generateTermSheet = () => `
+TERM SHEET
+
+${entityName} - ${targetPartnerName} Strategic Partnership
+
+Date: ${new Date().toLocaleDateString()}
+
+PARTIES:
+• ${entityName} ("Company A")
+• ${targetPartnerName} ("Company B")
+
+TRANSACTION OVERVIEW:
+Company A and Company B intend to form a strategic partnership for market entry and expansion in ${targetMarket}, with total committed capital of $${(dealValue / 1000000).toFixed(1)}M.
+
+KEY ECONOMIC TERMS:
+• Total Investment: $${(dealValue / 1000000).toFixed(1)}M
+• Equity Split: 60% Company A / 40% Company B
+• Profit Sharing: Pro-rata based on equity ownership
+• Dividend Policy: Annual distributions after debt service
+• Exit Rights: Tag-along/drag-along rights for majority shareholder
+
+GOVERNANCE:
+• Board Composition: 5 members (3 from Company A, 2 from Company B)
+• CEO: Appointed by Company A
+• CFO: Appointed by Company B
+• Decision Rights: Unanimous approval for investments >$1M
+• Reporting: Monthly financials, quarterly board meetings
+
+CONDITIONS PRECEDENT:
+• Satisfactory due diligence completion
+• Regulatory approvals obtained
+• Definitive agreements executed within 90 days
+• Financing commitments secured
+
+TIMELINE:
+• Due Diligence: 30 days
+• Definitive Agreements: 60 days
+• Closing: 90 days from term sheet execution
+
+This term sheet is non-binding and subject to definitive agreements.
+  `;
+
+  const generateInvestmentMemo = () => `
+INVESTMENT MEMO
+
+TO: Investment Committee
+FROM: Strategic Partnerships Team
+DATE: ${new Date().toLocaleDateString()}
+SUBJECT: Investment in ${targetPartnerName} Partnership - ${targetMarket} Market Entry
+
+EXECUTIVE SUMMARY:
+We recommend proceeding with a $${(dealValue / 1000000).toFixed(1)}M investment in a strategic partnership with ${targetPartnerName} for ${targetMarket} market entry. The opportunity presents a compelling risk-adjusted return profile with 38% IRR and 3.2x MOIC over 5 years.
+
+INVESTMENT THESIS:
+• Market Opportunity: $${(dealValue * 8 / 1000000).toFixed(0)}B addressable market with 12-15% CAGR
+• Competitive Advantage: First-mover positioning through ${targetPartnerName}'s established relationships
+• Value Creation: Revenue synergies of $${(dealValue * 0.25 / 1000000).toFixed(1)}M annually through cross-selling
+• Risk Mitigation: Diversified customer base and long-term contracts
+
+FINANCIAL PROJECTIONS:
+Year 1: Revenue $${(dealValue * 0.15 / 1000000).toFixed(1)}M, EBITDA -40%
+Year 2: Revenue $${(dealValue * 0.35 / 1000000).toFixed(1)}M, EBITDA 8%
+Year 3: Revenue $${(dealValue * 0.65 / 1000000).toFixed(1)}M, EBITDA 18%
+Year 5: Revenue $${(dealValue / 1000000).toFixed(1)}M, EBITDA 28%
+
+RETURN METRICS:
+• IRR: 38%
+• Payback Period: 30 months
+• Terminal Value: $${(dealValue * 4 / 1000000).toFixed(1)}M (8x EBITDA exit multiple)
+
+RISKS & MITIGATIONS:
+1. Regulatory Risk: Government relations team + 6-month buffer
+2. Market Adoption: Pilot program with pre-signed contracts
+3. Operational Integration: Experienced management team
+4. Currency Volatility: Hedging program
+
+RECOMMENDATION:
+APPROVE investment subject to due diligence completion and final term negotiation.
+
+REQUIRED APPROVALS:
+• Investment Committee: Required
+• Board of Directors: Required for investments >$25M
+• Legal/Compliance: Satisfactory due diligence
+  `;
+
+  const generateDueDiligenceRequest = () => `
+DUE DILIGENCE REQUEST LIST
+
+${entityName} Due Diligence Questionnaire for ${targetPartnerName}
+
+Date: ${new Date().toLocaleDateString()}
+
+CONFIDENTIAL - For Authorized Personnel Only
+
+LEGAL & CORPORATE:
+1. Certificate of Incorporation and bylaws
+2. Articles of Organization/Association
+3. List of directors, officers, and key management
+4. Ownership structure and shareholder agreements
+5. Recent annual reports and financial statements (3 years)
+6. Legal proceedings (past 5 years)
+7. Regulatory licenses and compliance certificates
+8. Intellectual property portfolio summary
+
+FINANCIAL:
+9. Audited financial statements (3 years)
+10. Tax returns (3 years)
+11. Debt schedule and financing agreements
+12. Accounts receivable aging
+13. Inventory valuation methods
+14. Fixed asset register
+15. Pension and benefit plan summaries
+16. Related party transaction disclosures
+
+OPERATIONAL:
+17. Organization chart
+18. Key customer contracts (top 10)
+19. Key supplier agreements
+20. Manufacturing/process flow diagrams
+21. Quality control procedures
+22. IT systems and data security policies
+23. Environmental compliance records
+24. Insurance coverage summary
+
+MARKET & COMPETITIVE:
+25. Market share data and analysis
+26. Competitive positioning analysis
+27. Customer concentration analysis
+28. SWOT analysis
+29. Growth strategy documents
+30. R&D pipeline summary
+
+Please provide all requested documents within 14 days of this request.
+Contact: [Your Name] - [Your Email] - [Your Phone]
+  `;
+
+  const generateBusinessIntelligenceReport = () => `
+BUSINESS INTELLIGENCE REPORT: ${targetMarket} MARKET ANALYSIS
+
+Prepared by: ${entityName} Intelligence Team
+Date: ${new Date().toLocaleDateString()}
+
+EXECUTIVE SUMMARY:
+This report provides comprehensive market intelligence on ${targetMarket}, supporting the strategic partnership evaluation with ${targetPartnerName}. The market represents a $${(dealValue * 8 / 1000000).toFixed(0)}B opportunity with favorable entry conditions.
+
+MARKET OVERVIEW:
+• Total Addressable Market (TAM): $${(dealValue * 8 / 1000000).toFixed(0)}B
+• Serviceable Addressable Market (SAM): $${(dealValue * 2 / 1000000).toFixed(1)}B
+• Compound Annual Growth Rate (CAGR): 12-15%
+• Key Growth Drivers: Urbanization, digital adoption, regulatory support
+
+COMPETITIVE LANDSCAPE:
+• Market Leaders: 3 major players controlling 60% market share
+• Mid-tier Competitors: 15-20 companies with 30% share
+• Emerging Players: 50+ small entities with 10% share
+• Barriers to Entry: Regulatory approval (6-12 months), capital requirements ($${dealValue / 1000000}M), talent availability
+
+CUSTOMER ANALYSIS:
+• Primary Segments: Enterprise clients (60%), mid-market (30%), SMB (10%)
+• Buying Behavior: Relationship-driven, long sales cycles (6-12 months)
+• Key Decision Criteria: Price (40%), quality (30%), service (20%), brand (10%)
+• Customer Concentration: Top 10 customers represent 45% of market revenue
+
+TECHNOLOGY TRENDS:
+• Digital Transformation: 70% of customers planning major IT investments
+• Cloud Adoption: Expected to reach 85% penetration by 2026
+• AI/ML Integration: Growing demand for intelligent solutions
+• Cybersecurity: Increasing focus on data protection and compliance
+
+REGULATORY ENVIRONMENT:
+• Key Regulations: Data protection laws, industry-specific licensing
+• Approval Timeline: 6-12 months for foreign investment
+• Compliance Requirements: Local content rules, employment quotas
+• Political Risk: Moderate, with stable government policies
+
+ENTRY STRATEGY RECOMMENDATIONS:
+1. Partner with established local entity (${targetPartnerName})
+2. Focus on high-growth segments with less competition
+3. Invest in local talent development and training
+4. Build relationships with key government stakeholders
+5. Develop phased market entry with pilot programs
+
+CONCLUSION:
+The ${targetMarket} market presents a strong investment opportunity with manageable risks. Partnership with ${targetPartnerName} provides optimal market access and competitive positioning.
+  `;
+
+  const generatePartnershipAnalyzer = () => `
+PARTNERSHIP PERFORMANCE ANALYSIS
+
+${entityName} - ${targetPartnerName} Partnership Review
+
+Date: ${new Date().toLocaleDateString()}
+
+PARTNERSHIP OVERVIEW:
+This analysis evaluates the existing partnership framework between ${entityName} and ${targetPartnerName} for ${targetMarket} market entry, assessing performance, synergies, and future opportunities.
+
+CURRENT PERFORMANCE METRICS:
+• Revenue Contribution: $${(dealValue * 0.15 / 1000000).toFixed(1)}M (Year 1 actual)
+• Market Share Achieved: 2.1% (target: 2-3%)
+• Customer Acquisition: 45 new clients (target: 50)
+• Operational Efficiency: 15% cost savings realized
+• Partnership Satisfaction: 8.5/10 (both parties)
+
+STRENGTHS:
+✓ Strong market access through ${targetPartnerName}'s network
+✓ Complementary technical capabilities
+✓ Shared risk appetite and growth objectives
+✓ Effective governance structure with quarterly reviews
+✓ Cultural alignment and communication
+
+AREAS FOR IMPROVEMENT:
+⚠ Customer onboarding process needs streamlining
+⚠ Technology integration behind schedule
+⚠ Profit sharing mechanism requires refinement
+⚠ Geographic expansion planning incomplete
+
+FINANCIAL ANALYSIS:
+• Investment Deployed: $${(dealValue * 0.35 / 1000000).toFixed(1)}M
+• Revenue Generated: $${(dealValue * 0.15 / 1000000).toFixed(1)}M
+• EBITDA Margin: -40% (as expected for investment phase)
+• ROI to Date: -25% (on track for 38% IRR target)
+• Cash Flow: Negative (funding ongoing expansion)
+
+STRATEGIC OPPORTUNITIES:
+1. Adjacent Market Expansion: Leverage existing infrastructure
+2. Product Line Extension: Cross-selling opportunities
+3. Technology Partnership: Joint R&D initiatives
+4. International Growth: Regional expansion planning
+
+RISKS & MITIGATIONS:
+• Partnership Dynamics: Regular alignment meetings
+• Market Changes: Flexible business model
+• Regulatory Shifts: Dedicated compliance team
+• Competitive Pressure: Continuous innovation
+
+RECOMMENDATIONS:
+1. Accelerate technology integration (target: 3 months)
+2. Expand customer acquisition team (additional 10 hires)
+3. Negotiate revised profit sharing terms
+4. Develop 5-year strategic roadmap
+5. Increase marketing investment by 20%
+
+OVERALL ASSESSMENT: STRONG FOUNDATION with clear path to value creation.
+  `;
+
+  const generateStakeholderAnalysis = () => `
+STAKEHOLDER ANALYSIS & ENGAGEMENT PLAN
+
+${entityName} - ${targetMarket} Partnership Initiative
+
+Date: ${new Date().toLocaleDateString()}
+
+STAKEHOLDER MAPPING:
+
+HIGH INFLUENCE / HIGH INTEREST:
+• ${targetPartnerName} Executive Team: Critical partner, direct involvement
+ - Interest: Mutual value creation, strategic alignment
+ - Influence: High (decision-making authority)
+ - Engagement: Weekly calls, monthly meetings
+
+• Government Regulators: Key approvals required
+ - Interest: Economic development, job creation
+ - Influence: High (licensing and compliance)
+ - Engagement: Quarterly briefings, policy advocacy
+
+• Key Customers: Revenue drivers
+ - Interest: Product quality, service reliability
+ - Influence: Medium (market validation)
+ - Engagement: Customer advisory board, satisfaction surveys
+
+HIGH INFLUENCE / LOW INTEREST:
+• Industry Associations: Regulatory influence
+ - Interest: Industry standards, advocacy
+ - Influence: High (policy recommendations)
+ - Engagement: Membership, conference participation
+
+• Local Banks: Financing partners
+ - Interest: Loan portfolio growth, relationship banking
+ - Influence: Medium-High (financing availability)
+ - Engagement: Credit committee presentations
+
+LOW INFLUENCE / HIGH INTEREST:
+• Local Community: Social license to operate
+ - Interest: Employment opportunities, community development
+ - Influence: Low-Medium (public opinion)
+ - Engagement: CSR programs, community outreach
+
+• Employees: Internal stakeholders
+ - Interest: Job security, career development
+ - Influence: Low (operational execution)
+ - Engagement: Town halls, internal communications
+
+ENGAGEMENT STRATEGY:
+1. Communication Plan: Monthly newsletters, quarterly town halls
+2. Influence Strategy: Build coalitions with key decision-makers
+3. Risk Mitigation: Monitor stakeholder sentiment regularly
+4. Value Creation: Ensure all stakeholders see clear benefits
+
+MONITORING & MEASUREMENT:
+• Stakeholder satisfaction surveys (quarterly)
+• Media monitoring and sentiment analysis
+• Regulatory compliance tracking
+• Partnership performance metrics
+
+CONCLUSION:
+Successful stakeholder management is critical for partnership success. Focus on high-influence stakeholders while maintaining positive relationships with all parties.
+  `;
+
+  const generateMarketEntryStrategy = () => `
+MARKET ENTRY STRATEGY: ${targetMarket}
+
+${entityName} Expansion Plan
+
+Date: ${new Date().toLocaleDateString()}
+
+EXECUTIVE SUMMARY:
+This strategy outlines a comprehensive approach for ${entityName} to enter ${targetMarket} through partnership with ${targetPartnerName}. The plan focuses on sustainable growth, risk mitigation, and value creation over a 5-year horizon.
+
+MARKET ASSESSMENT:
+• Market Size: $${(dealValue * 8 / 1000000).toFixed(0)}B TAM
+• Growth Rate: 12-15% CAGR
+• Competitive Intensity: Moderate (consolidation opportunity)
+• Entry Barriers: Regulatory (6-12 months), capital ($${dealValue / 1000000}M), relationships
+
+STRATEGIC OBJECTIVES:
+1. Achieve 2-3% market share within 5 years
+2. Establish profitable operations by Year 3
+3. Build sustainable competitive advantages
+4. Create platform for regional expansion
+
+ENTRY APPROACH: STRATEGIC PARTNERSHIP
+• Partner: ${targetPartnerName} (market leader in distribution)
+• Investment: $${(dealValue / 1000000).toFixed(1)}M total capital
+• Ownership: 60% ${entityName} / 40% ${targetPartnerName}
+• Governance: Joint steering committee
+
+PHASED IMPLEMENTATION:
+
+PHASE 1: FOUNDATION (Months 1-6)
+• Legal entity formation and regulatory approvals
+• Core team recruitment (20-25 local hires)
+• Office establishment and infrastructure setup
+• Partnership agreement finalization
+• Initial market research and customer identification
+
+PHASE 2: MARKET PENETRATION (Months 7-18)
+• Product localization and customization
+• Pilot customer acquisition (5-10 anchor clients)
+• Sales and marketing team expansion
+• Operational processes implementation
+• Performance monitoring systems deployment
+
+PHASE 3: SCALE & OPTIMIZE (Months 19-36)
+• Full market launch across all segments
+• Revenue growth acceleration
+• Cost optimization and efficiency improvements
+• Additional market segment expansion
+• Profitability target achievement
+
+PHASE 4: LEADERSHIP & EXPANSION (Months 37-60)
+• Market leadership position consolidation
+• Regional expansion planning
+• New product development
+• Strategic acquisitions evaluation
+• IPO or exit preparation
+
+RISK MANAGEMENT:
+• Regulatory: Dedicated government relations team
+• Market: Pilot program with guaranteed contracts
+• Operational: Experienced local management
+• Financial: Conservative cash flow projections
+
+SUCCESS METRICS:
+• Year 1: Market presence established, first revenues
+• Year 2: Break-even achieved, customer base of 50
+• Year 3: Profitable operations, 1% market share
+• Year 5: 2-3% market share, industry leadership position
+
+RESOURCE REQUIREMENTS:
+• Capital: $${(dealValue / 1000000).toFixed(1)}M investment
+• Personnel: 75-100 full-time employees
+• Technology: ERP, CRM, and industry-specific software
+• Facilities: Office space, warehouse, showroom
+
+CONCLUSION:
+This market entry strategy provides a structured path to success in ${targetMarket} with manageable risks and attractive financial returns. The partnership with ${targetPartnerName} is critical to execution success.
+  `;
+
+  const generateCompetitiveAnalysis = () => `
+COMPETITIVE ANALYSIS: ${targetMarket} MARKET
+
+${entityName} Competitive Positioning Assessment
+
+Date: ${new Date().toLocaleDateString()}
+
+MARKET STRUCTURE:
+The ${targetMarket} market is moderately concentrated with clear opportunities for new entrants. Current landscape features 3 major players controlling 60% market share, 15-20 mid-tier competitors holding 30%, and 50+ small/emerging players with the remaining 10%.
+
+KEY COMPETITORS:
+
+MAJOR PLAYERS:
+1. Market Leader Inc.
+  - Market Share: 35%
+  - Strengths: Brand recognition, distribution network, financial resources
+  - Weaknesses: High cost structure, slow innovation
+  - Strategy: Market dominance through scale
+
+2. TechCorp Solutions
+  - Market Share: 15%
+  - Strengths: Technology leadership, R&D investment
+  - Weaknesses: Limited distribution, regional focus
+  - Strategy: Innovation-driven growth
+
+3. Global Enterprises
+  - Market Share: 10%
+  - Strengths: International presence, diversified portfolio
+  - Weaknesses: Complex organization, integration challenges
+  - Strategy: Global expansion
+
+MID-TIER COMPETITORS:
+• Regional Player A: Strong local relationships, limited scalability
+• Regional Player B: Cost leadership, quality concerns
+• Regional Player C: Niche focus, growth potential
+
+COMPETITIVE ADVANTAGES:
+Through partnership with ${targetPartnerName}, ${entityName} can leverage:
+
+1. MARKET ACCESS: Established distribution channels and customer relationships
+2. TECHNOLOGICAL EDGE: Superior product capabilities and innovation pipeline
+3. FINANCIAL STRENGTH: Deep capital resources for investment and marketing
+4. GLOBAL EXPERTISE: Best practices from international operations
+5. SPEED TO MARKET: Accelerated entry through partnership
+
+THREAT ANALYSIS:
+• New Entrants: Moderate barrier (regulatory, capital requirements)
+• Substitute Products: Low threat (limited alternatives available)
+• Supplier Power: Medium (key component availability)
+• Buyer Power: High (price-sensitive customers, consolidation)
+• Competitive Rivalry: High (price competition, feature differentiation)
+
+STRATEGIC POSITIONING:
+${entityName} should position as:
+• Quality Leader: Premium pricing, superior service
+• Innovation Driver: Technology differentiation
+• Partnership Expert: Ecosystem approach to value creation
+
+COMPETITIVE RESPONSE STRATEGIES:
+1. Monitor competitor pricing and promotions
+2. Accelerate product development cycles
+3. Build customer loyalty programs
+4. Invest in marketing and brand awareness
+5. Develop strategic partnerships and alliances
+
+MARKET OPPORTUNITIES:
+• Consolidation: Acquire smaller competitors for market share
+• Niche Markets: Target underserved segments
+• Technology Gaps: Address customer pain points with innovation
+• Geographic Expansion: Follow customer migration patterns
+
+CONCLUSION:
+The competitive landscape presents both challenges and opportunities. Through strategic partnership and focused execution, ${entityName} can establish a strong market position and drive sustainable growth.
+  `;
+
+  const generateOperationalPlan = () => `
+OPERATIONAL PLAN: ${targetMarket} PARTNERSHIP
+
+${entityName} Implementation Roadmap
+
+Date: ${new Date().toLocaleDateString()}
+
+EXECUTIVE SUMMARY:
+This operational plan outlines the implementation framework for ${entityName}'s partnership with ${targetPartnerName} in ${targetMarket}. The plan covers organizational structure, processes, systems, and execution timelines for successful market entry.
+
+ORGANIZATIONAL STRUCTURE:
+
+LEADERSHIP TEAM:
+• CEO: Overall responsibility and strategic direction
+• COO: Operations management and execution
+• CFO: Financial management and investor relations
+• Chief Commercial Officer: Sales and marketing leadership
+• Chief Technology Officer: Technology and product development
+
+DEPARTMENTAL STRUCTURE:
+• Sales & Marketing: 15-20 personnel
+• Operations & Customer Service: 20-25 personnel
+• Finance & Administration: 8-10 personnel
+• Technology & IT: 5-8 personnel
+• Human Resources: 3-5 personnel
+
+LOCAL MANAGEMENT:
+• Country Manager: Overall P&L responsibility
+• Sales Director: Revenue generation and customer management
+• Operations Manager: Day-to-day execution
+• Finance Manager: Local financial management
+
+IMPLEMENTATION PHASES:
+
+PHASE 1: SETUP & PLANNING (Days 1-90)
+Objectives: Establish foundation for operations
+• Legal entity registration and regulatory approvals
+• Office space acquisition and fit-out
+• Core team recruitment and onboarding
+• IT infrastructure deployment
+• Banking relationships establishment
+• Initial market research completion
+
+PHASE 2: PILOT OPERATIONS (Days 91-180)
+Objectives: Test systems and processes
+• Pilot customer acquisition (5-10 clients)
+• Product/service customization and testing
+• Sales process implementation
+• Customer service setup
+• Quality assurance procedures
+• Performance metrics establishment
+
+PHASE 3: FULL OPERATIONS (Days 181-365)
+Objectives: Scale to full market presence
+• Full sales team deployment
+• Marketing campaign launch
+• Customer base expansion to 50+ clients
+• Operational process optimization
+• Staff expansion to full complement
+• Profitability target achievement
+
+KEY PROCESSES:
+
+SALES PROCESS:
+1. Lead Generation: Marketing campaigns, partner referrals
+2. Qualification: Needs assessment and budget evaluation
+3. Proposal: Customized solution development
+4. Negotiation: Terms and pricing agreement
+5. Closing: Contract execution and onboarding
+6. Post-Sale: Implementation and support
+
+CUSTOMER SERVICE PROCESS:
+1. Inquiry Handling: Multi-channel support
+2. Issue Resolution: Technical and operational support
+3. Account Management: Relationship development
+4. Upselling: Additional product opportunities
+5. Feedback Collection: Satisfaction monitoring
+
+OPERATIONAL PROCESSES:
+1. Order Processing: From quote to delivery
+2. Inventory Management: Stock control and replenishment
+3. Quality Control: Product and service standards
+4. Financial Management: Budgeting and reporting
+5. Compliance: Regulatory and legal requirements
+
+TECHNOLOGY SYSTEMS:
+• ERP System: SAP or equivalent for core operations
+• CRM System: Salesforce for customer management
+• Financial Software: QuickBooks/Oracle for accounting
+• Communication Tools: Microsoft Teams/Slack
+• Project Management: Asana/Jira for task tracking
+
+PERFORMANCE METRICS:
+• Revenue Growth: Monthly targets and actuals
+• Customer Acquisition: Number of new clients
+• Customer Satisfaction: NPS scores and feedback
+• Operational Efficiency: Cost per transaction, processing time
+• Employee Productivity: Revenue per employee
+• Quality Metrics: Defect rates, compliance scores
+
+RISK MANAGEMENT:
+• Operational Risks: Business continuity planning
+• Financial Risks: Cash flow monitoring, budget controls
+• Compliance Risks: Regular audits and training
+• People Risks: Succession planning, retention programs
+
+SUCCESS FACTORS:
+1. Strong local leadership team
+2. Effective partnership with ${targetPartnerName}
+3. Robust operational processes
+4. Technology enablement
+5. Continuous improvement culture
+
+CONCLUSION:
+This operational plan provides a comprehensive framework for successful implementation. Regular monitoring and adaptation will be essential for achieving operational excellence.
+  `;
+
+  const generateIntegrationPlan = () => `
+INTEGRATION PLAN: ${entityName} - ${targetPartnerName} PARTNERSHIP
+
+Post-Merger Integration Strategy
+
+Date: ${new Date().toLocaleDateString()}
+
+EXECUTIVE SUMMARY:
+This integration plan outlines the framework for combining ${entityName} and ${targetPartnerName} operations in ${targetMarket}. The plan focuses on creating operational synergies, cultural alignment, and value creation while minimizing disruption and risk.
+
+INTEGRATION OBJECTIVES:
+1. Achieve operational synergies within 12 months
+2. Realize cost savings of 15-20% through efficiency gains
+3. Maintain customer service levels throughout transition
+4. Create unified organizational culture
+5. Meet financial targets and investor expectations
+
+INTEGRATION APPROACH:
+The integration will follow a phased approach with clear milestones, accountability, and communication. Key principles include speed, transparency, and employee engagement.
+
+PHASED INTEGRATION PLAN:
+
+PHASE 1: PLANNING & DESIGN (Days 1-30)
+• Integration team formation and charter
+• Current state assessment and gap analysis
+• Target operating model design
+• Integration roadmap development
+• Communication plan creation
+• Risk assessment and mitigation planning
+
+PHASE 2: FOUNDATION BUILDING (Days 31-90)
+• Legal entity integration completion
+• Leadership team alignment and decisions
+• Core team identification and retention
+• IT systems integration planning
+• Financial systems consolidation
+• Brand and messaging alignment
+
+PHASE 3: OPERATIONAL INTEGRATION (Days 91-180)
+• Sales and marketing function integration
+• Operations and supply chain combination
+• Customer service transition
+• Technology platform migration
+• Financial reporting unification
+• HR policies and systems harmonization
+
+PHASE 4: OPTIMIZATION & SCALE (Days 181-365)
+• Process standardization and optimization
+• Performance management implementation
+• Cultural integration initiatives
+• Growth initiatives launch
+• Continuous improvement programs
+• Full synergy realization
+
+WORKSTREAM STRUCTURE:
+
+FINANCIAL INTEGRATION:
+• Systems consolidation (ERP, accounting)
+• Reporting standardization
+• Treasury and cash management
+• Tax optimization
+• Budgeting and forecasting alignment
+
+OPERATIONAL INTEGRATION:
+• Supply chain optimization
+• Manufacturing/process harmonization
+• Quality systems integration
+• Inventory management
+• Procurement centralization
+
+COMMERCIAL INTEGRATION:
+• Sales force integration
+• Customer relationship management
+• Marketing strategy alignment
+• Pricing and product strategy
+• Channel management
+
+TECHNOLOGY INTEGRATION:
+• IT infrastructure consolidation
+• Application portfolio rationalization
+• Data migration and integration
+• Cybersecurity framework
+• Digital transformation initiatives
+
+HUMAN RESOURCES INTEGRATION:
+• Organizational design
+• Compensation and benefits harmonization
+• Performance management systems
+• Training and development programs
+• Cultural integration initiatives
+
+CHANGE MANAGEMENT:
+• Communication strategy
+• Employee engagement programs
+• Training and support programs
+• Resistance management
+• Leadership alignment
+
+SUCCESS METRICS:
+• Financial: Cost synergy achievement, revenue growth
+• Operational: Process efficiency, quality metrics
+• Customer: Satisfaction scores, retention rates
+• Employee: Engagement surveys, retention rates
+• Integration: Milestone achievement, timeline adherence
+
+RISK MANAGEMENT:
+• Operational disruption mitigation
+• Customer retention strategies
+• Employee retention and engagement
+• Regulatory compliance
+• Financial performance protection
+
+GOVERNANCE STRUCTURE:
+• Integration Management Office (IMO)
+• Executive Steering Committee
+• Workstream leads and teams
+• Regular progress reporting
+• Issue escalation procedures
+
+COMMUNICATION PLAN:
+• Employee town halls and updates
+• Customer notifications and reassurances
+• Stakeholder briefings
+• Media and public communications
+• Internal newsletter and intranet
+
+CONCLUSION:
+Successful integration requires careful planning, strong leadership, and consistent execution. This plan provides the framework for creating a combined entity greater than the sum of its parts.
   `;
 
   const exportDocument = async () => {

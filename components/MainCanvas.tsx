@@ -76,6 +76,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
   const [isDraftFinalized, setIsDraftFinalized] = useState(false);
   const [showFinalizationModal, setShowFinalizationModal] = useState(false);
   const [selectedFinalReports, setSelectedFinalReports] = useState<string[]>([]);
+  const [partnerPersonas, setPartnerPersonas] = useState<string[]>([]);
   const [generatedDocs, setGeneratedDocs] = useState<{id: string, title: string, desc: string, timestamp: Date}[]>([]);
   const [selectedIntelligenceEnhancements, setSelectedIntelligenceEnhancements] = useState<string[]>([]);
 
@@ -95,6 +96,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
     identity: ['organizationName', 'organizationType', 'country'],
     mandate: ['strategicIntent', 'problemStatement'],
     market: ['userCity'],
+    'partner-personas': ['partnerPersonas'],
     risk: ['riskTolerance'],
   };
 
@@ -385,8 +387,9 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                             {id: 'identity', label: '01. Identity', description: "Define your organization's profile", icon: Building2, color: 'text-blue-600'},
                             {id: 'mandate', label: '02. Mandate', description: 'Outline partnership objectives', icon: Target, color: 'text-green-600'},
                             {id: 'market', label: '03. Market', description: 'Analyze the target market', icon: Globe, color: 'text-purple-600'},
-                            {id: 'risk', label: '04. Risk', description: 'Assess risks & mitigation', icon: Shield, color: 'text-red-600'},
-                            {id: 'generation', label: '05. Generation', description: 'Generate the final report', icon: FileText, color: 'text-orange-600'},
+                            {id: 'partner-personas', label: '04. Personas', description: 'Define partner personas', icon: Users, color: 'text-yellow-600'},
+                            {id: 'risk', label: '05. Risk', description: 'Assess risks & mitigation', icon: Shield, color: 'text-red-600'},
+                            {id: 'generation', label: '06. Generation', description: 'Generate the final report', icon: FileText, color: 'text-orange-600'},
                         ].map(section => (
                             <button
                                 key={section.id}
@@ -1198,46 +1201,24 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                         value={params.country}
                                                         onChange={(e) => setParams({ ...params, country: e.target.value })}
                                                         className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent ${isFieldInvalid('country') ? 'border-red-500' : 'border-stone-200'}`}
-                                                        placeholder="Enter country"
+                                                        placeholder="e.g., USA, Singapore"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Tax Jurisdiction</label>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Operating Regions</label>
                                                     <input
                                                         type="text"
-                                                        value={params.region}
-                                                        onChange={(e) => setParams({ ...params, region: e.target.value })}
+                                                        value={params.regions}
+                                                        onChange={(e) => setParams({ ...params, regions: e.target.value })}
                                                         className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent"
-                                                        placeholder="Enter tax jurisdiction"
-                                                    />
-                                                </div>
-                                                <div className="md:col-span-2">
-                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Street Address</label>
-                                                    <input type="text" className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent" placeholder="e.g., 123 Innovation Drive"/>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-bold text-stone-700 mb-1">City</label>
-                                                    <input type="text" value={params.userCity || ''} onChange={(e) => setParams({ ...params, userCity: e.target.value })} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent" placeholder="e.g., Metropolis"/>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-bold text-stone-700 mb-1">State / Province</label>
-                                                    <input type="text" className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent" placeholder="e.g., California"/>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Postal Code</label>
-                                                    <input type="text" className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent" placeholder="e.g., 90210"/>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Website</label>
-                                                    <input
-                                                        type="url"
-                                                        className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent"
-                                                        placeholder="https://example.com"
+                                                        placeholder="e.g., North America, Southeast Asia"
                                                     />
                                                 </div>
                                             </div>
                                         </div>
                                     </CollapsibleSection>
+
+
                                     <CollapsibleSection
                                         title="1.2 Capability Assessment"
                                         description="Evaluate organizational capabilities, resources, and competencies"
@@ -1517,20 +1498,70 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Expansion Timeline</label>
                                                 <select value={params.expansionTimeline} onChange={(e) => setParams({...params, expansionTimeline: e.target.value})} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent">
                                                     <option value="">Select timeline...</option>
-                                                    <option value="0-6 Months">0-6 Months</option>
-                                                    <option value="6-12 Months">6-12 Months</option>
-                                                    <option value="1-2 Years">1-2 Years</option>
-                                                    <option value="2+ Years">2+ Years</option>
+                                                    <option value="<6 months">&lt;6 months</option>
+                                                    <option value="6-12 months">6-12 months</option>
+                                                    <option value="12-24 months">12-24 months</option>
+                                                    <option value="24+ months">24+ months</option>
                                                 </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold text-stone-700 mb-1">Operational Priority</label>
-                                                <input type="text" value={params.operationalPriority} onChange={(e) => setParams({...params, operationalPriority: e.target.value})} className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., Speed to market, Cost efficiency"/>
                                             </div>
                                         </div>
                                     </CollapsibleSection>
                                 </div>
                             )}
+                            {activeModal === 'partner-personas' && (
+    <div className="space-y-4">
+        <CollapsibleSection
+            title="4.1 Persona Definition"
+            description="Define the key characteristics of your ideal partner personas."
+            isExpanded={!!expandedSubsections['partner-personas-definition']}
+            onToggle={() => toggleSubsection('partner-personas-definition')}
+            color="from-yellow-50 to-yellow-100"
+        >
+            <div className="space-y-3">
+                <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1">Partner Personas <span className="text-red-500">*</span></label>
+                    <div className="space-y-2">
+                        {params.partnerPersonas?.map((persona, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    value={persona}
+                                    onChange={(e) => {
+                                        const newPersonas = [...(params.partnerPersonas || [])];
+                                        newPersonas[index] = e.target.value;
+                                        setParams({ ...params, partnerPersonas: newPersonas });
+                                    }}
+                                    className="w-full p-2 border rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent"
+                                    placeholder={`Persona ${index + 1}`}
+                                />
+                                <button
+                                    onClick={() => {
+                                        const newPersonas = [...(params.partnerPersonas || [])];
+                                        newPersonas.splice(index, 1);
+                                        setParams({ ...params, partnerPersonas: newPersonas });
+                                    }}
+                                    className="p-2 rounded-full hover:bg-stone-100"
+                                >
+                                    <X size={16} className="text-stone-500" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                    <button
+                        onClick={() => {
+                            const newPersonas = [...(params.partnerPersonas || []), ''];
+                            setParams({ ...params, partnerPersonas: newPersonas });
+                        }}
+                        className="mt-2 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2"
+                    >
+                        <Plus size={14} />
+                        Add Persona
+                    </button>
+                </div>
+            </div>
+        </CollapsibleSection>
+    </div>
+)}
                             {activeModal === 'market' && (
                                 <div className="space-y-4">
                                     <CollapsibleSection
@@ -1591,6 +1622,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                             </div>
                                         </div>
                                     </CollapsibleSection>
+
                                     <CollapsibleSection
                                         title="3.4 Regulatory & Economic Factors"
                                         description="Detail the legal, compliance, and financial environment"
@@ -2553,6 +2585,22 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                 </>
                             ) : (
                                 <p className="text-sm text-stone-400 italic">Awaiting strategic mandate...</p>
+                            )}
+                        </div>
+
+                        {/* Partner Personas Section */}
+                        <div className="mb-12">
+                            <h2 className="text-[10px] font-sans font-bold text-stone-400 uppercase tracking-widest mb-4 border-b border-stone-100 pb-2">03. Partner Personas</h2>
+                            {params.partnerPersonas && params.partnerPersonas.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {params.partnerPersonas.map((persona, index) => (
+                                        <div key={index} className="p-4 border border-stone-200 rounded-lg bg-stone-50">
+                                            <div className="font-bold text-sm text-stone-800">{persona}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-stone-400 italic">Awaiting partner personas...</p>
                             )}
                         </div>
 

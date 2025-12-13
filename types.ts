@@ -149,7 +149,8 @@ export interface ReportParameters {
   successMetrics?: string[];
   specificOpportunity?: string; // Granular opportunity selection
   targetIncentives?: string[]; // Incentives sought
-  
+  partnerPersonas?: string[];
+
   // Execution & Operations
   relationshipStage: string;
   dueDiligenceDepth: string;

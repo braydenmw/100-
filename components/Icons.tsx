@@ -21,6 +21,8 @@ import {
     Download,
     BrainCircuit
 } from 'lucide-react';
+import { FaBalanceScale, FaChartLine, FaClipboardList, FaFileSignature, FaFlask, FaGlobe, FaHandshake, FaLandmark, FaLightbulb, FaListAlt, FaMoneyBillWave, FaRegChartBar, FaSearch, FaShieldAlt, FaSitemap, FaUserFriends } from 'react-icons/fa';
+import { FiUsers } from 'react-icons/fi';
 
 export const GlobeIcon = Globe;
 export const ShieldCheckIcon = ShieldCheck;

@@ -25,7 +25,7 @@ export const LetterGeneratorModal: React.FC<LetterGeneratorModalProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState('');
-  const [letterType, setLetterType] = useState<'formal' | 'precedent_based' | 'strategic' | 'investment'>('strategic');
+  const [letterType, setLetterType] = useState<'formal' | 'precedent_based' | 'strategic' | 'investment' | 'term_sheet' | 'formal_proposal' | 'investment_memo' | 'due_diligence_request' | 'joint_venture_agreement' | 'non_disclosure_agreement' | 'licensing_agreement'>('strategic');
 
   const generatePrecedentBasedLetter = useCallback((): string => {
     const precedents = PrecedentMatchingEngine.findMatches(reportParameters as ReportParameters, 0.65);
@@ -122,7 +122,340 @@ ${orgName}
 [Your Title]
 [Your Contact Information]
 `;
-  };
+};
+
+const generateStrategicLetter = (): string => {
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const orgName = reportParameters.organizationName || 'Our Organization';
+  const country = reportParameters.country || 'your target market';
+
+  return `
+${today}
+
+To: Government Investment Board / Economic Development Authority
+Re: STRATEGIC INVESTMENT OPPORTUNITY - ${orgName.toUpperCase()} MARKET ENTRY
+
+Dear [Minister/Secretary/Director],
+
+${orgName} is pleased to present a strategic investment proposal that aligns with ${country}'s economic development objectives and creates substantial value for all stakeholders.
+
+INVESTMENT OVERVIEW:
+• Total Investment: $${reportParameters.calibration?.constraints?.budgetCap || 'TBD'}M
+• Job Creation: ${reportParameters.expansionTimeline ? Math.floor(parseInt(reportParameters.expansionTimeline) * 50) : '500+'} direct and indirect positions
+• Technology Transfer: Advanced capabilities in ${reportParameters.strategicIntent || 'key industries'}
+• Economic Impact: $${(parseFloat(reportParameters.calibration?.constraints?.budgetCap || '100') * 3).toFixed(1)}M in economic multiplier effects
+
+STRATEGIC ALIGNMENT:
+Our investment supports ${country}'s priorities in:
+1. Economic diversification and growth
+2. Technology adoption and innovation
+3. Skills development and employment
+4. International partnership development
+
+We seek to establish a dialogue regarding the specific incentives and support frameworks that would optimize this investment's success.
+
+Sincerely,
+
+[Your Name]
+${orgName}
+[Your Title]
+[Contact Information]
+`;
+};
+
+const generateInvestmentLetter = (): string => {
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const orgName = reportParameters.organizationName || 'Our Organization';
+  const country = reportParameters.country || 'your target market';
+
+  return `
+${today}
+
+To: Investment Committee
+Re: APPROVAL REQUEST - ${country} Market Entry Investment
+
+Dear Committee Members,
+
+We recommend approval of a $${reportParameters.calibration?.constraints?.budgetCap || 'TBD'}M investment in ${country} through partnership with ${reportParameters.targetCounterpartType || 'local partner'}.
+
+INVESTMENT RATIONALE:
+• Market Opportunity: $${(parseFloat(reportParameters.calibration?.constraints?.budgetCap || '100') * 80).toFixed(0)}B addressable market
+• Competitive Advantage: First-mover positioning with established partner
+• Financial Returns: 35-40% IRR with 3.2x MOIC
+• Strategic Fit: Aligns with our expansion objectives
+
+RISK ASSESSMENT:
+• Regulatory Risk: Mitigated through government relations
+• Market Risk: Addressed via pilot program
+• Operational Risk: Managed with experienced team
+• Overall Risk Rating: Medium (acceptable for returns)
+
+RECOMMENDATION: APPROVE investment subject to due diligence completion.
+
+Best regards,
+
+[Your Name]
+Chief Investment Officer
+${orgName}
+`;
+};
+
+const generateTermSheetLetter = (): string => {
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const orgName = reportParameters.organizationName || 'Our Organization';
+
+  return `
+${today}
+
+To: ${reportParameters.targetCounterpartType || 'Partner'} Legal Counsel
+Re: TERM SHEET - ${orgName} Strategic Partnership
+
+Dear Counsel,
+
+Enclosed is the proposed term sheet for our strategic partnership. This document outlines the key economic and governance terms for the $${reportParameters.calibration?.constraints?.budgetCap || 'TBD'}M investment.
+
+KEY TERMS SUMMARY:
+• Investment Amount: $${reportParameters.calibration?.constraints?.budgetCap || 'TBD'}M
+• Equity Structure: 60/40 ownership split
+• Governance: Joint steering committee
+• Timeline: 90 days to definitive agreements
+
+We request your review and feedback within 14 days to proceed with detailed negotiations.
+
+Sincerely,
+
+[Your Name]
+${orgName}
+[Your Title]
+[Contact Information]
+`;
+};
+
+const generateFormalProposalLetter = (): string => {
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const orgName = reportParameters.organizationName || 'Our Organization';
+  const country = reportParameters.country || 'your target market';
+
+  return `
+${today}
+
+To: ${reportParameters.targetCounterpartType || 'Potential Partner'}
+Re: FORMAL PARTNERSHIP PROPOSAL - ${country} Market Entry
+
+Dear [Contact Name],
+
+Following our initial discussions, ${orgName} is pleased to submit this formal proposal for strategic partnership in ${country}.
+
+PROPOSAL OVERVIEW:
+• Partnership Structure: Joint venture with $${reportParameters.calibration?.constraints?.budgetCap || 'TBD'}M investment
+• Strategic Objectives: Market expansion and technology transfer
+• Value Creation: Revenue synergies and shared growth opportunities
+• Timeline: ${reportParameters.expansionTimeline || '18-24 months'} to profitability
+
+We believe this partnership represents a mutually beneficial opportunity and look forward to your detailed review and response.
+
+Best regards,
+
+[Your Name]
+${orgName}
+[Your Title]
+[Contact Information]
+`;
+};
+
+const generateInvestmentMemoLetter = (): string => {
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const orgName = reportParameters.organizationName || 'Our Organization';
+  const country = reportParameters.country || 'your target market';
+
+  return `
+${today}
+
+MEMORANDUM
+
+TO: Executive Committee
+FROM: Investment Team
+SUBJECT: Investment Opportunity - ${country} Market Entry
+
+EXECUTIVE SUMMARY:
+${orgName} has identified a compelling investment opportunity in ${country} with projected returns of 35-40% IRR.
+
+MARKET ANALYSIS:
+• Market Size: $${(parseFloat(reportParameters.calibration?.constraints?.budgetCap || '100') * 80).toFixed(0)}B
+• Growth Rate: 12-15% CAGR
+• Competitive Position: First-mover advantage available
+
+INVESTMENT PROPOSAL:
+• Amount: $${reportParameters.calibration?.constraints?.budgetCap || 'TBD'}M
+• Structure: Partnership with local entity
+• Timeline: ${reportParameters.expansionTimeline || '24 months'} to positive cash flow
+• Risk Rating: Medium
+
+RECOMMENDATION: Proceed with due diligence and partner negotiations.
+
+APPROVAL REQUIRED: Executive Committee approval for investments >$25M.
+`;
+};
+
+const generateDueDiligenceRequestLetter = (): string => {
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const orgName = reportParameters.organizationName || 'Our Organization';
+
+  return `
+${today}
+
+To: ${reportParameters.targetCounterpartType || 'Partner'} Management
+Re: DUE DILIGENCE INFORMATION REQUEST
+
+Dear [Contact Name],
+
+As we progress toward definitive agreements for our strategic partnership, we require the following information for our due diligence process:
+
+FINANCIAL INFORMATION:
+• Audited financial statements (past 3 years)
+• Tax returns and compliance records
+• Debt schedule and financing agreements
+• Key customer and supplier contracts
+
+LEGAL INFORMATION:
+• Certificate of incorporation and bylaws
+• List of shareholders and ownership structure
+• Pending litigation or regulatory issues
+• Intellectual property portfolio
+
+OPERATIONAL INFORMATION:
+• Organization chart and key personnel
+• Operational processes and procedures
+• Technology systems and capabilities
+• Risk management policies
+
+Please provide this information within 14 business days. Our legal counsel will review all materials and maintain confidentiality.
+
+Sincerely,
+
+[Your Name]
+${orgName}
+[Your Title]
+[Contact Information]
+`;
+};
+
+const generateJointVentureAgreementLetter = (): string => {
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const orgName = reportParameters.organizationName || 'Our Organization';
+
+  return `
+${today}
+
+To: ${reportParameters.targetCounterpartType || 'Partner'} Board of Directors
+Re: JOINT VENTURE AGREEMENT - ${orgName} Partnership
+
+Dear Board Members,
+
+We are pleased to propose the formation of a joint venture between ${orgName} and ${reportParameters.targetCounterpartType || 'your organization'} for ${reportParameters.country || 'market'} expansion.
+
+JV STRUCTURE:
+• Legal Entity: New company with 60/40 ownership split
+• Capital Contribution: $${reportParameters.calibration?.constraints?.budgetCap || 'TBD'}M total investment
+• Management: Joint board with equal representation
+• Profit Distribution: Pro-rata based on ownership
+
+GOVERNANCE:
+• Board of Directors: 6 members (3 from each party)
+• CEO: Appointed by majority owner
+• Key Decisions: Unanimous approval for strategic matters
+
+SCOPE OF OPERATIONS:
+• Geographic Focus: ${reportParameters.country || 'Target market'}
+• Business Activities: ${reportParameters.strategicIntent || 'Market expansion and growth'}
+• Duration: 10 years with renewal options
+
+We believe this joint venture will create significant value for both organizations and look forward to your consideration.
+
+Sincerely,
+
+[Your Name]
+${orgName}
+[Your Title]
+[Contact Information]
+`;
+};
+
+const generateNonDisclosureAgreementLetter = (): string => {
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const orgName = reportParameters.organizationName || 'Our Organization';
+
+  return `
+${today}
+
+To: ${reportParameters.targetCounterpartType || 'Partner'} Legal Department
+Re: NON-DISCLOSURE AGREEMENT
+
+Dear Legal Counsel,
+
+To facilitate discussions regarding our potential strategic partnership, we propose entering into a mutual non-disclosure agreement.
+
+AGREEMENT SCOPE:
+• Confidential Information: All proprietary business, technical, and financial information
+• Term: 3 years from execution
+• Permitted Use: Evaluation of partnership opportunities only
+• Return/Destruction: Upon termination or completion of discussions
+
+STANDARD PROVISIONS:
+• Definition of Confidential Information
+• Exclusions (publicly available information)
+• Obligations of Receiving Party
+• Remedies for breach
+• Governing Law and jurisdiction
+
+Please review the attached NDA template and provide any proposed modifications within 5 business days.
+
+Sincerely,
+
+[Your Name]
+${orgName}
+[Your Title]
+[Contact Information]
+`;
+};
+
+const generateLicensingAgreementLetter = (): string => {
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const orgName = reportParameters.organizationName || 'Our Organization';
+
+  return `
+${today}
+
+To: ${reportParameters.targetCounterpartType || 'Partner'} Management
+Re: LICENSING AGREEMENT PROPOSAL
+
+Dear [Contact Name],
+
+${orgName} is interested in exploring a licensing arrangement for our technology/IP in ${reportParameters.country || 'your market'}.
+
+PROPOSED TERMS:
+• Licensed Technology: [Specify technology/IP]
+• Territory: ${reportParameters.country || 'Target market'}
+• Term: 5 years with renewal options
+• Royalties: [Specify royalty structure]
+• Performance Obligations: Minimum sales targets
+
+COMMERCIAL BENEFITS:
+• Technology Access: Advanced capabilities without development costs
+• Market Expansion: Accelerated entry through established partner
+• Revenue Generation: Royalty income from successful commercialization
+• Strategic Partnership: Foundation for broader collaboration
+
+We propose an initial meeting to discuss specific licensing opportunities and terms.
+
+Sincerely,
+
+[Your Name]
+${orgName}
+[Your Title]
+[Contact Information]
+`;
+};
 
   const generateLetterContent = useCallback(async () => {
     setIsGenerating(true);
@@ -138,9 +471,27 @@ ${orgName}
         content = generatePrecedentBasedLetter();
       } else if (letterType === 'formal') {
         content = generateFormalLetter();
+      } else if (letterType === 'strategic') {
+        content = generateStrategicLetter();
+      } else if (letterType === 'investment') {
+        content = generateInvestmentLetter();
+      } else if (letterType === 'term_sheet') {
+        content = generateTermSheetLetter();
+      } else if (letterType === 'formal_proposal') {
+        content = generateFormalProposalLetter();
+      } else if (letterType === 'investment_memo') {
+        content = generateInvestmentMemoLetter();
+      } else if (letterType === 'due_diligence_request') {
+        content = generateDueDiligenceRequestLetter();
+      } else if (letterType === 'joint_venture_agreement') {
+        content = generateJointVentureAgreementLetter();
+      } else if (letterType === 'non_disclosure_agreement') {
+        content = generateNonDisclosureAgreementLetter();
+      } else if (letterType === 'licensing_agreement') {
+        content = generateLicensingAgreementLetter();
       } else {
-        // Default to precedent based for now as it's the "smartest"
-        content = generatePrecedentBasedLetter(); 
+        // Default to precedent based
+        content = generatePrecedentBasedLetter();
       }
       setLetterContent(content);
     } catch (e) {
@@ -189,10 +540,10 @@ ${orgName}
           </div>
 
           <div className="flex gap-2 bg-stone-200/50 p-1 rounded-lg w-fit">
-            {(['formal', 'precedent_based', 'strategic'] as const).map((type) => (
+            {(['formal', 'precedent_based', 'strategic', 'investment', 'term_sheet', 'formal_proposal', 'investment_memo', 'due_diligence_request', 'joint_venture_agreement', 'non_disclosure_agreement', 'licensing_agreement'] as const).map((type) => (
               <button
                 key={type}
-                onClick={() => setLetterType(type as any)}
+                onClick={() => setLetterType(type)}
                 className={`px-4 py-2 text-xs font-bold rounded-md transition-all ${
                   letterType === type
                     ? 'bg-white text-stone-900 shadow-sm'
@@ -202,6 +553,14 @@ ${orgName}
                 {type === 'formal' && 'Standard Formal'}
                 {type === 'precedent_based' && 'Evidence-Based (AI)'}
                 {type === 'strategic' && 'Gov. Relations'}
+                {type === 'investment' && 'Investment Memo'}
+                {type === 'term_sheet' && 'Term Sheet'}
+                {type === 'formal_proposal' && 'Formal Proposal'}
+                {type === 'investment_memo' && 'Investment Memo'}
+                {type === 'due_diligence_request' && 'Due Diligence Request'}
+                {type === 'joint_venture_agreement' && 'JV Agreement'}
+                {type === 'non_disclosure_agreement' && 'NDA'}
+                {type === 'licensing_agreement' && 'Licensing Agreement'}
               </button>
             ))}
           </div>
