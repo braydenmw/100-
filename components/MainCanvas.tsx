@@ -786,6 +786,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                     </div>
                   </>
                 )}
+                </div>
             </div>
         </div>
 
