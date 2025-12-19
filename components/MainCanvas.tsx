@@ -81,7 +81,13 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
   const [showDocGenSuite, setShowDocGenSuite] = useState(false);
   const [partnerPersonas, setPartnerPersonas] = useState<string[]>([]);
   const [generatedDocs, setGeneratedDocs] = useState<{id: string, title: string, desc: string, timestamp: Date}[]>([]);
-  const [selectedIntelligenceEnhancements, setSelectedIntelligenceEnhancements] = useState<string[]>([]);
+  const [selectedIntelligenceEnhancements, setSelectedIntelligenceEnhancements] = useState<string[]>([
+    'roi-diagnostic', 'scenario-planning', 'due-diligence', 'partner-compatibility', 'diversification-analysis',
+    'ethical-compliance', 'historical-precedents', 'growth-modeling', 'stakeholder-analysis', 'geopolitical-risk',
+    'valuation-engine', 'performance-metrics', 'supply-chain-analysis', 'charts', 'data',
+    'ai-analysis', 'content', 'negotiation-advantage', 'trade-disruption', 'cultural-intelligence',
+    'deep-reasoning', 'temporal-analysis', 'regulatory-landscape', 'market-disruption', 'competitive-positioning'
+  ]);
 
   // Apply intelligence enhancements to report data
   const enhancedReportData = React.useMemo(() =>
@@ -386,331 +392,110 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
 
 
   return (
-    <div className="flex-1 w-full flex h-full bg-stone-100 font-sans text-stone-900 overflow-hidden">
+    <div className="flex-1 w-full flex h-full bg-slate-50 font-sans text-gray-900 overflow-hidden">
         {/* --- LEFT PANEL: CONTROLS & FORMS --- */}
-        <div className="flex flex-col bg-white border-r border-stone-200 overflow-y-auto custom-scrollbar" style={{ flexBasis: '30%' }}>
-            <div className="p-6 space-y-6">
+        <div className="flex flex-col bg-gradient-to-b from-amber-50 via-yellow-50 to-amber-50 border-r-4 border-amber-900 overflow-y-auto custom-scrollbar" style={{ flexBasis: '30%' }}>
+            <div className="p-6 space-y-6 bg-gradient-to-b from-amber-50 to-yellow-50">
                 {/* Section Navigation */}
                 <div>
-                    <h3 className="text-sm font-bold text-stone-500 uppercase tracking-wider mb-3">Primary Steps</h3>
-                    <p className="text-xs text-stone-500 mb-4">Follow these steps sequentially to build the data foundation for your strategic analysis. Each completed step enriches the live document preview on the right.</p>
+                    <h3 className="text-sm font-bold text-amber-900 uppercase tracking-wider mb-3 border-b-2 border-amber-700 pb-2">Primary Steps</h3>
+                    <p className="text-xs text-gray-700 mb-4 font-medium">Follow these steps sequentially to build the data foundation for your strategic analysis. Each completed step enriches the live document preview on the right.</p>
                     <div className="grid grid-cols-2 gap-3">
                         {[
-                            {id: 'identity', label: '01. Identity', description: "Define your organization's profile", icon: Building2, color: 'text-blue-600'},
-                            {id: 'mandate', label: '02. Mandate', description: 'Outline partnership objectives', icon: Target, color: 'text-green-600'},
-                            {id: 'market', label: '03. Market', description: 'Analyze the target market', icon: Globe, color: 'text-purple-600'},
-                            {id: 'partner-personas', label: '04. Personas', description: 'Define partner personas', icon: Users, color: 'text-yellow-600'},
-                            {id: 'risk', label: '05. Risk', description: 'Assess risks & mitigation', icon: Shield, color: 'text-red-600'},
-                            {id: 'generation', label: '06. Generation', description: 'Generate the final report', icon: FileText, color: 'text-orange-600'},
+                            {id: 'identity', label: '01. Identity', description: "Define your organization's profile", icon: Building2, color: 'text-amber-900'},
+                            {id: 'mandate', label: '02. Mandate', description: 'Outline partnership objectives', icon: Target, color: 'text-amber-800'},
+                            {id: 'market', label: '03. Market', description: 'Analyze the target market', icon: Globe, color: 'text-amber-900'},
+                            {id: 'partner-personas', label: '04. Personas', description: 'Define partner personas', icon: Users, color: 'text-gray-700'},
+                            {id: 'risk', label: '05. Risk', description: 'Assess risks & mitigation', icon: Shield, color: 'text-gray-800'},
+                            {id: 'generation', label: '06. Generation', description: 'Generate the final report', icon: FileText, color: 'text-amber-800'},
                         ].map(section => (
                             <button
                                 key={section.id}
                                 onClick={() => openModal(section.id)}
-                                className={`p-3 bg-white border rounded-lg hover:shadow-md transition-all text-left group ${
+                                className={`p-3 bg-gradient-to-br from-amber-100 to-yellow-100 border-2 rounded-lg hover:shadow-lg transition-all text-left group ${
                                     activeModal === section.id
-                                        ? 'border-bw-navy shadow-md'
-                                        : 'border-stone-200 hover:border-blue-300'
+                                        ? 'border-amber-800 shadow-lg bg-amber-100'
+                                        : 'border-amber-300 hover:border-amber-700'
                                 }`}
                             >
                                 <div className="flex items-center gap-2 mb-1">
                                     <section.icon size={16} className={section.color} />
-                                    <span className="text-sm font-bold text-stone-900 flex items-center gap-1">
+                                    <span className="text-sm font-bold text-gray-900 flex items-center gap-1">
                                       {section.label}
-                                      {isStepComplete(section.id) && <Check size={14} className="text-green-500" />}
+                                      {isStepComplete(section.id) && <Check size={14} className="text-green-700" />}
                                     </span>
                                 </div>
-                                <p className="text-[10px] text-stone-600 pl-6">{section.description}</p>
+                                <p className="text-[10px] text-gray-700 pl-6 font-medium">{section.description}</p>
                             </button>
                         ))}
                     </div>
                 </div>
 
-                <div className="w-full h-px bg-stone-200"></div>
+                <div className="w-full h-1 bg-gradient-to-r from-amber-700 via-yellow-700 to-amber-700 rounded-full"></div>
 
                 {/* Optional Intelligence Enhancements */}
                 <div>
-                    <h3 className="text-sm font-bold text-stone-500 uppercase tracking-wider mb-3">Optional Intelligence Enhancements</h3>
-                    <p className="text-xs text-stone-500 mb-4">Enhance your Strategic Roadmap draft with specialized analysis. Select any combination to add depth and insights that will improve your final reports and letters.</p>
-                    <div className="grid grid-cols-2 gap-3">
-                        <label className="flex items-start gap-2 p-4 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group min-h-[60px]">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('roi-diagnostic')}
-                                onChange={() => handleIntelligenceEnhancementToggle('roi-diagnostic')}
-                                className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <BarChart3 className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-                                    <span className="text-xs font-bold text-stone-900 leading-tight">ROI Diagnostic</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600 leading-tight">Financial viability assessment</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('scenario-planning')}
-                                onChange={() => handleIntelligenceEnhancementToggle('scenario-planning')}
-                                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Network className="w-4 h-4 text-blue-600" />
-                                    <span className="text-xs font-bold text-stone-900">Scenario Planning</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Multi-outcome modeling</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-green-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('due-diligence')}
-                                onChange={() => handleIntelligenceEnhancementToggle('due-diligence')}
-                                className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <ShieldCheck className="w-4 h-4 text-green-600" />
-                                    <span className="text-xs font-bold text-stone-900">Due Diligence</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Background verification</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-pink-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('partner-compatibility')}
-                                onChange={() => handleIntelligenceEnhancementToggle('partner-compatibility')}
-                                className="mt-1 h-4 w-4 text-pink-600 focus:ring-pink-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Handshake className="w-4 h-4 text-pink-600" />
-                                    <span className="text-xs font-bold text-stone-900">Partner Compatibility</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Strategic matching</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-purple-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('diversification-analysis')}
-                                onChange={() => handleIntelligenceEnhancementToggle('diversification-analysis')}
-                                className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <PieChart className="w-4 h-4 text-purple-600" />
-                                    <span className="text-xs font-bold text-stone-900">Diversification Analysis</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Portfolio optimization</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-red-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('ethical-compliance')}
-                                onChange={() => handleIntelligenceEnhancementToggle('ethical-compliance')}
-                                className="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Shield className="w-4 h-4 text-red-600" />
-                                    <span className="text-xs font-bold text-stone-900">Ethical Compliance</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Sustainability assessment</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-amber-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('historical-precedents')}
-                                onChange={() => handleIntelligenceEnhancementToggle('historical-precedents')}
-                                className="mt-1 h-4 w-4 text-amber-600 focus:ring-amber-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <History className="w-4 h-4 text-amber-600" />
-                                    <span className="text-xs font-bold text-stone-900">Historical Precedents</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Data-driven insights</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-teal-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('growth-modeling')}
-                                onChange={() => handleIntelligenceEnhancementToggle('growth-modeling')}
-                                className="mt-1 h-4 w-4 text-teal-600 focus:ring-teal-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <TrendingUp className="w-4 h-4 text-teal-600" />
-                                    <span className="text-xs font-bold text-stone-900">Growth Modeling</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Revenue projections</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-orange-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('stakeholder-analysis')}
-                                onChange={() => handleIntelligenceEnhancementToggle('stakeholder-analysis')}
-                                className="mt-1 h-4 w-4 text-orange-600 focus:ring-orange-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Users className="w-4 h-4 text-orange-600" />
-                                    <span className="text-xs font-bold text-stone-900">Stakeholder Analysis</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Interest mapping</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-cyan-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('geopolitical-risk')}
-                                onChange={() => handleIntelligenceEnhancementToggle('geopolitical-risk')}
-                                className="mt-1 h-4 w-4 text-cyan-600 focus:ring-cyan-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Globe className="w-4 h-4 text-cyan-600" />
-                                    <span className="text-xs font-bold text-stone-900">Geopolitical Risk</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Regional stability analysis</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-lime-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('valuation-engine')}
-                                onChange={() => handleIntelligenceEnhancementToggle('valuation-engine')}
-                                className="mt-1 h-4 w-4 text-lime-600 focus:ring-lime-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Calculator className="w-4 h-4 text-lime-600" />
-                                    <span className="text-xs font-bold text-stone-900">Valuation Engine</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Asset valuation models</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('performance-metrics')}
-                                onChange={() => handleIntelligenceEnhancementToggle('performance-metrics')}
-                                className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Activity className="w-4 h-4 text-indigo-600" />
-                                    <span className="text-xs font-bold text-stone-900">Performance Metrics</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">KPI benchmarking</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-rose-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('supply-chain-analysis')}
-                                onChange={() => handleIntelligenceEnhancementToggle('supply-chain-analysis')}
-                                className="mt-1 h-4 w-4 text-rose-600 focus:ring-rose-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <GitBranch className="w-4 h-4 text-rose-600" />
-                                    <span className="text-xs font-bold text-stone-900">Supply Chain Analysis</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Dependency mapping</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('charts')}
-                                onChange={() => handleIntelligenceEnhancementToggle('charts')}
-                                className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <BarChart3 className="w-4 h-4 text-blue-600" />
-                                    <span className="text-xs font-bold text-stone-900">Charts</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Visual data representation</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-green-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('data')}
-                                onChange={() => handleIntelligenceEnhancementToggle('data')}
-                                className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Database className="w-4 h-4 text-green-600" />
-                                    <span className="text-xs font-bold text-stone-900">Data</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Data tables and metrics</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-purple-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('ai-analysis')}
-                                onChange={() => handleIntelligenceEnhancementToggle('ai-analysis')}
-                                className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <Cpu className="w-4 h-4 text-purple-600" />
-                                    <span className="text-xs font-bold text-stone-900">AI Analysis</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">AI-driven insights</p>
-                            </div>
-                        </label>
-
-                        <label className="flex items-start gap-2 p-3 bg-white border border-stone-200 rounded-lg hover:shadow-md hover:border-orange-300 transition-all cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={selectedIntelligenceEnhancements.includes('content')}
-                                onChange={() => handleIntelligenceEnhancementToggle('content')}
-                                className="mt-1 h-4 w-4 text-orange-600 focus:ring-orange-500 border-stone-300 rounded"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <FileText className="w-4 h-4 text-orange-600" />
-                                    <span className="text-xs font-bold text-stone-900">Content</span>
-                                </div>
-                                <p className="text-[10px] text-stone-600">Enhanced content blocks</p>
-                            </div>
-                        </label>
+                    <h3 className="text-sm font-bold text-amber-900 uppercase tracking-wider mb-1 border-b-2 border-amber-700 pb-2">Maximize Intelligence Enhancements</h3>
+                    <p className="text-xs text-gray-700 mb-4 font-medium">Enhance your Strategic Roadmap draft with specialized analysis. Select any combination to add depth and insights that will improve your final reports and letters. 100% of system capacity enabled.</p>
+                    <div className="grid grid-cols-2 gap-2">
+                        {/* Existing 16 options + 9 new ones = 25 total */}
+                        {[
+                            { id: 'roi-diagnostic', label: 'ROI Diagnostic', desc: 'Financial viability assessment', icon: BarChart3, color: 'amber' },
+                            { id: 'scenario-planning', label: 'Scenario Planning', desc: 'Multi-outcome modeling', icon: Network, color: 'amber' },
+                            { id: 'due-diligence', label: 'Due Diligence', desc: 'Background verification', icon: ShieldCheck, color: 'amber' },
+                            { id: 'partner-compatibility', label: 'Partner Compatibility', desc: 'Strategic matching', icon: Handshake, color: 'gray' },
+                            { id: 'diversification-analysis', label: 'Diversification Analysis', desc: 'Portfolio optimization', icon: PieChart, color: 'gray' },
+                            { id: 'ethical-compliance', label: 'Ethical Compliance', desc: 'Sustainability assessment', icon: Shield, color: 'amber' },
+                            { id: 'historical-precedents', label: 'Historical Precedents', desc: 'Data-driven insights', icon: History, color: 'gray' },
+                            { id: 'growth-modeling', label: 'Growth Modeling', desc: 'Revenue projections', icon: TrendingUp, color: 'amber' },
+                            { id: 'stakeholder-analysis', label: 'Stakeholder Analysis', desc: 'Interest mapping', icon: Users, color: 'gray' },
+                            { id: 'geopolitical-risk', label: 'Geopolitical Risk', desc: 'Regional stability analysis', icon: Globe, color: 'amber' },
+                            { id: 'valuation-engine', label: 'Valuation Engine', desc: 'Asset valuation models', icon: Calculator, color: 'gray' },
+                            { id: 'performance-metrics', label: 'Performance Metrics', desc: 'KPI benchmarking', icon: Activity, color: 'amber' },
+                            { id: 'supply-chain-analysis', label: 'Supply Chain Analysis', desc: 'Dependency mapping', icon: GitBranch, color: 'gray' },
+                            { id: 'charts', label: 'Charts & Visualizations', desc: 'Visual data representation', icon: BarChart3, color: 'amber' },
+                            { id: 'data', label: 'Data Tables', desc: 'Data tables and metrics', icon: Database, color: 'gray' },
+                            { id: 'ai-analysis', label: 'AI Analysis', desc: 'AI-driven insights', icon: Cpu, color: 'amber' },
+                            { id: 'content', label: 'Content Generation', desc: 'Enhanced content blocks', icon: FileText, color: 'gray' },
+                            { id: 'negotiation-advantage', label: 'Negotiation Advantage', desc: 'Leverage point analysis', icon: MessageCircle, color: 'amber' },
+                            { id: 'trade-disruption', label: 'Trade Disruption Analysis', desc: 'Market impact assessment', icon: AlertCircle, color: 'gray' },
+                            { id: 'cultural-intelligence', label: 'Cultural Intelligence', desc: 'Regional nuance mapping', icon: Globe, color: 'amber' },
+                            { id: 'deep-reasoning', label: 'Deep Reasoning Engine', desc: 'Multi-factor analysis', icon: Cpu, color: 'gray' },
+                            { id: 'temporal-analysis', label: 'Temporal Analysis', desc: 'Timeline & sequence mapping', icon: Activity, color: 'amber' },
+                            { id: 'regulatory-landscape', label: 'Regulatory Landscape', desc: 'Compliance framework', icon: Scale, color: 'gray' },
+                            { id: 'market-disruption', label: 'Market Disruption Map', desc: 'Innovation opportunity scan', icon: Zap, color: 'amber' },
+                            { id: 'competitive-positioning', label: 'Competitive Positioning', desc: 'Market advantage analysis', icon: Target, color: 'gray' },
+                        ].map(option => {
+                            const isAmber = option.color === 'amber';
+                            const bgClass = isAmber ? 'from-amber-100 to-yellow-50 border-amber-400 hover:border-amber-700' : 'from-gray-100 to-gray-50 border-gray-400 hover:border-gray-700';
+                            const textColor = isAmber ? 'text-amber-700' : 'text-gray-700';
+                            const inputColor = isAmber ? 'text-amber-700 focus:ring-amber-600 border-amber-400' : 'text-gray-700 focus:ring-gray-600 border-gray-400';
+                            return (
+                                <label key={option.id} className={`flex items-start gap-2 p-3 bg-gradient-to-br ${bgClass} border-2 rounded-lg hover:shadow-lg transition-all cursor-pointer group`}>
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedIntelligenceEnhancements.includes(option.id)}
+                                        onChange={() => handleIntelligenceEnhancementToggle(option.id)}
+                                        className={`mt-1 h-4 w-4 ${inputColor} rounded`}
+                                    />
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <option.icon className={`w-4 h-4 ${textColor} flex-shrink-0`} />
+                                            <span className="text-xs font-bold text-gray-900">{option.label}</span>
+                                        </div>
+                                        <p className="text-[10px] text-gray-700 font-medium">{option.desc}</p>
+                                    </div>
+                                </label>
+                            );
+                        })}
                     </div>
                 </div>
 
-                <div className="w-full h-px bg-stone-200"></div>
+                <div className="w-full h-1 bg-gradient-to-r from-amber-700 via-yellow-700 to-amber-700 rounded-full"></div>
 
                 {/* BW Consultant Chat */}
-                <div className="bg-stone-50 border border-stone-200 rounded-lg flex flex-col">
-                    <div className="h-12 bg-bw-navy text-white flex items-center justify-between px-4 rounded-t-lg">
+                <div className="bg-gradient-to-b from-amber-50 to-yellow-50 border-2 border-amber-700 rounded-lg flex flex-col">
+                    <div className="h-12 bg-gradient-to-r from-amber-800 to-gray-700 text-white flex items-center justify-between px-4 rounded-t-lg">
                         <div className="flex items-center gap-2">
                             <User size={16} />
                             <span className="text-sm font-bold">AI Consultant</span>
@@ -718,13 +503,13 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         <div className="text-xs opacity-75">Live Assistant</div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3 h-48 custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3 h-48 custom-scrollbar bg-white">
                         {chatMessages.map((msg, index) => (
                             <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
                                     msg.sender === 'user'
-                                        ? 'bg-bw-navy text-white'
-                                        : 'bg-white border border-stone-200 text-stone-900'
+                                        ? 'bg-amber-800 text-white'
+                                        : 'bg-gradient-to-br from-amber-100 to-yellow-50 border-2 border-amber-400 text-gray-900'
                                 }`}>
                                     {msg.text}
                                 </div>
@@ -732,18 +517,18 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         ))}
                     </div>
 
-                    <div className="h-12 border-t border-stone-200 flex items-center gap-2 px-4">
+                    <div className="h-12 border-t-2 border-amber-700 flex items-center gap-2 px-4 bg-gradient-to-b from-yellow-50 to-amber-50">
                         <input
                             type="text"
                             value={chatInput}
                             onChange={(e) => setChatInput(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                             placeholder="Ask your AI Consultant..."
-                            className="flex-1 text-sm border border-stone-200 rounded px-3 py-1 focus:ring-1 focus:ring-bw-gold focus:border-transparent"
+                            className="flex-1 text-sm border-2 border-amber-400 rounded px-3 py-1 focus:ring-2 focus:ring-amber-600 focus:border-transparent bg-white text-gray-900"
                         />
                         <button
                             onClick={handleSendMessage}
-                            className="p-2 bg-bw-navy text-white rounded hover:bg-bw-gold hover:text-bw-navy transition-all"
+                            className="p-2 bg-gradient-to-r from-amber-800 to-gray-700 text-white rounded hover:from-amber-900 hover:to-gray-800 transition-all"
                         >
                             <Send size={14} />
                         </button>
@@ -810,7 +595,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="p-6 border-b border-stone-200 flex items-center justify-between shrink-0">
-                            <h2 className="text-2xl font-serif font-bold text-bw-navy capitalize">{modalView !== 'main' ? modalView.replace(/-/g, ' ') : activeModal?.replace(/-/g, ' ')} Configuration</h2>
+                            <h2 className="text-2xl font-serif font-bold text-amber-800 capitalize">{modalView !== 'main' ? modalView.replace(/-/g, ' ') : activeModal?.replace(/-/g, ' ')} Configuration</h2>
                             <button onClick={handleModalClose} className="p-2 rounded-full hover:bg-stone-100">
                                 <X size={20} className="text-stone-500" />
                             </button>
@@ -825,7 +610,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Define organization type, jurisdiction, and legal framework"
                                         isExpanded={!!expandedSubsections['identity-entity']}
                                         onToggle={() => toggleSubsection('identity-entity')}
-                                        color="from-blue-50 to-blue-100"
+                                        color="from-amber-50 to-yellow-100"
                                      >
                                         <div className="space-y-3">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -835,7 +620,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                         type="text"
                                                         value={params.organizationName}
                                                         onChange={(e) => setParams({ ...params, organizationName: e.target.value })}
-                                                        className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent ${isFieldInvalid('organizationName') ? 'border-red-500' : 'border-stone-200'}`}
+                                                        className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent ${isFieldInvalid('organizationName') ? 'border-red-500' : 'border-stone-200'}`}
                                                         placeholder="Enter organization name"
                                                     />
                                                 </div>
@@ -844,7 +629,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                     <select
                                                         value={params.organizationType}
                                                         onChange={(e) => setParams({ ...params, organizationType: e.target.value })}
-                                                        className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent ${isFieldInvalid('organizationType') ? 'border-red-500' : 'border-stone-200'}`}
+                                                        className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent ${isFieldInvalid('organizationType') ? 'border-red-500' : 'border-stone-200'}`}
                                                     >
                                                         <option value="">Select type</option>
                                                         {Object.entries(ENTITY_TYPES.reduce((acc: any, item) => {
@@ -867,7 +652,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                     <select
                                                         value={params.country}
                                                         onChange={(e) => setParams({ ...params, country: e.target.value })}
-                                                        className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent ${isFieldInvalid('country') ? 'border-red-500' : 'border-stone-200'}`}
+                                                        className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent ${isFieldInvalid('country') ? 'border-red-500' : 'border-stone-200'}`}
                                                     >
                                                         <option value="">Select country</option>
                                                         {Object.entries(COUNTRIES.reduce((acc: any, item) => {
@@ -889,7 +674,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                         type="text"
                                                         value={params.regions}
                                                         onChange={(e) => setParams({ ...params, regions: e.target.value })}
-                                                        className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent"
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent"
                                                         placeholder="e.g., North America, Southeast Asia"
                                                     />
                                                 </div>
@@ -903,7 +688,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Evaluate organizational capabilities, resources, and competencies"
                                         isExpanded={!!expandedSubsections['identity-capability']}
                                         onToggle={() => toggleSubsection('identity-capability')}
-                                        color="from-blue-50 to-blue-100"
+                                        color="from-amber-50 to-yellow-100"
                                     >
                                         <div className="space-y-4">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -912,7 +697,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                     <select
                                                         value={params.revenueBand || ''}
                                                         onChange={(e) => setParams({ ...params, revenueBand: e.target.value })}
-                                                        className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent"
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent"
                                                     >
                                                         <option value="">Select revenue...</option>
                                                         <option value="$0-1M">$0-1M</option>
@@ -926,7 +711,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                     <select
                                                         value={params.headcountBand || ''}
                                                         onChange={(e) => setParams({ ...params, headcountBand: e.target.value })}
-                                                        className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent"
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent"
                                                     >
                                                         <option value="">Select headcount...</option>
                                                         <option value="1-10">1-10</option>
@@ -943,7 +728,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                     type="text"
                                                     value={params.organizationSubType || ''}
                                                     onChange={(e) => setParams({ ...params, organizationSubType: e.target.value })}
-                                                    className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent"
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent"
                                                     placeholder="e.g., Publicly Traded, Non-Profit, B-Corp"
                                                 />
                                             </div>
@@ -954,7 +739,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Define competitive positioning, brand strategy, and market differentiation"
                                         isExpanded={!!expandedSubsections['identity-positioning']}
                                         onToggle={() => toggleSubsection('identity-positioning')}
-                                        color="from-emerald-50 to-emerald-100"
+                                        color="from-gray-50 to-gray-100"
                                      >
                                         <div className="space-y-4">
                                             <div>
@@ -972,7 +757,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                                         : [...currentIndustries, ind.value];
                                                                     setParams({ ...params, industry: newIndustries });
                                                                 }}
-                                                                className="h-4 w-4 text-bw-navy focus:ring-bw-gold"
+                                                                className="h-4 w-4 text-amber-800 focus:ring-amber-600"
                                                             /> 
                                                             <span className="text-sm">{ind.label}</span>
                                                         </label>
@@ -981,7 +766,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Niche Areas or Specializations</label>
-                                                <textarea value={params.nicheAreas?.join(', ') || ''} onChange={(e) => setParams({ ...params, nicheAreas: e.target.value.split(',').map(s => s.trim()) })} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent" placeholder="e.g., AI in Drug Discovery, Fintech for SMEs"/>
+                                                <textarea value={params.nicheAreas?.join(', ') || ''} onChange={(e) => setParams({ ...params, nicheAreas: e.target.value.split(',').map(s => s.trim()) })} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent" placeholder="e.g., AI in Drug Discovery, Fintech for SMEs"/>
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -990,11 +775,11 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Articulate long-term vision, mission, and strategic objectives"
                                         isExpanded={!!expandedSubsections['identity-intent']}
                                         onToggle={() => toggleSubsection('identity-intent')}
-                                        color="from-violet-50 to-violet-100">
+                                        color="from-amber-50 to-yellow-100">
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Primary Strategic Intent <span className="text-red-500">*</span></label>
-                                                <select value={params.strategicIntent[0] || ''} onChange={(e) => setParams({ ...params, strategicIntent: [e.target.value] })} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent">
+                                                <select value={params.strategicIntent[0] || ''} onChange={(e) => setParams({ ...params, strategicIntent: [e.target.value] })} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent">
                                                     <option value="">Select primary goal...</option>
                                                     <option value="Market Expansion">Market Expansion</option>
                                                     <option value="Partnership Development">Partnership Development</option>
@@ -1004,7 +789,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Problem Statement <span className="text-red-500">*</span></label>
-                                                <textarea value={params.problemStatement} onChange={(e) => setParams({ ...params, problemStatement: e.target.value })} className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent h-24 ${isFieldInvalid('problemStatement') ? 'border-red-500' : 'border-stone-200'}`} placeholder="Describe the core problem this strategy aims to solve."/>
+                                                <textarea value={params.problemStatement} onChange={(e) => setParams({ ...params, problemStatement: e.target.value })} className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent h-24 ${isFieldInvalid('problemStatement') ? 'border-red-500' : 'border-stone-200'}`} placeholder="Describe the core problem this strategy aims to solve."/>
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -1018,7 +803,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Risk Tolerance <span className="text-red-500">*</span></label>
-                                                <select value={params.riskTolerance} onChange={(e) => setParams({ ...params, riskTolerance: e.target.value })} className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent ${isFieldInvalid('riskTolerance') ? 'border-red-500' : 'border-stone-200'}`}>
+                                                <select value={params.riskTolerance} onChange={(e) => setParams({ ...params, riskTolerance: e.target.value })} className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent ${isFieldInvalid('riskTolerance') ? 'border-red-500' : 'border-stone-200'}`}>
                                                     <option value="">Select risk tolerance...</option>
                                                     <option value="Low">Low</option>
                                                     <option value="Medium">Medium</option>
@@ -1027,7 +812,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Funding Source</label>
-                                                <select value={params.fundingSource} onChange={(e) => setParams({ ...params, fundingSource: e.target.value })} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent">
+                                                <select value={params.fundingSource} onChange={(e) => setParams({ ...params, fundingSource: e.target.value })} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent">
                                                     <option value="">Select funding source...</option>
                                                     <optgroup label="Equity">
                                                         <option value="Bootstrapped">Bootstrapped</option>
@@ -1053,7 +838,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Define measurable objectives and key performance indicators"
                                         isExpanded={!!expandedSubsections['mandate-objectives']}
                                         onToggle={() => toggleSubsection('mandate-objectives')}
-                                        color="from-green-50 to-green-100"
+                                        color="from-amber-50 to-yellow-100"
                                      >
                                         <div className="space-y-3">
                                             <label className="block text-xs font-bold text-stone-700 mb-1">Select Strategic Objectives <span className="text-red-500">*</span></label>
@@ -1069,7 +854,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                                     : [...params.strategicIntent, intent];
                                                                 setParams({ ...params, strategicIntent: newIntents });
                                                             }}
-                                                            className="h-4 w-4 text-bw-navy focus:ring-bw-gold"
+                                                            className="h-4 w-4 text-amber-800 focus:ring-amber-600"
                                                         />
                                                         <span className="text-sm">{intent}</span>
                                                     </label>
@@ -1080,7 +865,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                 <textarea
                                                     value={params.problemStatement}
                                                     onChange={(e) => setParams({ ...params, problemStatement: e.target.value })}
-                                                    className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent h-24 ${isFieldInvalid('problemStatement') ? 'border-red-500' : 'border-stone-200'}`}
+                                                    className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent h-24 ${isFieldInvalid('problemStatement') ? 'border-red-500' : 'border-stone-200'}`}
                                                      placeholder="Describe the core problem this partnership aims to solve."
                                                 />
                                             </div>
@@ -1091,7 +876,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Define ideal partner characteristics and selection criteria"
                                         isExpanded={!!expandedSubsections['mandate-profiling']}
                                         onToggle={() => toggleSubsection('mandate-profiling')}
-                                        color="from-green-50 to-green-100"
+                                        color="from-amber-50 to-yellow-100"
                                     >
                                         <div className="space-y-4">
                                             <div>
@@ -1099,7 +884,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                 <textarea
                                                     value={params.idealPartnerProfile}
                                                     onChange={(e) => setParams({ ...params, idealPartnerProfile: e.target.value })}
-                                                    className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent h-24"
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent h-24"
                                                     placeholder="Describe the ideal partner (e.g., size, industry, capabilities, culture)."
                                                 />
                                             </div>
@@ -1109,7 +894,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                     type="text"
                                                     value={params.targetCounterpartType?.join(', ') || ''}
                                                     onChange={(e) => setParams({ ...params, targetCounterpartType: e.target.value.split(',').map(s => s.trim()) })}
-                                                    className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent"
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent"
                                                     placeholder="e.g., CEO, Head of Strategy, R&D Lead"
                                                 />
                                             </div>
@@ -1120,7 +905,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Craft compelling value propositions for potential partners"
                                         isExpanded={!!expandedSubsections['mandate-proposition']}
                                         onToggle={() => toggleSubsection('mandate-proposition')}
-                                        color="from-purple-50 to-purple-100"
+                                        color="from-gray-50 to-gray-100"
                                      >
                                         <div className="space-y-4">
                                             <div>
@@ -1128,7 +913,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                 <textarea
                                                     value={params.successMetrics?.join(', ') || ''}
                                                     onChange={(e) => setParams({ ...params, successMetrics: e.target.value.split(',').map(s => s.trim()) })}
-                                                    className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent h-24"
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent h-24"
                                                     placeholder="e.g., 20% market share increase, $5M in new revenue, Launch in 2 new countries"
                                                 />
                                             </div>
@@ -1139,12 +924,12 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Define negotiation approach and key terms framework"
                                         isExpanded={!!expandedSubsections['mandate-negotiation']}
                                         onToggle={() => toggleSubsection('mandate-negotiation')}
-                                        color="from-orange-50 to-orange-100"
+                                        color="from-amber-50 to-yellow-100"
                                      >
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Due Diligence Depth</label>
-                                                <select value={params.dueDiligenceDepth} onChange={(e) => setParams({...params, dueDiligenceDepth: e.target.value})} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent">
+                                                <select value={params.dueDiligenceDepth} onChange={(e) => setParams({...params, dueDiligenceDepth: e.target.value})} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent">
                                                     <option value="">Select depth...</option>
                                                     <option value="Standard">Standard</option>
                                                     <option value="Enhanced">Enhanced</option>
@@ -1158,12 +943,12 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Plan partnership governance structure and integration approach"
                                         isExpanded={!!expandedSubsections['mandate-governance']}
                                         onToggle={() => toggleSubsection('mandate-governance')}
-                                        color="from-red-50 to-red-100"
+                                        color="from-gray-50 to-gray-100"
                                      >
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Preferred Governance Model</label>
-                                                <select className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent">
+                                                <select className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent">
                                                     <option value="">Select model...</option> 
                                                     <option value="Joint Venture (JV)">Joint Venture (JV)</option>
                                                     <option value="Strategic Alliance">Strategic Alliance</option>
@@ -1180,7 +965,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Define operational priorities and timelines"
                                         isExpanded={!!expandedSubsections['mandate-execution']}
                                         onToggle={() => toggleSubsection('mandate-execution')}
-                                        color="from-indigo-50 to-indigo-100"
+                                        color="from-amber-50 to-yellow-100"
                                     >
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
@@ -1189,7 +974,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Expansion Timeline</label>
-                                                <select value={params.expansionTimeline} onChange={(e) => setParams({...params, expansionTimeline: e.target.value})} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent">
+                                                <select value={params.expansionTimeline} onChange={(e) => setParams({...params, expansionTimeline: e.target.value})} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent">
                                                     <option value="">Select timeline...</option>
                                                     <optgroup label="Short-Term">
                                                         <option value="0-6 Months">0-6 Months</option>
@@ -1212,7 +997,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
             description="Define the key characteristics of your ideal partner personas."
             isExpanded={!!expandedSubsections['partner-personas-definition']}
             onToggle={() => toggleSubsection('partner-personas-definition')}
-            color="from-yellow-50 to-yellow-100"
+            color="from-amber-50 to-yellow-100"
         >
             <div className="space-y-3">
                 <div>
@@ -1228,7 +1013,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         newPersonas[index] = e.target.value;
                                         setParams({ ...params, partnerPersonas: newPersonas });
                                     }}
-                                    className="w-full p-2 border rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent"
+                                    className="w-full p-2 border rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent"
                                     placeholder={`Persona ${index + 1}`}
                                 />
                                 <button
@@ -1266,12 +1051,12 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Define geographic and demographic target markets"
                                         isExpanded={!!expandedSubsections['market-target']}
                                         onToggle={() => toggleSubsection('market-target')}
-                                        color="from-purple-50 to-purple-100"
+                                        color="from-gray-50 to-gray-100"
                                     >
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Target City / Region <span className="text-red-500">*</span></label>
-                                                <input type="text" value={params.userCity || ''} onChange={(e) => setParams({ ...params, userCity: e.target.value })} className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent ${isFieldInvalid('userCity') ? 'border-red-500' : 'border-stone-200'}`} placeholder="e.g., Silicon Valley, Singapore"/>
+                                                <input type="text" value={params.userCity || ''} onChange={(e) => setParams({ ...params, userCity: e.target.value })} className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent ${isFieldInvalid('userCity') ? 'border-red-500' : 'border-stone-200'}`} placeholder="e.g., Silicon Valley, Singapore"/>
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Target Market Size (TAM)</label>
@@ -1283,7 +1068,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Analysis Timeframe</label>
-                                                <select value={params.analysisTimeframe} onChange={(e) => setParams({...params, analysisTimeframe: e.target.value})} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent">
+                                                <select value={params.analysisTimeframe} onChange={(e) => setParams({...params, analysisTimeframe: e.target.value})} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent">
                                                     <option value="1-Year">1-Year</option>
                                                     <option value="3-Year">3-Year</option>
                                                     <option value="5-Year">5-Year</option>
@@ -1296,7 +1081,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Analyze key competitors, their market share, and your advantages"
                                         isExpanded={!!expandedSubsections['market-competitive']}
                                         onToggle={() => toggleSubsection('market-competitive')}
-                                        color="from-purple-50 to-purple-100"
+                                        color="from-gray-50 to-gray-100"
                                     >
                                         <div className="space-y-4">
                                             <div>
@@ -1314,7 +1099,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Define target customer profiles and their unmet needs"
                                         isExpanded={!!expandedSubsections['market-customer']}
                                         onToggle={() => toggleSubsection('market-customer')}
-                                        color="from-purple-50 to-purple-100"
+                                        color="from-gray-50 to-gray-100"
                                     >
                                         <div className="space-y-4">
                                             <div>
@@ -1333,7 +1118,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Detail the legal, compliance, and financial environment"
                                         isExpanded={!!expandedSubsections['market-regulatory']}
                                         onToggle={() => toggleSubsection('market-regulatory')}
-                                        color="from-purple-50 to-purple-100"
+                                        color="from-gray-50 to-gray-100"
                                     >
                                         <div className="space-y-4">
                                             <div>
@@ -1351,12 +1136,12 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Identify and evaluate key partnership risks"
                                         isExpanded={!!expandedSubsections['risk-assessment']}
                                         onToggle={() => toggleSubsection('risk-assessment')}
-                                        color="from-red-50 to-red-100"
+                                        color="from-gray-50 to-gray-100"
                                     >
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Primary Risk Concerns <span className="text-red-500">*</span></label>
-                                                <textarea className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-bw-gold focus:border-transparent h-24 ${isFieldInvalid('riskTolerance') ? 'border-red-500' : 'border-stone-200'}`} placeholder="List main risks: financial, operational, reputational, geopolitical, etc."/>
+                                                <textarea className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent h-24 ${isFieldInvalid('riskTolerance') ? 'border-red-500' : 'border-stone-200'}`} placeholder="List main risks: financial, operational, reputational, geopolitical, etc."/>
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -1365,7 +1150,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Develop strategies to minimize risks and plan for failure"
                                         isExpanded={!!expandedSubsections['risk-mitigation']}
                                         onToggle={() => toggleSubsection('risk-mitigation')}
-                                        color="from-red-50 to-red-100"
+                                        color="from-gray-50 to-gray-100"
                                     >
                                         <div className="space-y-4">
                                             <div>
@@ -1383,7 +1168,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         description="Establish processes for ongoing risk tracking and reporting"
                                         isExpanded={!!expandedSubsections['risk-monitoring']}
                                         onToggle={() => toggleSubsection('risk-monitoring')}
-                                        color="from-red-50 to-red-100"
+                                        color="from-gray-50 to-gray-100"
                                     >
                                         <div className="space-y-4">
                                             <div>
@@ -1529,7 +1314,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="grid grid-cols-2 gap-2">
                                             {["Market Opportunity", "Financial Projections", "Risk Mitigation", "Team Strength"].map(sec => (
                                                 <label key={sec} className="flex items-center gap-2 p-2 border rounded-md hover:bg-stone-50 cursor-pointer">
-                                                    <input type="checkbox" onChange={e => setGenerationConfig(p => ({...p, emphasized: {...p.emphasized, [sec]: e.target.checked}}))} className="h-4 w-4 text-bw-navy focus:ring-bw-gold"/>
+                                                    <input type="checkbox" onChange={e => setGenerationConfig(p => ({...p, emphasized: {...p.emphasized, [sec]: e.target.checked}}))} className="h-4 w-4 text-amber-800 focus:ring-amber-600"/>
                                                     <span className="text-sm">{sec}</span>
                                                 </label>
                                             ))}
@@ -1553,7 +1338,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="grid grid-cols-2 gap-2">
                                             {["Geopolitical Analysis", "Governance Audit", "RROI Index", "Temporal Market Analysis"].map(mod => (
                                                 <label key={mod} className="flex items-center gap-2 p-2 border rounded-md hover:bg-stone-50 cursor-pointer">
-                                                    <input type="checkbox" className="h-4 w-4 text-bw-navy focus:ring-bw-gold"/>
+                                                    <input type="checkbox" className="h-4 w-4 text-amber-800 focus:ring-amber-600"/>
                                                     <span className="text-sm">{mod}</span>
                                                 </label>
                                             ))}
@@ -1627,7 +1412,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="grid grid-cols-2 gap-2">
                                             {["Binding Provisions", "Non-binding Provisions", "Confidentiality", "Exclusivity", "Termination"].map(clause => (
                                                 <label key={clause} className="flex items-center gap-2 p-2 border rounded-md hover:bg-stone-50 cursor-pointer">
-                                                    <input type="checkbox" className="h-4 w-4 text-bw-navy focus:ring-bw-gold"/>
+                                                    <input type="checkbox" className="h-4 w-4 text-amber-800 focus:ring-amber-600"/>
                                                     <span className="text-sm">{clause} Clause</span>
                                                 </label>
                                             ))}
@@ -1722,7 +1507,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <label className="block text-xs font-bold text-stone-700 mb-1">Scope of Diligence</label>
                                         <div className="grid grid-cols-2 gap-2">
                                             {["Financials", "Legal & Corporate Structure", "Technical IP", "Human Resources"].map(scope => (
-                                                <label key={scope} className="flex items-center gap-2 p-2 border rounded-md hover:bg-stone-50 cursor-pointer"><input type="checkbox" className="h-4 w-4 text-bw-navy focus:ring-bw-gold"/> <span className="text-sm">{scope}</span></label>
+                                                <label key={scope} className="flex items-center gap-2 p-2 border rounded-md hover:bg-stone-50 cursor-pointer"><input type="checkbox" className="h-4 w-4 text-amber-800 focus:ring-amber-600"/> <span className="text-sm">{scope}</span></label>
                                             ))}
                                         </div>
                                     </div>
@@ -1770,7 +1555,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="grid grid-cols-2 gap-2">
                                             {["Executive Summary", "Terms & Conditions", "Financial Projections", "Risk Assessment", "Governance Structure", "Exit Strategy"].map(sec => (
                                                 <label key={sec} className="flex items-center gap-2 p-2 border rounded-md hover:bg-stone-50 cursor-pointer">
-                                                    <input type="checkbox" className="h-4 w-4 text-bw-navy focus:ring-bw-gold"/>
+                                                    <input type="checkbox" className="h-4 w-4 text-amber-800 focus:ring-amber-600"/>
                                                     <span className="text-sm">{sec}</span>
                                                 </label>
                                             ))}
@@ -1805,7 +1590,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="grid grid-cols-2 gap-2">
                                             {["Financial Risk", "Operational Risk", "Legal Risk", "Market Risk", "Reputational Risk", "Geopolitical Risk"].map(risk => (
                                                 <label key={risk} className="flex items-center gap-2 p-2 border rounded-md hover:bg-stone-50 cursor-pointer">
-                                                    <input type="checkbox" defaultChecked className="h-4 w-4 text-bw-navy focus:ring-bw-gold"/>
+                                                    <input type="checkbox" defaultChecked className="h-4 w-4 text-amber-800 focus:ring-amber-600"/>
                                                     <span className="text-sm">{risk}</span>
                                                 </label>
                                             ))}
@@ -2147,7 +1932,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                     {activeModal?.startsWith('add-') ? 'Add to Report' : 'Generate Document'}
                                 </button>
                             ) : activeModal !== 'generation' ? (
-                                <button onClick={handleModalClose} className="px-6 py-2 bg-bw-navy text-white text-sm font-bold rounded shadow-lg hover:bg-stone-800 transition-all">
+                                <button onClick={handleModalClose} className="px-6 py-2 bg-gradient-to-r from-amber-800 to-gray-700 text-white text-sm font-bold rounded shadow-lg hover:bg-stone-800 transition-all">
                                     Close
                                 </button>
                             ) : null}
@@ -2177,7 +1962,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="p-6 border-b border-stone-200">
-                            <h2 className="text-2xl font-serif font-bold text-bw-navy">Official Report Selection</h2>
+                            <h2 className="text-2xl font-serif font-bold text-amber-800">Official Report Selection</h2>
                             <p className="text-sm text-stone-600 mt-1">Select which official documents to generate. Each will be created based on the finalized draft data.</p>
                         </div>
                         <div className="p-8 overflow-y-auto custom-scrollbar flex-1">
@@ -2235,18 +2020,18 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
         </AnimatePresence>
 
         {/* --- RIGHT PANEL: THE ARTIFACT (OUTPUT) --- */}
-        <div className="flex-1 bg-stone-200 relative flex flex-col items-center overflow-hidden" style={{ flexBasis: '70%' }}>
+        <div className="flex-1 bg-gradient-to-b from-slate-50 to-gray-100 relative flex flex-col items-center overflow-hidden" style={{ flexBasis: '70%' }}>
             {/* Toolbar Header */}
-            <div className="w-full h-16 bg-white/80 backdrop-blur border-b border-stone-300 flex items-center justify-between px-8 z-10 shrink-0">
-                <div className="flex items-center gap-2 text-xs font-bold text-stone-500 uppercase tracking-widest">
+            <div className="w-full h-16 bg-gradient-to-r from-amber-50 to-yellow-50 backdrop-blur border-b-4 border-amber-700 flex items-center justify-between px-8 z-10 shrink-0">
+                <div className="flex items-center gap-2 text-xs font-bold text-amber-900 uppercase tracking-widest">
                     <History className="w-4 h-4" /> Live Document Preview
                 </div>
                 <div className="flex gap-2 flex-wrap items-center">
-                    <button className="px-4 py-2 bg-bw-navy text-white text-xs font-bold rounded shadow-lg hover:bg-stone-800 transition-all flex items-center gap-2">
+                    <button className="px-4 py-2 bg-gradient-to-r from-amber-800 to-gray-700 text-white text-xs font-bold rounded shadow-lg hover:from-amber-900 hover:to-gray-800 transition-all flex items-center gap-2">
                         <MessageCircle size={14} />
                         BW Consultant
                     </button>
-                    <button className="px-4 py-2 hover:bg-stone-100 rounded text-stone-600 text-xs font-bold flex items-center gap-2 border border-transparent hover:border-stone-200 transition-all" title="Print">
+                    <button className="px-4 py-2 hover:bg-amber-100 rounded text-amber-900 text-xs font-bold flex items-center gap-2 border-2 border-amber-400 hover:border-amber-700 transition-all" title="Print">
                         <Printer size={14}/> Print
                     </button>
                     <button className="px-4 py-2 hover:bg-stone-100 rounded text-stone-600 text-xs font-bold flex items-center gap-2 border border-transparent hover:border-stone-200 transition-all" title="Download">
@@ -2272,7 +2057,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                     {/* Doc Header */}
                     <div className="h-32 bg-white border-b border-stone-100 flex items-center justify-between px-12 shrink-0">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-bw-navy text-white flex items-center justify-center font-serif font-bold text-2xl">N</div>
+                            <div className="w-12 h-12 bg-gradient-to-r from-amber-800 to-gray-700 text-white flex items-center justify-center font-serif font-bold text-2xl">N</div>
                             <div>
                                 <div className="text-[10px] font-bold tracking-[0.3em] text-stone-400 uppercase mb-1">BWGA Intelligence</div>
                                 <div className="text-xl font-serif font-bold text-stone-900 tracking-tight">
@@ -2410,7 +2195,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                     <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
                         <button 
                             onClick={() => setShowFinalizationModal(true)}
-                            className="px-8 py-4 bg-bw-gold text-bw-navy font-bold rounded-lg shadow-2xl hover:scale-105 transition-all flex items-center gap-3 animate-pulse"
+                            className="px-8 py-4 bg-bw-gold text-amber-800 font-bold rounded-lg shadow-2xl hover:scale-105 transition-all flex items-center gap-3 animate-pulse"
                         >
                             <CheckCircle size={20} /> Accept Draft & Proceed to Report Selection
                         </button>
@@ -2424,3 +2209,8 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
 
 
 export default MainCanvas;
+
+
+
+
+
