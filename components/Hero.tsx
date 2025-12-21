@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { ArrowDown, Radio, ScanLine } from 'lucide-react';
+import { ArrowDown, Radio, ScanLine, Users, Activity, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface HeroProps {
@@ -54,6 +54,21 @@ export const Hero: React.FC<HeroProps> = ({ onOpenSystem }) => {
                         <p className="mt-8">
                             We architected the <strong className="text-bw-gold">Regional Intelligence Core</strong> to decode this frequency. It is not a passive consultancy tool; it is a deterministic engine designed to translate the specific "blind spots" of regional expansion into the language of global capital.
                         </p>
+                        <p className="mt-8">
+                            Built to execute, not just analyze: <strong>Partner Discovery</strong>, <strong>Symbiotic Matchmaking (SPI)</strong>, <strong>Document Suite</strong> (LoI, MoU, Proposal), <strong>Multi‑Scenario Simulation</strong>, <strong>Early‑Warning Alerts</strong>, <strong>Due Diligence Intelligence</strong>, <strong>Relocation & TCO</strong>, and <strong>NSIL/API Export</strong>.
+                        </p>
+                        {/* Lightweight capability badges */}
+                        <div className="mt-4 flex flex-wrap gap-3">
+                            <span className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20 text-xs font-bold uppercase tracking-widest text-white/90">
+                                <Users className="w-3.5 h-3.5 text-bw-gold" aria-hidden="true" /> Partner Discovery
+                            </span>
+                            <span className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20 text-xs font-bold uppercase tracking-widest text-white/90">
+                                <Activity className="w-3.5 h-3.5 text-bw-gold" aria-hidden="true" /> Multi‑Scenario Simulation
+                            </span>
+                            <span className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20 text-xs font-bold uppercase tracking-widest text-white/90">
+                                <AlertTriangle className="w-3.5 h-3.5 text-bw-gold" aria-hidden="true" /> Early‑Warning Alerts
+                            </span>
+                        </div>
                     </div>
 
                     <div className="mt-10 flex flex-col sm:flex-row gap-8 items-start sm:items-center">

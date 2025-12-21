@@ -1,6 +1,6 @@
 
 import {
-  Building2, Target, Shield, Globe, BarChart3, Handshake, FileText,
+  Building2, Target, Shield, Globe, BarChart3, Handshake,
   Zap, Sparkles, DollarSign, Activity, Layers, Network, TrendingUp, Plus,
   Users, Scale, Settings, GitBranch, History, CheckCircle, MessageCircle, Briefcase,
   BarChart, Cpu, MapPin, ArrowRight, Calculator, AlertCircle, ShieldCheck,
@@ -10,6 +10,15 @@ import React, { ElementType } from 'react';
 
 export type SkillLevel = 'novice' | 'experienced' | 'expert';
 
+export interface IngestedDocumentMeta {
+  filename: string;
+  fileType?: string;
+  fileSize?: number;
+  wordCount?: number;
+  uploadedAt: string;
+  notes?: string;
+}
+
 // --- NEURO-SYMBOLIC TYPES ---
 
 export type ChecklistStatus = 'pending' | 'satisfied' | 'failed' | 'skipped';
@@ -18,8 +27,8 @@ export interface ChecklistItem {
     id: string;
     label: string;
     category: 'Identity' | 'Strategy' | 'Financial' | 'Risk' | 'Compliance';
-    status: ChecklistStatus;
-    value?: any;
+  status: ChecklistStatus;
+  value?: string | number | boolean | null;
     required: boolean;
     description: string;
     validationRule?: string; // e.g., "value > 1000"
@@ -100,6 +109,13 @@ export interface ReportParameters {
   userCountry: string;
   userCity?: string;
   userTier: string;
+  entityClassification?: string;
+  parentAgency?: string;
+  operatingUnit?: string;
+  missionRequestSummary?: string;
+  assistanceBackground?: string;
+  intakeGuidanceMode?: 'orientation' | 'collaborative' | 'expert';
+  ingestedDocuments?: IngestedDocumentMeta[];
   
   // Organization Deep Profile
   organizationName: string;
@@ -150,6 +166,14 @@ export interface ReportParameters {
   specificOpportunity?: string; // Granular opportunity selection
   targetIncentives?: string[]; // Incentives sought
   partnerPersonas?: string[];
+  stakeholderAlignment?: string[];
+  stakeholderConcerns?: string;
+  alignmentPlan?: string;
+  executiveSponsor?: string;
+  partnerReadinessLevel?: string;
+  partnerFitCriteria?: string[];
+  relationshipGoals?: string[];
+  partnerEngagementNotes?: string;
 
   // Execution & Operations
   relationshipStage: string;
@@ -260,11 +284,54 @@ export interface DiversificationAnalysis {
   recommendedMarkets: MarketOpportunity[];
 }
 
+export interface LAIResult {
+  title: string;
+  description: string;
+  components: string[];
+  synergyTag?: string;
+}
+
+export interface IVASBreakdown {
+  activationFriction: string;
+  opportunityQuantum: string;
+  complianceFriction?: string;
+}
+
+export interface IVASResult {
+  ivasScore: number;
+  activationMonths: number;
+  breakdown: IVASBreakdown;
+  p10Months?: number;
+  p50Months?: number;
+  p90Months?: number;
+}
+
+export interface SCFResult {
+  totalEconomicImpactUSD: number;
+  directJobs: number;
+  indirectJobs: number;
+  annualizedImpact: number;
+  impactP10?: number;
+  impactP50?: number;
+  impactP90?: number;
+  jobsP10?: number;
+  jobsP50?: number;
+  jobsP90?: number;
+}
+
+export interface ProvenanceTag {
+  metric: string;
+  source: string;
+  freshness: string;
+  coverage?: number;
+}
+
 export interface OrchResult {
     details: {
-        lais?: any[];
-        ivas?: any;
-        scf?: any;
+        lais?: LAIResult[];
+        ivas?: IVASResult;
+        scf?: SCFResult;
+    provenance?: ProvenanceTag[];
     };
     nsilOutput: string;
 }
@@ -406,6 +473,31 @@ export interface ReportData {
   implementation: ReportSection;
   financials: ReportSection;
   risks: ReportSection;
+
+  // Optional enriched intelligence fields used in the Control Matrix / Live Preview
+  confidenceScores?: {
+    overall?: number;
+    economicReadiness?: number;
+    symbioticFit?: number;
+    politicalStability?: number;
+    partnerReliability?: number;
+    ethicalAlignment?: number;
+    activationVelocity?: number;
+    transparency?: number;
+  };
+
+  computedIntelligence?: {
+    spi?: SPIResult;
+    rroi?: RROI_Index;
+    seam?: SEAM_Blueprint;
+    symbioticPartners?: SymbioticPartner[];
+    diversificationAnalysis?: DiversificationAnalysis;
+    ethicsCheck?: EthicalCheckResult;
+    ivas?: IVASResult;
+    scf?: SCFResult;
+    intakeMapping?: IntakeMappingSnapshot;
+    provenance?: ProvenanceTag[];
+  };
 }
 
 // --- REPORT PAYLOAD SCHEMA ---
@@ -486,8 +578,9 @@ export interface ReportPayload {
     symbioticPartners: SymbioticPartner[];
     diversificationAnalysis: DiversificationAnalysis;
     ethicsCheck: EthicalCheckResult;
-    ivas: any; // From orchestration
-    scf: any; // Strategic Cash Flow
+    ivas: IVASResult; // From orchestration
+    scf: SCFResult; // Strategic Cash Flow
+    intakeMapping: IntakeMappingSnapshot;
   };
 }
 
@@ -580,8 +673,8 @@ export interface ComplexityScore {
 export interface CanvasModule {
     id: string;
     title: string;
-    icon: React.ComponentType<any>;
-    component: React.ComponentType<any>;
+  icon: React.ComponentType<unknown>;
+  component: React.ComponentType<unknown>;
     status: 'active' | 'inactive' | 'completed' | 'locked';
     phase: string;
 }
@@ -703,3 +796,80 @@ export const toolCategories: Record<string, ToolDefinition[]> = {
     { id: 'custom-marketplace', icon: Plus, label: 'Add Custom', description: 'Define custom marketplace tool' }
   ]
 };
+
+// --- REFINED INTAKE MODEL ---
+
+export interface IntakeIdentity {
+  entityName: string;
+  legalStructure?: string;
+  registrationCountry?: string;
+  registrationCity?: string;
+  headquartersAddress?: string;
+  website?: string;
+  industryClassification?: string;
+  yearsOperating?: number;
+}
+
+export interface IntakeMission {
+  missionStatement?: string;
+  strategicIntent: string[]; // e.g., entry, scale, consolidate
+  objectives: string[]; // measurable goals/KPIs
+  timelineHorizon?: '0-6m' | '6-18m' | '18-36m' | '36m+';
+}
+
+export interface IntakeCounterparty {
+  name: string;
+  type?: string; // gov, enterprise, SME, NGO
+  country?: string;
+  city?: string;
+  relationshipStage?: 'none' | 'intro' | 'pilot' | 'contract';
+}
+
+export interface IntakeConstraints {
+  budgetUSD?: number;
+  capitalMix?: { debt?: number; equity?: number; grant?: number };
+  riskTolerance?: 'low' | 'medium' | 'high';
+  complianceNotes?: string[];
+}
+
+export interface IntakeProof {
+  documents?: Array<{ name: string; url?: string; type?: string }>;
+  references?: Array<{ name: string; role?: string; contact?: string }>;
+}
+
+export interface IntakeContacts {
+  primary?: { name: string; email: string; phone?: string };
+  secondary?: { name?: string; email?: string; phone?: string };
+  governmentLiaison?: { name?: string; email?: string; phone?: string };
+}
+
+export interface SPIInput {
+  riskTolerance: 'low' | 'medium' | 'high';
+  partnerCount: number;
+  hasGovernmentLiaison: boolean;
+}
+
+export interface IVASInput {
+  activationFrictionSeed: number;
+  opportunityQuantumSeed: number;
+}
+
+export interface SCFInput {
+  baseDealValueUSD: number;
+}
+
+export interface RefinedIntake {
+  identity: IntakeIdentity;
+  mission: IntakeMission;
+  counterparties: IntakeCounterparty[];
+  constraints?: IntakeConstraints;
+  proof?: IntakeProof;
+  contacts?: IntakeContacts;
+}
+
+export interface IntakeMappingSnapshot {
+  refinedIntake: RefinedIntake;
+  spiInput: SPIInput;
+  ivasInput: IVASInput;
+  scfInput: SCFInput;
+}

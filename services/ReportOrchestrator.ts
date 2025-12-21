@@ -1,12 +1,18 @@
-import { ReportParameters, ReportPayload, SPIResult, RROI_Index, SEAM_Blueprint, SymbioticPartner, DiversificationAnalysis, EthicalCheckResult } from '../types';
+import { ReportParameters, ReportPayload, SPIResult, RROI_Index, SEAM_Blueprint, SymbioticPartner, DiversificationAnalysis, EthicalCheckResult, RefinedIntake, RegionProfile, MarketShare } from '../types';
 import { calculateSPI, generateRROI, generateSEAM, generateSymbioticMatches, runEthicalSafeguards } from './engine';
 import { MarketDiversificationEngine } from './engine';
 import { runOpportunityOrchestration } from './engine';
 import { GLOBAL_CITY_DATABASE } from '../constants';
+import { mapToSPI, mapToIVAS, mapToSCF } from './intakeMapping';
 
 export class ReportOrchestrator {
   static async assembleReportPayload(params: ReportParameters): Promise<ReportPayload> {
     console.log('DEBUG: Starting ReportOrchestrator assembly for', params.organizationName);
+
+    const refinedIntake = this.toRefinedIntake(params);
+    const spiInput = mapToSPI(refinedIntake);
+    const ivasInput = mapToIVAS(refinedIntake);
+    const scfInput = mapToSCF(refinedIntake);
 
     // Run all intelligence engines in parallel
     const [
@@ -59,7 +65,13 @@ export class ReportOrchestrator {
         diversificationAnalysis,
         ethicsCheck,
         ivas: orchestrationResult.details.ivas,
-        scf: orchestrationResult.details.scf
+        scf: orchestrationResult.details.scf,
+        intakeMapping: {
+          refinedIntake,
+          spiInput,
+          ivasInput,
+          scfInput
+        }
       }
     };
 
@@ -67,12 +79,17 @@ export class ReportOrchestrator {
     return payload;
   }
 
-  private static buildRegionProfile(params: ReportParameters): any {
+  private static buildRegionProfile(params: ReportParameters): RegionProfile {
     const cityData = GLOBAL_CITY_DATABASE[params.country];
+    const population = cityData?.population ?? 10_000_000;
+    const gdpBillion = cityData?.gdp.totalBillionUSD ?? 100;
+
     return {
+      id: `${params.country || 'unknown'}-${params.region || 'region'}`,
+      name: params.country || 'Target Region',
       country: params.country,
-      region: params.region,
-      gdp: cityData ? { totalBillionUSD: cityData.gdp.totalBillionUSD } : { totalBillionUSD: 100 },
+      population,
+      gdp: gdpBillion * 1_000_000_000,
       rawFeatures: cityData ? [
         { name: 'Infrastructure', rarityScore: cityData.infrastructure.transportation, relevanceScore: 80, marketProxy: cityData.infrastructure.digital },
         { name: 'Talent Pool', rarityScore: cityData.talentPool.skillsAvailability, relevanceScore: 85, marketProxy: cityData.talentPool.educationLevel }
@@ -163,7 +180,7 @@ export class ReportOrchestrator {
 
   private static async runDiversificationAnalysis(params: ReportParameters): Promise<DiversificationAnalysis> {
     // Mock market shares for demonstration
-    const mockMarkets: any[] = [
+    const mockMarkets: MarketShare[] = [
       { country: params.country, share: 60 },
       { country: 'Vietnam', share: 20 },
       { country: 'India', share: 15 },
@@ -209,5 +226,31 @@ export class ReportOrchestrator {
     console.log('Confidence Scores:', payload.confidenceScores);
     console.log('Computed Intelligence Keys:', Object.keys(payload.computedIntelligence));
     console.log('=====================================');
+  }
+
+  private static toRefinedIntake(params: ReportParameters): RefinedIntake {
+    const yearsOperating = params.yearsOperation ? Number(params.yearsOperation) : undefined;
+    return {
+      identity: {
+        entityName: params.organizationName || 'Unnamed Entity',
+        registrationCountry: params.country,
+        registrationCity: params.userCity,
+        industryClassification: params.industry?.[0],
+        legalStructure: params.organizationType,
+        yearsOperating: Number.isFinite(yearsOperating) ? yearsOperating : undefined,
+      },
+      mission: {
+        strategicIntent: params.strategicIntent || [],
+        objectives: params.strategicObjectives || [],
+        timelineHorizon: params.expansionTimeline as RefinedIntake['mission']['timelineHorizon'],
+      },
+      counterparties: (params.partnerPersonas || []).map(name => ({ name, relationshipStage: 'intro' })),
+      constraints: {
+        budgetUSD: params.dealSize ? Number(params.dealSize) : undefined,
+        riskTolerance: params.riskTolerance as 'low' | 'medium' | 'high' | undefined,
+      },
+      proof: { documents: [] },
+      contacts: {},
+    };
   }
 }

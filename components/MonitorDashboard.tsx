@@ -33,7 +33,7 @@ export default function MonitorDashboard({ reports }: MonitorDashboardProps) {
 
       <div className="flex-1 overflow-y-auto relative z-10 custom-scrollbar pr-2">
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-            {reports.map((report, idx) => (
+            {reports.map((report) => (
                 <div key={report.id} className="border border-green-900/50 bg-green-900/5 p-2 text-xs flex justify-between items-center hover:bg-green-900/20 transition-colors">
                     <div className="flex flex-col">
                         <span className="font-bold opacity-70">[{report.id}]</span>

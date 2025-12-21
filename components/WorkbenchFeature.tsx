@@ -21,18 +21,18 @@ const USE_CASES = [
         title: "The Devil's Advocate",
         quote: "Think your strategy is perfect? Ask the Workbench to 'Attack this Plan.'",
         action: "It will simulate adversarial scenarios to find your blind spots.",
-        gradient: "from-orange-500/20 to-transparent",
-        border: "group-hover:border-orange-500/50"
+        gradient: "from-sky-500/20 to-transparent",
+        border: "group-hover:border-sky-500/50"
     }
 ];
 
 const SYSTEM_LOGS = [
     { time: '00:01', label: 'DETECTED INTENT:', value: 'Logistics Risk / Supply Chain', color: 'text-blue-400' },
-    { time: '00:01', label: 'CONTEXT:', value: 'Vietnam Region', color: 'text-stone-500' },
+    { time: '00:01', label: 'CONTEXT:', value: 'Philippine Region', color: 'text-slate-500' },
     { time: '00:02', label: 'ACTIVATING:', value: 'Trade Disruption Simulator', color: 'text-purple-400' },
-    { time: '00:02', label: 'LOADING:', value: 'Historical Port Congestion Index', color: 'text-stone-500' },
-    { time: '00:03', label: 'RETRIEVING:', value: 'Vietnam Port Throughput Data (2024)', color: 'text-orange-400' },
-    { time: '00:03', label: 'ANALYZING:', value: 'Wait times > 48hrs...', color: 'text-stone-500' },
+    { time: '00:02', label: 'LOADING:', value: 'Historical Port Congestion Index', color: 'text-slate-500' },
+    { time: '00:03', label: 'RETRIEVING:', value: 'Vietnam Port Throughput Data (2024)', color: 'text-sky-400' },
+    { time: '00:03', label: 'ANALYZING:', value: 'Wait times > 48hrs...', color: 'text-slate-500' },
     { time: '00:04', label: 'GENERATING:', value: 'Mitigation Strategy Beta...', color: 'text-green-400' }
 ];
 
@@ -108,41 +108,41 @@ export const WorkbenchFeature: React.FC = () => {
     }, [currentLogIndex, charIndex]);
 
     return (
-        <section className="py-24 bg-bw-navy text-white relative overflow-hidden border-t border-stone-800">
+        <section className="py-24 bg-slate-900 text-white relative overflow-hidden border-t border-slate-800">
             {/* Background Elements */}
             <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none" 
-                 style={{ backgroundImage: 'radial-gradient(#b49b67 1px, transparent 1px)', backgroundSize: '30px 30px' }}>
+                 style={{ backgroundImage: 'radial-gradient(#60a5fa 1px, transparent 1px)', backgroundSize: '30px 30px' }}>
             </div>
 
             <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
                 
                 {/* Header */}
                 <div className="text-center mb-16 max-w-3xl mx-auto">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20 text-xs font-bold uppercase tracking-widest mb-6 text-bw-gold">
-                        <Activity className="w-4 h-4" /> Live Collaboration Layer
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20 text-xs font-bold uppercase tracking-widest mb-6 text-blue-400">
+                        <Activity className="w-4 h-4" />
                     </div>
                     <h2 className="text-4xl md:text-5xl font-serif font-bold mb-6 leading-tight">
                         The Neural Workbench: <br/>
-                        <span className="text-stone-400">Your Always-On Strategic Partner.</span>
+                        <span className="text-slate-400">Your Always-On Strategic Partner.</span>
                     </h2>
-                    <p className="text-lg text-stone-300 leading-relaxed">
+                    <p className="text-lg text-slate-300 leading-relaxed">
                         You provide the raw intent. We provide the architectural logic. 
                         It acts as a friction-free bridge between your intuition and our calculation.
                     </p>
                 </div>
 
                 {/* The Visual Demo (Split Screen) */}
-                <div className="grid lg:grid-cols-2 gap-0 border border-stone-700 rounded-xl overflow-hidden shadow-2xl mb-24 bg-black/40 backdrop-blur-sm h-[450px]">
+                <div className="grid lg:grid-cols-2 gap-0 border border-slate-700 rounded-xl overflow-hidden shadow-2xl mb-24 bg-black/40 backdrop-blur-sm h-[450px]">
                     
                     {/* Left: User Input */}
-                    <div className="p-8 border-b lg:border-b-0 lg:border-r border-stone-700 bg-white/5 flex flex-col">
-                        <div className="flex items-center gap-2 mb-6 text-stone-400 text-xs font-bold uppercase tracking-widest">
+                    <div className="p-8 border-b lg:border-b-0 lg:border-r border-slate-700 bg-white/5 flex flex-col">
+                        <div className="flex items-center gap-2 mb-6 text-slate-400 text-xs font-bold uppercase tracking-widest">
                             <MessageSquare className="w-4 h-4" /> Your Strategic Notepad
                         </div>
                         <div className="font-serif text-2xl text-white/90 leading-relaxed flex-grow">
-                            "{typedText}<span className="animate-pulse text-bw-gold">|</span>"
+                            "{typedText}<span className="animate-pulse text-blue-400">|</span>"
                         </div>
-                        <div className="text-xs text-stone-500 mt-4 flex items-center gap-2">
+                        <div className="text-xs text-slate-500 mt-4 flex items-center gap-2">
                             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                             Status: Listening...
                         </div>
@@ -157,7 +157,7 @@ export const WorkbenchFeature: React.FC = () => {
                         <div ref={logContainerRef} className="space-y-4 overflow-y-auto custom-scrollbar flex-grow pr-2">
                             {terminalLines.map((log, i) => (
                                 <div key={i} className="flex gap-3 items-start">
-                                    <span className="text-stone-600 shrink-0">[{log.time}]</span>
+                                    <span className="text-slate-600 shrink-0">[{log.time}]</span>
                                     <span className={`${log.color} font-bold shrink-0`}>{log.label}</span>
                                     <span className="text-white/90">
                                         {log.value}
@@ -183,18 +183,18 @@ export const WorkbenchFeature: React.FC = () => {
                 {/* The Use Cases - Redesigned (No Icons) */}
                 <div className="grid md:grid-cols-3 gap-6">
                     {USE_CASES.map((useCase, idx) => (
-                        <div key={idx} className={`relative p-8 rounded-xl border border-white/10 bg-stone-900/50 backdrop-blur-md overflow-hidden group transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl ${useCase.border}`}>
+                        <div key={idx} className={`relative p-8 rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur-md overflow-hidden group transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl ${useCase.border}`}>
                             
                             {/* Subtle colored gradient overlay on hover */}
                             <div className={`absolute inset-0 bg-gradient-to-br ${useCase.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
                             
                             <div className="relative z-10 flex flex-col h-full">
-                                <h3 className="text-xl font-serif font-bold mb-4 text-white group-hover:text-bw-gold transition-colors">{useCase.title}</h3>
-                                <p className="text-stone-300 text-sm mb-6 italic leading-relaxed flex-grow">"{useCase.quote}"</p>
+                                <h3 className="text-xl font-serif font-bold mb-4 text-white group-hover:text-blue-400 transition-colors">{useCase.title}</h3>
+                                <p className="text-slate-300 text-sm mb-6 italic leading-relaxed flex-grow">"{useCase.quote}"</p>
                                 
                                 <div className="pt-6 border-t border-white/5 mt-auto">
-                                    <p className="text-stone-400 text-xs font-medium leading-relaxed flex gap-3">
-                                        <ArrowRight className="w-4 h-4 shrink-0 text-bw-gold mt-0.5" />
+                                    <p className="text-slate-400 text-xs font-medium leading-relaxed flex gap-3">
+                                        <ArrowRight className="w-4 h-4 shrink-0 text-blue-400 mt-0.5" />
                                         {useCase.action}
                                     </p>
                                 </div>
@@ -205,10 +205,10 @@ export const WorkbenchFeature: React.FC = () => {
 
                 {/* The "Clarifier" Disclaimer */}
                 <div className="mt-24 relative p-10 bg-white rounded-sm shadow-xl overflow-hidden">
-                    <div className="absolute top-0 left-0 w-2 h-full bg-bw-navy"></div>
+                    <div className="absolute top-0 left-0 w-2 h-full bg-slate-900"></div>
                     <div className="relative z-10 text-center">
-                        <h4 className="text-bw-navy font-serif font-bold text-3xl mb-4">The Great Clarifier.</h4>
-                        <p className="text-stone-600 max-w-3xl mx-auto leading-relaxed text-lg">
+                        <h4 className="text-slate-900 font-serif font-bold text-3xl mb-4">The Great Clarifier.</h4>
+                        <p className="text-slate-600 max-w-3xl mx-auto leading-relaxed text-lg">
                             This system is not designed to compete with human expertise. Whether you are an <strong>expert</strong> performing daily due diligence, or a <strong>novice</strong> unsure of where to start, the Neural Workbench exists to clarify confusion. It organizes the chaos of regional data into a coherent structure, allowing you to build with confidence.
                         </p>
                     </div>

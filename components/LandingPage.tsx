@@ -8,21 +8,18 @@ import { WorkbenchFeature } from './WorkbenchFeature';
 import { Insights } from './Insights';
 import { Pricing } from './Pricing';
 import { Footer } from './Footer';
-import SystemLogicPath from './SystemLogicPath';
 
 interface LandingPageProps {
     onEnter: () => void;
-    onOpenLegal: (section?: string) => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onOpenLegal }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
     return (
         <div className="font-sans text-slate-900 bg-white">
             <Navbar />
             {/* Hero also gets onOpenSystem just in case user clicks the visual element */}
             <Hero onOpenSystem={onEnter} />
             <Services />
-            <SystemLogicPath />
             <WorkbenchFeature />
             <About />
             <Insights />

@@ -29,19 +29,22 @@ const steps = [
 ];
 
 export const Insights: React.FC = () => {
-  return (
-    <section id="methodology" className="py-24 bg-white border-t border-gray-100">
+    return (
+        <section id="methodology" className="py-20 bg-white border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             <div className="lg:col-span-4">
                 <h2 className="text-bw-gold font-bold uppercase tracking-widest text-xs mb-3">Methodology</h2>
                 <h3 className="text-3xl font-serif font-bold text-bw-navy mb-6">Industrialized Intelligence.</h3>
                 <p className="text-gray-600 mb-6 leading-relaxed">
                     Most firms offer opinions. The BWGA System provides mathematical proof. We have industrialized the process of strategic foresight into a repeatable, four-stage analytical loop that replaces guesswork with calculation.
                 </p>
-                <p className="text-gray-600 mb-8 leading-relaxed">
-                    This is not a static database; it is an active simulation. Autonomous AI agents model how your specific strategy will interact with the real-world friction of your target market, predicting outcomes before capital is deployed.
+                <p className="text-gray-600 mb-6 leading-relaxed">
+                    This is not a static database; it is an active simulation. Autonomous AI agents model how your strategy interacts with real‑world friction, predicting outcomes before capital is deployed.
+                </p>
+                <p className="text-gray-600 mb-6 leading-relaxed">
+                    Trusted outcomes: <strong>Deep reasoning</strong> with evidence, real‑time <strong>governance guardrails</strong>, and <strong>early‑warning alerts</strong> mapped to your mission.
                 </p>
                 <div className="p-6 bg-bw-navy text-white rounded-sm border-l-4 border-bw-gold">
                     <div className="text-xl font-serif italic mb-4">"We don't find the safe bet. We calculate the mispriced one."</div>

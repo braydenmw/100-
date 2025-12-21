@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { FileText, Download, Mail, Copy, CheckCircle, AlertCircle, Clock, DollarSign, Zap } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { FileText, Download, Copy, CheckCircle, AlertCircle, DollarSign } from 'lucide-react';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { RefinedIntake } from '../types';
+import { evaluateDocReadiness } from '../services/intakeMapping';
 
-type DocumentType = 'loi' | 'mou' | 'proposal' | 'executive-summary' | 'financial-model' | 'risk-assessment' | 'dossier' | 'comparison' | 'term-sheet' | 'investment-memo' | 'due-diligence-request' | 'business-intelligence-report' | 'partnership-analyzer' | 'stakeholder-analysis' | 'market-entry-strategy' | 'competitive-analysis' | 'operational-plan' | 'integration-plan';
+type DocumentType = 'loi' | 'mou' | 'proposal' | 'executive-summary' | 'financial-model' | 'risk-assessment' | 'dossier' | 'comparison' | 'term-sheet' | 'investment-memo' | 'due-diligence-request' | 'business-intelligence-report' | 'partnership-analyzer' | 'stakeholder-analysis' | 'market-entry-strategy' | 'competitive-analysis' | 'operational-plan' | 'integration-plan' | 'entry-advisory' | 'cultural-brief';
 
 interface DocumentTemplate {
   id: DocumentType;
@@ -32,10 +33,34 @@ const DocumentGenerationSuite: React.FC<DocumentGenerationSuiteProps> = ({
   const [selectedDocument, setSelectedDocument] = useState<DocumentType | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<string>('');
-  const [exportFormat, setExportFormat] = useState<'pdf' | 'docx'>('pdf');
+  const [exportFormat] = useState<'pdf' | 'docx'>('pdf');
+  const [lengthPreset, setLengthPreset] = useState<'brief' | 'standard' | 'extended'>('standard');
+  const [selectedDocsQueue, setSelectedDocsQueue] = useState<DocumentType[]>([]);
+  const [generatedBatch, setGeneratedBatch] = useState<Array<{ id: DocumentType; title: string; content: string }>>([]);
 
   // Calculate decision deadline once to avoid impure function calls during render
   const [decisionDeadline] = useState(() => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString());
+
+  // Build a minimal intake model from provided props for readiness evaluation
+  const intake = useMemo<RefinedIntake>(() => ({
+    identity: {
+      entityName,
+      registrationCountry: targetMarket,
+      industryClassification: 'Partnership',
+      yearsOperating: undefined,
+    },
+    mission: {
+      strategicIntent: ['entry'],
+      objectives: ['establish partnership'],
+      timelineHorizon: '6-18m',
+    },
+    counterparties: targetPartnerName ? [{ name: targetPartnerName, country: targetMarket, relationshipStage: 'intro' }] : [],
+    constraints: { budgetUSD: dealValue, riskTolerance: 'medium' },
+    proof: { documents: [] },
+    contacts: {},
+  }), [entityName, targetPartnerName, targetMarket, dealValue]);
+
+  const docReadiness = useMemo(() => evaluateDocReadiness(intake), [intake]);
 
   const documentTemplates: DocumentTemplate[] = [
     {
@@ -181,8 +206,148 @@ const DocumentGenerationSuite: React.FC<DocumentGenerationSuiteProps> = ({
       icon: <FileText className="w-6 h-6" />,
       category: 'Strategic',
       timeToGenerate: '< 5 min'
+    },
+    {
+      id: 'entry-advisory',
+      title: 'Location Entry Advisory',
+      description: 'Guidance for entering and operating in a target market before relocation or travel',
+      icon: <FileText className="w-6 h-6" />,
+      category: 'Strategic',
+      timeToGenerate: '< 3 min'
+    },
+    {
+      id: 'cultural-brief',
+      title: 'Cultural Intelligence Brief',
+      description: 'Practical norms, etiquette, negotiation styles, and regulatory culture overview',
+      icon: <FileText className="w-6 h-6" />,
+      category: 'Analysis',
+      timeToGenerate: '< 2 min'
     }
   ];
+
+  const requiredFields: Record<DocumentType, { label: string; present: boolean }[]> = {
+    loi: [
+      { label: 'Counterparty', present: Boolean(targetPartnerName) },
+      { label: 'Jurisdiction', present: Boolean(targetMarket) },
+      { label: 'Deal value', present: Boolean(dealValue) }
+    ],
+    mou: [
+      { label: 'Counterparty', present: Boolean(targetPartnerName) },
+      { label: 'Scope', present: Boolean(targetMarket) },
+      { label: 'Governance', present: true }
+    ],
+    proposal: [
+      { label: 'Objectives', present: true },
+      { label: 'Counterparty', present: Boolean(targetPartnerName) },
+      { label: 'Market', present: Boolean(targetMarket) }
+    ],
+    'executive-summary': [
+      { label: 'Opportunity', present: Boolean(targetMarket) },
+      { label: 'Ask/Value', present: Boolean(dealValue) }
+    ],
+    'financial-model': [
+      { label: 'Deal value', present: Boolean(dealValue) },
+      { label: 'Horizon', present: true },
+      { label: 'Scenario set', present: true }
+    ],
+    'risk-assessment': [
+      { label: 'Jurisdiction', present: Boolean(targetMarket) },
+      { label: 'Counterparty', present: Boolean(targetPartnerName) }
+    ],
+    dossier: [
+      { label: 'Market', present: Boolean(targetMarket) },
+      { label: 'Partner', present: Boolean(targetPartnerName) },
+      { label: 'Financials', present: Boolean(dealValue) }
+    ],
+    comparison: [
+      { label: 'Options listed', present: false },
+      { label: 'Criteria', present: true }
+    ],
+    'term-sheet': [
+      { label: 'Counterparty', present: Boolean(targetPartnerName) },
+      { label: 'Deal value', present: Boolean(dealValue) },
+      { label: 'Key terms', present: true }
+    ],
+    'investment-memo': [
+      { label: 'Deal value', present: Boolean(dealValue) },
+      { label: 'Thesis', present: Boolean(targetMarket) }
+    ],
+    'due-diligence-request': [
+      { label: 'Counterparty', present: Boolean(targetPartnerName) },
+      { label: 'Scope', present: true }
+    ],
+    'business-intelligence-report': [
+      { label: 'Market', present: Boolean(targetMarket) },
+      { label: 'Focus areas', present: true }
+    ],
+    'partnership-analyzer': [
+      { label: 'Existing partner', present: Boolean(targetPartnerName) },
+      { label: 'KPIs', present: true }
+    ],
+    'stakeholder-analysis': [
+      { label: 'Stakeholder list', present: false },
+      { label: 'Influence map', present: true }
+    ],
+    'market-entry-strategy': [
+      { label: 'Market', present: Boolean(targetMarket) },
+      { label: 'Timeline', present: true }
+    ],
+    'competitive-analysis': [
+      { label: 'Competitor list', present: false },
+      { label: 'Market', present: Boolean(targetMarket) }
+    ],
+    'operational-plan': [
+      { label: 'Milestones', present: true },
+      { label: 'Budget', present: Boolean(dealValue) }
+    ],
+    'integration-plan': [
+      { label: 'Day 1 scope', present: true },
+      { label: 'TSAs', present: false }
+    ],
+    'entry-advisory': [
+      { label: 'Jurisdiction', present: Boolean(targetMarket) },
+      { label: 'Counterparty', present: Boolean(targetPartnerName) },
+      { label: 'Regulatory path', present: true }
+    ],
+    'cultural-brief': [
+      { label: 'Jurisdiction', present: Boolean(targetMarket) },
+      { label: 'Counterparty', present: Boolean(targetPartnerName) },
+      { label: 'Local norms', present: true }
+    ],
+  };
+
+  const recommendedDocs: DocumentType[] = useMemo(() => {
+    const preferredOrder: DocumentType[] = ['executive-summary', 'entry-advisory', 'cultural-brief', 'loi', 'risk-assessment'];
+    const readyFirst = preferredOrder.filter(d => docReadiness[d] === 'ready');
+    const notReady = preferredOrder.filter(d => docReadiness[d] === 'missing-fields');
+    return [...readyFirst, ...notReady];
+  }, [docReadiness]);
+
+  const getReadiness = (doc: DocumentType) => {
+    const reqs = requiredFields[doc] || [];
+    const missing = reqs.filter(r => !r.present).map(r => r.label);
+    return { missing, isReady: missing.length === 0, requirements: reqs };
+  };
+
+  const blockerList = recommendedDocs
+    .flatMap(doc => getReadiness(doc).missing.map(m => `${documentTemplates.find(d => d.id === doc)?.title || doc}: ${m}`))
+    .filter(Boolean);
+
+  const adjustByLength = (text: string): string => {
+    if (lengthPreset === 'brief') {
+      // crude summarization by truncation for now
+      const maxChars = 1200;
+      return text.length > maxChars ? text.slice(0, maxChars) + '\n\n[...brief summary truncated...]' : text;
+    }
+    if (lengthPreset === 'extended') {
+      return text + '\n\nAPPENDIX: Local Considerations\n• Workforce norms\n• Compliance checkpoints\n• Government touchpoints\n• Logistics & infrastructure notes\n\nAPPENDIX: Contacts & Checklists\n• Stakeholder map\n• Required certifications\n• First 90 days plan';
+    }
+    return text; // standard
+  };
+
+  const toggleDocQueue = (docType: DocumentType) => {
+    setSelectedDocsQueue(prev => prev.includes(docType) ? prev.filter(d => d !== docType) : [...prev, docType]);
+  };
 
   const generateDocument = async (docType: DocumentType) => {
     setSelectedDocument(docType);
@@ -250,11 +415,56 @@ const DocumentGenerationSuite: React.FC<DocumentGenerationSuiteProps> = ({
       case 'integration-plan':
         content = generateIntegrationPlan();
         break;
+      case 'entry-advisory':
+        content = generateEntryAdvisory();
+        break;
+      case 'cultural-brief':
+        content = generateCulturalBrief();
+        break;
     }
 
-    setGeneratedContent(content);
+    setGeneratedContent(adjustByLength(content));
     setIsGenerating(false);
     onDocumentGenerated?.(docType, content);
+  };
+
+  const generateSelectedBatch = async () => {
+    if (selectedDocsQueue.length === 0) return;
+    setIsGenerating(true);
+    const batch: Array<{ id: DocumentType; title: string; content: string }> = [];
+    for (const docType of selectedDocsQueue) {
+      // Simulate time similar to single-generation
+      const generationTime = docType === 'dossier' ? 8000 : docType === 'financial-model' ? 4000 : 2500;
+      await new Promise(r => setTimeout(r, generationTime));
+      let content = '';
+      switch (docType) {
+        case 'loi': content = generateLOI(); break;
+        case 'mou': content = generateMOU(); break;
+        case 'proposal': content = generateProposal(); break;
+        case 'executive-summary': content = generateExecutiveSummary(); break;
+        case 'financial-model': content = generateFinancialModel(); break;
+        case 'risk-assessment': content = generateRiskAssessment(); break;
+        case 'dossier': content = generateDossier(); break;
+        case 'comparison': content = generateComparison(); break;
+        case 'term-sheet': content = generateTermSheet(); break;
+        case 'investment-memo': content = generateInvestmentMemo(); break;
+        case 'due-diligence-request': content = generateDueDiligenceRequest(); break;
+        case 'business-intelligence-report': content = generateBusinessIntelligenceReport(); break;
+        case 'partnership-analyzer': content = generatePartnershipAnalyzer(); break;
+        case 'stakeholder-analysis': content = generateStakeholderAnalysis(); break;
+        case 'market-entry-strategy': content = generateMarketEntryStrategy(); break;
+        case 'competitive-analysis': content = generateCompetitiveAnalysis(); break;
+        case 'operational-plan': content = generateOperationalPlan(); break;
+        case 'integration-plan': content = generateIntegrationPlan(); break;
+        case 'entry-advisory': content = generateEntryAdvisory(); break;
+        case 'cultural-brief': content = generateCulturalBrief(); break;
+      }
+      const adjusted = adjustByLength(content);
+      batch.push({ id: docType, title: documentTemplates.find(d => d.id === docType)?.title || docType, content: adjusted });
+    }
+    setGeneratedBatch(batch);
+    setIsGenerating(false);
+    setSelectedDocument(null);
   };
 
   const generateLOI = () => `
@@ -1438,6 +1648,96 @@ CONCLUSION:
 Successful integration requires careful planning, strong leadership, and consistent execution. This plan provides the framework for creating a combined entity greater than the sum of its parts.
   `;
 
+  const generateEntryAdvisory = () => `
+LOCATION ENTRY ADVISORY: ${targetMarket}
+
+Prepared for: ${entityName}
+Partner: ${targetPartnerName}
+Date: ${new Date().toLocaleDateString()}
+
+EXECUTIVE SUMMARY:
+This advisory provides practical guidance to prepare for entry and operations in ${targetMarket} prior to relocation or travel. It outlines regulatory steps, key contacts, cultural considerations, and 30/60/90-day priorities to reduce friction and accelerate readiness.
+
+REGULATORY PATHWAY:
+• Entity Setup: Confirm legal form (LLC/JV); engage local counsel
+• Licenses & Permits: Identify sector-specific approvals; prepare documentation
+• Banking & Tax: Open local accounts; register for tax IDs; set invoicing rules
+• Data & Compliance: Map data flows; align with privacy and sector regulations
+
+KEY TOUCHPOINTS & CONTACTS:
+• Government Relations: Appoint liaison; schedule introductory briefings
+• Industry Bodies: Join relevant associations to access policy updates
+• Local Counsel & Auditor: Retainers for filings, payroll, and compliance
+• Anchor Customers: Pre-schedule solution demos and pilot scoping sessions
+
+OPERATIONAL READINESS CHECKLIST:
+• Office & Infrastructure: Shortlist locations; confirm internet/power reliability
+• Talent & Hiring: Define local roles; engage recruiting partners; plan onboarding
+• Vendor Network: Validate logistics, IT, and facility vendors; negotiate SLAs
+• Security & Continuity: Draft incident response; verify insurance coverage
+
+CULTURAL & NEGOTIATION NOTES:
+• Meetings: Confirm agenda in advance; allow buffer for relationship building
+• Negotiation: Expect iterative discussions; write clear follow-ups and summaries
+• Decision Cycles: Anticipate committee reviews; provide concise briefing packs
+
+30/60/90-DAY PLAN:
+• 30 Days: Legal kick-off, GR introductions, pilot customer shortlist, vendor RFPs
+• 60 Days: License filings submitted, first pilot SOWs, local hiring underway
+• 90 Days: Office ready, pilots live, compliance audit checklist complete
+
+RISKS & MITIGATIONS:
+• Regulatory Delays → Parallel filings, GR follow-ups, buffer timelines
+• Talent Shortages → Early sourcing, competitive offers, training plans
+• Vendor Reliability → Multi-sourcing, performance clauses, weekly tracking
+
+RECOMMENDATION:
+Proceed with Phase 1 setup and pilots. Decision checkpoint by ${decisionDeadline}.
+  `;
+
+  const generateCulturalBrief = () => `
+CULTURAL INTELLIGENCE BRIEF: ${targetMarket}
+
+Prepared for: ${entityName}
+Partner: ${targetPartnerName}
+Date: ${new Date().toLocaleDateString()}
+
+EXECUTIVE OVERVIEW:
+This brief highlights core norms, communication styles, meeting etiquette, and regulatory culture to support effective engagement and trust-building in ${targetMarket}.
+
+COMMUNICATION & MEETINGS:
+• Style: Be clear and respectful; avoid ambiguity in commitments
+• Scheduling: Share agendas early; confirm attendees and decisions required
+• Follow-ups: Summarize outcomes and next steps in writing promptly
+
+NEGOTIATION APPROACH:
+• Tempo: Expect phased agreements; maintain patience and flexibility
+• Decision-Making: Committee or multi-stakeholder reviews are common
+• Documentation: Provide concise term outlines and risk considerations
+
+BUSINESS NORMS:
+• Relationship Orientation: Invest time in continuity and reliability
+• Professional Conduct: Punctuality, preparedness, and precision are valued
+• Governance: Align on KPIs, reporting cadence, and escalation paths
+
+REGULATORY CULTURE:
+• Compliance: Respect formal processes; maintain complete records and audit trails
+• Engagement: Build constructive relationships with relevant authorities
+• Transparency: Provide clear disclosures and timely filings
+
+DO / DON'T:
+• Do: Bring bilingual materials where helpful; verify assumptions in writing
+• Don't: Overpromise timelines; neglect stakeholder sensitivities or protocols
+
+READINESS REMINDERS:
+• Briefing Packs: Prepare concise decks tailored to each audience
+• Local Contacts: Curate a contact map across government, industry, and customers
+• Continuity: Plan for holidays and local events that affect scheduling
+
+RECOMMENDATION:
+Adopt the above practices to strengthen trust, accelerate approvals, and improve negotiation outcomes.
+  `;
+
   const exportDocument = async () => {
     if (!generatedContent) return;
 
@@ -1464,6 +1764,25 @@ Successful integration requires careful planning, strong leadership, and consist
     }
   };
 
+  const exportContent = async (content: string, name: string) => {
+    const pdf = new jsPDF();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 10;
+    const maxWidth = pageWidth - 2 * margin;
+    const lines = pdf.splitTextToSize(content, maxWidth);
+    let yPosition = margin;
+    lines.forEach((line: string) => {
+      if (yPosition > pageHeight - margin) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+      pdf.text(line, margin, yPosition);
+      yPosition += 5;
+    });
+    pdf.save(`${name}-${new Date().getTime()}.pdf`);
+  };
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(generatedContent);
   };
@@ -1479,10 +1798,57 @@ Successful integration requires careful planning, strong leadership, and consist
             Document Generation Suite
           </h2>
           <p className="text-stone-600">Generate professional partnership documents in minutes</p>
+          <div className="mt-4 flex items-center gap-3">
+            <span className="text-xs font-bold text-stone-700">Length:</span>
+            {(['brief','standard','extended'] as const).map(p => (
+              <button key={p} onClick={() => setLengthPreset(p)} className={`px-3 py-1.5 text-xs rounded border ${lengthPreset===p?'bg-blue-600 text-white border-blue-600':'bg-white text-stone-700 border-stone-300 hover:border-blue-300'}`}>{p}</button>
+            ))}
+            <span className="ml-auto text-xs text-stone-500">Multi-select any docs below, then Generate Selected.</span>
+          </div>
         </div>
 
         {!selectedDocument ? (
           <>
+            {/* Stepper & Readiness */}
+            <div className="bg-white border border-stone-200 rounded-xl p-4 flex flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-wide text-stone-700">
+                {["1. Readiness", "2. Pick Docs", "3. Fill Required Fields", "4. Review & Dispatch"].map((step, idx) => (
+                  <div key={step} className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${idx === 0 ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-stone-50 border-stone-200'}`}>
+                    <span className="text-[10px]">{step}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="grid md:grid-cols-3 gap-3">
+                <div className="border border-blue-200 bg-blue-50 rounded-lg p-3 text-xs text-blue-900">
+                  <div className="font-bold mb-1">Recommended next docs</div>
+                  <div className="flex flex-wrap gap-2">
+                    {recommendedDocs.map(doc => {
+                      const { isReady } = getReadiness(doc);
+                      const template = documentTemplates.find(d => d.id === doc);
+                      return (
+                        <span key={doc} className={`px-2 py-1 rounded-full border text-[11px] ${isReady ? 'border-green-300 bg-green-50 text-green-800' : 'border-amber-300 bg-amber-50 text-amber-800'}`}>
+                          {template?.title || doc}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="border border-stone-200 bg-white rounded-lg p-3 text-xs text-stone-800">
+                  <div className="font-bold mb-1">Blocking fields</div>
+                  <ul className="list-disc list-inside space-y-1">
+                    {blockerList.slice(0,3).map((msg, i) => (
+                      <li key={i}>{msg}</li>
+                    ))}
+                    {blockerList.length === 0 && <li>No blockers detected</li>}
+                  </ul>
+                </div>
+                <div className="border border-stone-200 bg-white rounded-lg p-3 text-xs text-stone-800">
+                  <div className="font-bold mb-1">Output & delivery</div>
+                  <p>Choose PDF/Word, download or attach to email/CRM. Bundle packs (Exec Pack, Risk Pack) recommended after readiness.</p>
+                </div>
+              </div>
+            </div>
+
             {/* DOCUMENT GRID */}
             <div className="space-y-6">
               {['Foundation', 'Strategic', 'Analysis', 'Comprehensive', 'Comparative'].map(category => (
@@ -1492,20 +1858,47 @@ Successful integration requires careful planning, strong leadership, and consist
                     {documentTemplates.filter(d => d.category === category).map(doc => (
                       <button
                         key={doc.id}
-                        onClick={() => generateDocument(doc.id)}
+                        onClick={() => toggleDocQueue(doc.id)}
                         className="bg-white rounded-lg border border-stone-200 p-4 hover:shadow-md hover:border-blue-300 transition-all text-left group"
                       >
                         <div className="flex items-start justify-between mb-2">
                           <div className="text-blue-600 group-hover:text-blue-700">{doc.icon}</div>
-                          <div className="text-xs font-bold text-stone-500 bg-stone-100 px-2 py-1 rounded">{doc.timeToGenerate}</div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-xs font-bold text-stone-500 bg-stone-100 px-2 py-1 rounded">{doc.timeToGenerate}</div>
+                            <input type="checkbox" checked={selectedDocsQueue.includes(doc.id)} readOnly className="h-4 w-4" />
+                          </div>
                         </div>
                         <h4 className="font-bold text-stone-900 mb-1">{doc.title}</h4>
                         <p className="text-xs text-stone-600 leading-relaxed">{doc.description}</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {getReadiness(doc.id).requirements.map(req => (
+                            <span
+                              key={`${doc.id}-${req.label}`}
+                              className={`text-[11px] px-2 py-1 rounded-full border ${req.present ? 'border-green-200 bg-green-50 text-green-800' : 'border-amber-200 bg-amber-50 text-amber-800'}`}
+                            >
+                              {req.label}
+                            </span>
+                          ))}
+                        </div>
+                        {!getReadiness(doc.id).isReady && (
+                          <div className="mt-2 text-[11px] text-amber-700 font-semibold">Missing: {getReadiness(doc.id).missing.join(', ')}</div>
+                        )}
+                        <div className="mt-3 flex items-center gap-2">
+                          <button onClick={(e) => { e.stopPropagation(); generateDocument(doc.id); }} className="px-3 py-1.5 text-xs bg-stone-800 text-white rounded hover:bg-black">Generate Now</button>
+                          <span className="text-[11px] text-stone-500">or select for batch</span>
+                        </div>
                       </button>
                     ))}
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button onClick={generateSelectedBatch} disabled={selectedDocsQueue.length===0 || isGenerating} className={`px-4 py-2 rounded text-xs font-bold ${selectedDocsQueue.length===0?'bg-stone-200 text-stone-500 cursor-not-allowed':'bg-blue-600 text-white hover:bg-blue-700'}`}>
+                Generate Selected ({selectedDocsQueue.length})
+              </button>
+              {isGenerating && <span className="text-xs text-stone-600">Generating batch...</span>}
             </div>
 
             {/* INFO BOX */}
@@ -1543,42 +1936,47 @@ Successful integration requires careful planning, strong leadership, and consist
                   ✕
                 </button>
               </div>
-
-              <div className="bg-stone-50 p-6 rounded-lg border border-stone-200 h-96 overflow-y-auto whitespace-pre-wrap text-sm text-stone-700 leading-relaxed font-mono">
-                {generatedContent}
-              </div>
-
-              {/* ACTION BUTTONS */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <button
-                  onClick={copyToClipboard}
-                  className="px-4 py-3 border border-stone-200 rounded-lg font-bold text-sm text-stone-700 hover:bg-stone-50 flex items-center justify-center gap-2"
-                >
-                  <Copy className="w-4 h-4" />
-                  Copy to Clipboard
-                </button>
-
-                <button
-                  onClick={exportDocument}
-                  className="px-4 py-3 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center justify-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download as PDF
-                </button>
-
-                <button
-                  onClick={() => setSelectedDocument(null)}
-                  className="px-4 py-3 border border-stone-200 rounded-lg font-bold text-sm text-stone-700 hover:bg-stone-50 flex items-center justify-center gap-2"
-                >
-                  <FileText className="w-4 h-4" />
-                  Generate Another
-                </button>
-              </div>
-
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-800 flex items-center gap-2">
-                <CheckCircle className="w-4 h-4" />
-                Document generated successfully. Ready for export or sharing.
-              </div>
+              {generatedBatch.length === 0 ? (
+                <>
+                  <div className="bg-stone-50 p-6 rounded-lg border border-stone-200 h-96 overflow-y-auto whitespace-pre-wrap text-sm text-stone-700 leading-relaxed font-mono">
+                    {generatedContent}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <button onClick={copyToClipboard} className="px-4 py-3 border border-stone-200 rounded-lg font-bold text-sm text-stone-700 hover:bg-stone-50 flex items-center justify-center gap-2">
+                      <Copy className="w-4 h-4" /> Copy to Clipboard
+                    </button>
+                    <button onClick={exportDocument} className="px-4 py-3 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 flex items-center justify-center gap-2">
+                      <Download className="w-4 h-4" /> Download as PDF
+                    </button>
+                    <button onClick={() => setSelectedDocument(null)} className="px-4 py-3 border border-stone-200 rounded-lg font-bold text-sm text-stone-700 hover:bg-stone-50 flex items-center justify-center gap-2">
+                      <FileText className="w-4 h-4" /> Generate Another
+                    </button>
+                  </div>
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-800 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" /> Document generated successfully. Ready for export or sharing.
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-4">
+                    {generatedBatch.map((doc, idx) => (
+                      <div key={`${doc.id}-${idx}`} className="border border-stone-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-bold text-stone-900 text-sm">{doc.title}</h4>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => exportContent(doc.content, doc.id)} className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded">Download PDF</button>
+                            <button onClick={() => navigator.clipboard.writeText(doc.content)} className="px-3 py-1.5 text-xs border border-stone-300 rounded">Copy</button>
+                          </div>
+                        </div>
+                        <div className="bg-stone-50 p-3 rounded border border-stone-200 whitespace-pre-wrap text-[12px] text-stone-700 font-mono h-52 overflow-y-auto">{doc.content}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-800 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" /> {generatedBatch.length} documents generated. Export individually.
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

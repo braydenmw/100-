@@ -18,9 +18,9 @@ const plans: PricingPlan[] = [
       'Full System Access (9 Agents)',
       'Unlimited Report Generation',
       'Full Math Core (IVAS™, SCF™, SPI™)',
-      'Global Knowledge Graph (195 Regions)',
-      'Real-Time Ethics & Governance',
-      'PDF & Audio Brief Exports'
+      'Partner Discovery & Matchmaking',
+      'Document Suite (LoI, MoU, Proposal)',
+      'Real-Time Ethics & Governance'
     ]
   },
   {
@@ -33,9 +33,9 @@ const plans: PricingPlan[] = [
       'Full System Access (9 Agents)',
       'Unlimited Report Generation',
       'Full Math Core (IVAS™, SCF™, SPI™)',
-      'Global Knowledge Graph (195 Regions)',
-      'Real-Time Ethics & Governance',
-      'PDF & Audio Brief Exports'
+      'Partner Discovery & Matchmaking',
+      'Document Suite (LoI, MoU, Proposal)',
+      'Real-Time Ethics & Governance'
     ]
   },
   {
@@ -48,9 +48,9 @@ const plans: PricingPlan[] = [
       'Full System Access (9 Agents)',
       'Unlimited Report Generation',
       'Full Math Core (IVAS™, SCF™, SPI™)',
-      'Global Knowledge Graph (195 Regions)',
-      'Real-Time Ethics & Governance',
-      'PDF & Audio Brief Exports'
+      'Partner Discovery & Matchmaking',
+      'Document Suite (LoI, MoU, Proposal)',
+      'Real-Time Ethics & Governance'
     ],
     recommended: true
   },
@@ -64,16 +64,16 @@ const plans: PricingPlan[] = [
       'Full System Access (9 Agents)',
       'Unlimited Report Generation',
       'Full Math Core (IVAS™, SCF™, SPI™)',
-      'Global Knowledge Graph (195 Regions)',
-      'Real-Time Ethics & Governance',
-      'PDF & Audio Brief Exports'
+      'Partner Discovery & Matchmaking',
+      'Document Suite (LoI, MoU, Proposal)',
+      'Real-Time Ethics & Governance'
     ]
   }
 ];
 
 export const Pricing: React.FC<PricingProps> = ({ onOpenSystem }) => {
   return (
-    <section id="pricing" className="py-24 bg-white border-t border-gray-100">
+    <section id="pricing" className="py-20 bg-white border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-bw-gold font-bold uppercase tracking-widest text-sm mb-2">Access Grid</h2>
@@ -83,11 +83,11 @@ export const Pricing: React.FC<PricingProps> = ({ onOpenSystem }) => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
           {plans.map((plan) => (
             <div 
               key={plan.id} 
-              className={`flex flex-col p-6 rounded-sm border ${plan.recommended ? 'border-bw-gold bg-white shadow-xl scale-105 z-10' : 'border-gray-200 bg-bw-light'} transition-all duration-300 hover:shadow-lg`}
+              className={`flex flex-col p-5 rounded-sm border ${plan.recommended ? 'border-bw-gold bg-white shadow-xl scale-105 z-10' : 'border-gray-200 bg-bw-light'} transition-all duration-300 hover:shadow-lg`}
             >
               {plan.recommended && (
                 <div className="self-center bg-bw-gold text-bw-navy text-xs font-bold uppercase py-1 px-3 rounded-full mb-4">
@@ -100,9 +100,9 @@ export const Pricing: React.FC<PricingProps> = ({ onOpenSystem }) => {
               </div>
               <p className="text-xs text-gray-500 uppercase font-bold tracking-wide mb-6">{plan.duration}</p>
               
-              <p className="text-sm text-gray-600 mb-6 min-h-[40px]">{plan.description}</p>
+              <p className="text-sm text-gray-600 mb-5">{plan.description}</p>
               
-              <div className="flex-grow space-y-3 mb-8">
+              <div className="flex-grow space-y-2 mb-6">
                 {plan.features.map((feature, i) => (
                   <div key={i} className="flex items-start">
                     <Check className="h-4 w-4 text-bw-gold mt-0.5 mr-2 flex-shrink-0" />

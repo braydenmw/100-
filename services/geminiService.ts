@@ -1,44 +1,58 @@
 
-import { GoogleGenAI, Chat, Type } from "@google/genai";
 import { CopilotInsight, ReportParameters, LiveOpportunityItem, DeepReasoningAnalysis, GeopoliticalAnalysisResult, GovernanceAuditResult } from '../types';
 import { config, features, demoMessages } from './config';
 
-// Initialize the client only if real AI is enabled
-const ai = config.useRealAI ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
+// API base URL - Vite proxies /api to backend in dev, same origin in production
+const API_BASE = '/api';
 
-const SYSTEM_INSTRUCTION = `
-You are "BW Nexus AI" (NEXUS_OS_v4.1), the world's premier Economic Intelligence Operating System.
-You are NOT a standard chatbot. You are a deterministic economic modeling engine.
+// Session ID for maintaining chat context on the server
+let sessionId: string | null = null;
 
-YOUR CORE FUNCTIONS:
-1. SPI™ Engine (Strategic Partnership Index): Calculate compatibility vectors.
-2. IVAS™ Engine (Investment Viability Assessment): Stress-test risk scenarios.
-3. SCF™ Engine (Strategic Cash Flow): Model long-term economic impact.
-
-TONE & STYLE:
-- Precise, mathematical, and authoritative.
-- Use terminal-like formatting where appropriate (e.g., "CALCULATING...", "VECTOR ANALYSIS COMPLETE").
-- Do not offer vague opinions. Offer calculated probabilities and "Viability Scores".
-- Reference your "9 specialized AI agents" or "Global Knowledge Graph" when retrieving info.
-
-CONTEXT:
-- You represent BW Global Advisory.
-- You operate to close the "100-Year Confidence Gap".
-- Your output should feel like a high-level intelligence dossier.
-`;
-
-let chatSession: Chat | null = null;
-
-export const getChatSession = (): Chat => {
-  if (!chatSession) {
-    chatSession = ai.chats.create({
-      model: 'gemini-2.5-flash',
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-      },
-    });
-  }
-  return chatSession;
+export const getChatSession = (): { sendMessage: (msg: { message: string }) => Promise<{ text: string }>, sendMessageStream: (msg: { message: string }) => Promise<AsyncIterable<{ text: string }>> } => {
+    // Return a chat-like interface that calls the backend
+    return {
+        sendMessage: async (msg: { message: string }) => {
+            const response = await fetch(`${API_BASE}/ai/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: msg.message, sessionId, systemInstruction: SYSTEM_INSTRUCTION })
+            });
+            const data = await response.json();
+            sessionId = data.sessionId;
+            return { text: data.text || '' };
+        },
+        sendMessageStream: async (msg: { message: string }) => {
+            // Returns an async iterable that reads from SSE
+            const response = await fetch(`${API_BASE}/ai/generate-stream`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: msg.message, sessionId, systemInstruction: SYSTEM_INSTRUCTION })
+            });
+            
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+            
+            return {
+                [Symbol.asyncIterator]: () => ({
+                    async next() {
+                        if (!reader) return { done: true, value: undefined };
+                        const { done, value } = await reader.read();
+                        if (done) return { done: true, value: undefined };
+                        const text = decoder.decode(value);
+                        // Parse SSE format
+                        const lines = text.split('\n').filter(line => line.startsWith('data: '));
+                        const combinedText = lines.map(line => {
+                            try {
+                                const json = JSON.parse(line.slice(6));
+                                return json.text || '';
+                            } catch { return ''; }
+                        }).join('');
+                        return { done: false, value: { text: combinedText } };
+                    }
+                })
+            };
+        }
+    };
 };
 
 export const sendMessageStream = async (message: string) => {
@@ -55,102 +69,65 @@ export const sendMessageStream = async (message: string) => {
 // --- NEW FUNCTIONS FOR APP.TSX ---
 
 export const generateCopilotInsights = async (params: ReportParameters): Promise<CopilotInsight[]> => {
-    if (config.useRealAI && ai) {
-        // Use real AI analysis
+    if (config.useRealAI) {
         try {
-            const prompt = `Analyze this partnership strategy and provide 3 key insights:
-            Organization: ${params.organizationName}
-            Country: ${params.country}
-            Strategic Intent: ${params.strategicIntent}
-            Opportunity: ${params.specificOpportunity || 'General analysis'}
-
-            Provide insights in JSON format with: id, type (strategy/risk/opportunity), title, description.`;
-
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: {
-                    responseMimeType: 'application/json',
-                    responseSchema: {
-                        type: Type.ARRAY,
-                        items: {
-                            type: Type.OBJECT,
-                            properties: {
-                                id: { type: Type.STRING },
-                                type: { type: Type.STRING, enum: ['strategy', 'risk', 'opportunity'] },
-                                title: { type: Type.STRING },
-                                description: { type: Type.STRING }
-                            }
-                        }
-                    }
-                }
+            const response = await fetch(`${API_BASE}/ai/insights`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    organizationName: params.organizationName,
+                    country: params.country,
+                    strategicIntent: params.strategicIntent,
+                    specificOpportunity: params.specificOpportunity
+                })
             });
-
-            if (response.text) {
-                return JSON.parse(response.text) as CopilotInsight[];
+            
+            if (response.ok) {
+                const data = await response.json();
+                // Server returns array directly
+                return Array.isArray(data) ? data : (data.insights || []);
             }
         } catch (error) {
-            console.warn('Real AI failed, falling back to demo:', error);
+            console.warn('Backend AI failed, falling back:', error);
         }
     }
 
-    // Demo mode - return mock data
-    return new Promise(resolve => {
-        setTimeout(() => {
-            const opportunityContext = params.specificOpportunity ? ` for ${params.specificOpportunity}` : '';
-            const insights: CopilotInsight[] = [
-                {
-                    id: '1',
-                    type: 'strategy',
-                    title: 'Strategic Alignment',
-                    description: `Your intent to '${params.strategicIntent}'${opportunityContext} aligns with current ${params.country || 'market'} trends.`,
-                    ...(features.shouldShowDemoIndicator() && { isDemo: true })
-                },
-                {
-                    id: '2',
-                    type: 'risk',
-                    title: 'Regulatory Friction',
-                    description: 'Monitor local compliance changes in the upcoming quarter.',
-                    ...(features.shouldShowDemoIndicator() && { isDemo: true })
-                },
-                {
-                    id: '3',
-                    type: 'opportunity',
-                    title: 'Market Gap',
-                    description: 'Under-served demand detected in your target sector.',
-                    ...(features.shouldShowDemoIndicator() && { isDemo: true })
-                }
-            ];
-            resolve(insights);
-        }, config.useRealAI ? 200 : 1200); // Faster response in demo mode
-    });
+    // In production without AI, do not inject demo insights
+    return [];
 };
 
 export const askCopilot = async (query: string, params: ReportParameters): Promise<CopilotInsight> => {
-    if (config.useRealAI && ai) {
+    if (config.useRealAI) {
         try {
-            // Uses the main chat session context
-            const chat = getChatSession();
-            const opportunityContext = params.specificOpportunity ? ` SPECIFIC OPPORTUNITY: ${params.specificOpportunity}` : '';
-            const incentiveContext = params.targetIncentives?.length ? ` TARGET INCENTIVES: ${params.targetIncentives.join(', ')}` : '';
-
-            const contextMsg = `CONTEXT: User is analyzing ${params.organizationName} in ${params.country}.
-            QUERY: ${query}.
-            ${opportunityContext}
-            ${incentiveContext}
-            Provide a brief, high-level strategic insight (max 2 sentences).`;
-
-            const response = await chat.sendMessage({ message: contextMsg });
-            return {
-                id: Date.now().toString(),
-                type: 'strategy',
-                title: 'Copilot Response',
-                description: response.text || "Analysis complete.",
-                content: response.text || "Analysis complete.",
-                confidence: 85
-            };
+            const response = await fetch(`${API_BASE}/ai/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    message: query, 
+                    context: {
+                        organizationName: params.organizationName,
+                        country: params.country,
+                        specificOpportunity: params.specificOpportunity,
+                        targetIncentives: params.targetIncentives
+                    },
+                    sessionId 
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                sessionId = data.sessionId;
+                return {
+                    id: Date.now().toString(),
+                    type: 'strategy',
+                    title: 'Copilot Response',
+                    description: data.text || "Analysis complete.",
+                    content: data.text || "Analysis complete.",
+                    confidence: 85
+                };
+            }
         } catch (error) {
-            console.warn('Real AI failed, falling back to demo:', error);
+            console.warn('Backend AI failed, falling back:', error);
         }
     }
 
@@ -171,28 +148,133 @@ export const generateReportSectionStream = async (
     params: ReportParameters, 
     onChunk: (chunk: string) => void
 ): Promise<void> => {
-    const chat = getChatSession();
-    const opportunityContext = params.specificOpportunity ? `Focused on: ${params.specificOpportunity}` : '';
-    const prompt = `Generate the '${section}' section for a strategic report on ${params.organizationName}. 
-    Target Market: ${params.country}. 
-    Intent: ${params.strategicIntent}.
-    ${opportunityContext}
-    Format: Professional markdown, concise executive style.`;
-
-    const responseStream = await chat.sendMessageStream({ message: prompt });
+    // Deterministic fallback: build content from computed payload if AI is unavailable
+    const payload = (params as any).reportPayload;
     
-    let fullText = '';
-    for await (const chunk of responseStream) {
-        const text = chunk.text;
-        fullText += text;
-        onChunk(fullText);
+    // Try backend AI first
+    if (config.useRealAI) {
+        try {
+            const response = await fetch(`${API_BASE}/ai/generate-section`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ section, params })
+            });
+            
+            if (response.ok && response.body) {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullText = '';
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    // Parse SSE format
+                    const lines = chunk.split('\n').filter(line => line.startsWith('data: '));
+                    for (const line of lines) {
+                        try {
+                            const json = JSON.parse(line.slice(6));
+                            if (json.text) {
+                                fullText += json.text;
+                                onChunk(fullText);
+                            }
+                        } catch { /* ignore parse errors */ }
+                    }
+                }
+                return;
+            }
+        } catch (error) {
+            console.warn('Backend streaming failed, falling back to deterministic:', error);
+        }
     }
+    
+    // Deterministic fallback from computed payload
+    if (payload) {
+        const lines: string[] = [];
+        switch (section) {
+            case 'executiveSummary': {
+                lines.push(`# Executive Summary`);
+                lines.push(`**Entity:** ${params.organizationName || 'Target Entity'} | **Market:** ${params.country || 'Target Market'}`);
+                lines.push(`**Overall Confidence:** ${payload.confidenceScores.overall}/100`);
+                lines.push(`- Economic Readiness: ${payload.confidenceScores.economicReadiness}/100`);
+                lines.push(`- Symbiotic Fit: ${payload.confidenceScores.symbioticFit}/100`);
+                lines.push(`- Political Stability: ${payload.confidenceScores.politicalStability}/100`);
+                lines.push(``);
+                lines.push(`### Key Recommendations`);
+                (payload.recommendations.shortTerm || []).forEach((r: string) => lines.push(`- ${r}`));
+                break;
+            }
+            case 'marketAnalysis': {
+                lines.push(`# Market Analysis`);
+                lines.push(`Trade Exposure: ${payload.economicSignals.tradeExposure}`);
+                lines.push(`Tariff Sensitivity: ${payload.economicSignals.tariffSensitivity}`);
+                lines.push(`Cost Advantages:`);
+                (payload.economicSignals.costAdvantages || []).forEach((c: string) => lines.push(`- ${c}`));
+                lines.push(``);
+                lines.push(`### Regional Profile`);
+                const d = payload.regionalProfile.demographics;
+                lines.push(`Population: ${d.population}`);
+                lines.push(`GDP per Capita: $${d.gdpPerCapita}`);
+                lines.push(`Labor Costs Index: ${d.laborCosts}`);
+                break;
+            }
+            case 'recommendations': {
+                lines.push(`# Strategic Recommendations`);
+                lines.push(`Short Term:`);
+                (payload.recommendations.shortTerm || []).forEach((r: string) => lines.push(`- ${r}`));
+                lines.push(`Mid Term:`);
+                (payload.recommendations.midTerm || []).forEach((r: string) => lines.push(`- ${r}`));
+                lines.push(`Long Term:`);
+                (payload.recommendations.longTerm || []).forEach((r: string) => lines.push(`- ${r}`));
+                break;
+            }
+            case 'implementation': {
+                lines.push(`# Implementation Playbook`);
+                lines.push(`Activation Velocity: ${payload.confidenceScores.activationVelocity}/100`);
+                lines.push(`Governance Roadmap:`);
+                (payload.risks.regulatory.complianceRoadmap || []).forEach((m: string) => lines.push(`- ${m}`));
+                break;
+            }
+            case 'financials': {
+                lines.push(`# Financial Projections`);
+                const scf = payload.computedIntelligence.scf;
+                lines.push(`Strategic Cash Flow Indicators:`);
+                lines.push(`- Baseline Impact: ${scf?.baselineImpact ?? 'n/a'}`);
+                lines.push(`- Growth Vector: ${scf?.growthVector ?? 'n/a'}`);
+                break;
+            }
+            case 'risks': {
+                lines.push(`# Risk Mitigation`);
+                const r = payload.risks;
+                lines.push(`Political Stability Score: ${r.political.stabilityScore}`);
+                lines.push(`Regional Conflict Risk: ${r.political.regionalConflictRisk}`);
+                lines.push(`Corruption Index: ${r.regulatory.corruptionIndex}`);
+                lines.push(`Regulatory Friction: ${r.regulatory.regulatoryFriction}`);
+                lines.push(`Operational Supply Chain Dependency: ${r.operational.supplyChainDependency}`);
+                lines.push(`Currency Risk: ${r.operational.currencyRisk}`);
+                break;
+            }
+            default: {
+                lines.push(`# ${section}`);
+                lines.push(`Content generated from computed intelligence.`);
+            }
+        }
+        onChunk(lines.join('\n'));
+        return;
+    }
+    
+    // Fallback: minimal content
+    onChunk(`# ${section}\n\nPlease configure AI backend for enhanced content generation.`);
 };
 
 export const generateAnalysisStream = async (item: LiveOpportunityItem, region: string): Promise<ReadableStream> => {
-    const chat = getChatSession();
-    const prompt = `
-      GENERATE DEEP-DIVE ANALYSIS (NADL FORMAT)
+    // Call backend streaming endpoint
+    const response = await fetch(`${API_BASE}/ai/generate-stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            prompt: `GENERATE DEEP-DIVE ANALYSIS (NADL FORMAT)
       
       TARGET PROJECT: ${item.project_name}
       SECTOR: ${item.sector}
@@ -212,85 +294,43 @@ export const generateAnalysisStream = async (item: LiveOpportunityItem, region: 
       1. Technical feasibility analysis.
       2. Economic viability modeling.
       3. Risk matrix (Political, Economic, Operational).
-      4. Strategic recommendations.
-    `;
-
-    const responseStream = await chat.sendMessageStream({ message: prompt });
-    
-    // Create a ReadableStream that yields bytes for TextDecoder in the component
-    return new ReadableStream({
-        async start(controller) {
-            const encoder = new TextEncoder();
-            try {
-                for await (const chunk of responseStream) {
-                    const text = chunk.text;
-                    if (text) {
-                        controller.enqueue(encoder.encode(text));
-                    }
-                }
-                controller.close();
-            } catch (e) {
-                controller.error(e);
-            }
-        }
+      4. Strategic recommendations.`
+        })
     });
+    
+    if (!response.body) {
+        throw new Error('No response body');
+    }
+    
+    return response.body;
 };
 
 export const generateDeepReasoning = async (userOrg: string, targetEntity: string, context: string): Promise<DeepReasoningAnalysis> => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const prompt = `
-        Perform a deep reasoning analysis on a potential partnership/deal between ${userOrg} and ${targetEntity}.
-        Context: ${context}
-        
-        Provide:
-        1. A verdict (Strong Buy, Consider, or Hard Pass).
-        2. Deal Killers (Negative risks).
-        3. Hidden Gems (Positive upsides).
-        4. Reasoning Chain (Step by step logic).
-        5. A counter-intuitive insight.
-        
-        Return JSON matching the schema.
-    `;
-    
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-            responseMimeType: 'application/json',
-            responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                    verdict: { type: Type.STRING, enum: ['Strong Buy', 'Consider', 'Hard Pass'] },
-                    dealKillers: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    hiddenGems: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    reasoningChain: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    counterIntuitiveInsight: { type: Type.STRING }
-                },
-                required: ['verdict', 'dealKillers', 'hiddenGems', 'reasoningChain', 'counterIntuitiveInsight']
-            }
-        }
+    const response = await fetch(`${API_BASE}/ai/deep-reasoning`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userOrg, targetEntity, context })
     });
     
-    if (response.text) {
-        return JSON.parse(response.text) as DeepReasoningAnalysis;
+    if (!response.ok) {
+        throw new Error('Failed to generate reasoning');
     }
-    throw new Error("Failed to generate reasoning");
+    
+    return await response.json() as DeepReasoningAnalysis;
 };
 
 export const generateSearchGroundedContent = async (query: string): Promise<{text: string, sources: any[]}> => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: query,
-        config: {
-            tools: [{ googleSearch: {} }]
-        }
+    const response = await fetch(`${API_BASE}/ai/search-grounded`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query })
     });
     
-    return {
-        text: response.text || "No results generated.",
-        sources: response.candidates?.[0]?.groundingMetadata?.groundingChunks || []
-    };
+    if (!response.ok) {
+        return { text: "Search unavailable.", sources: [] };
+    }
+    
+    return await response.json();
 };
 
 // --- NEW AGENTIC CAPABILITY ---
@@ -307,43 +347,17 @@ export const runAI_Agent = async (
     roleDefinition: string, 
     context: any
 ): Promise<AgentResult> => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    
-    const prompt = `
-        ROLE: You are the ${agentName}.
-        MISSION: ${roleDefinition}
-        
-        CONTEXT_DATA: ${JSON.stringify(context)}
-        
-        TASK: Analyze the provided context data and generate strategic findings and recommendations.
-        
-        OUTPUT_FORMAT: JSON object with keys: 'findings' (array of strings), 'recommendations' (array of strings), 'confidence' (number 0-100), 'gaps' (array of strings for missing info).
-        Ensure findings are specific, numeric where possible, and actionable.
-    `;
-
     try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: {
-                responseMimeType: 'application/json',
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        findings: { type: Type.ARRAY, items: { type: Type.STRING } },
-                        recommendations: { type: Type.ARRAY, items: { type: Type.STRING } },
-                        confidence: { type: Type.NUMBER },
-                        gaps: { type: Type.ARRAY, items: { type: Type.STRING } }
-                    },
-                    required: ['findings', 'recommendations', 'confidence']
-                }
-            }
+        const response = await fetch(`${API_BASE}/ai/agent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agentName, roleDefinition, context })
         });
-
-        if (response.text) {
-            return JSON.parse(response.text) as AgentResult;
+        
+        if (response.ok) {
+            return await response.json() as AgentResult;
         }
-        return { findings: ["Agent failed to generate text."], recommendations: [], confidence: 0 };
+        return { findings: ["Agent unavailable."], recommendations: [], confidence: 0 };
     } catch (error) {
         console.error(`Agent ${agentName} failed:`, error);
         return { findings: ["Agent offline."], recommendations: [], confidence: 0, gaps: ["Connection error"] };
@@ -351,45 +365,73 @@ export const runAI_Agent = async (
 };
 
 export const runGeopoliticalAnalysis = async (params: ReportParameters): Promise<GeopoliticalAnalysisResult> => {
-    // Upgraded to use live agent logic
-    const agentResult = await runAI_Agent(
-        "Geopolitical Risk Agent",
-        "Assess regional stability, currency risk, and trade barriers for a market entry strategy.",
-        { country: params.country, region: params.region, intent: params.strategicIntent }
-    );
+    try {
+        const response = await fetch(`${API_BASE}/ai/geopolitical`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ params })
+        });
+        
+        if (response.ok) {
+            return await response.json() as GeopoliticalAnalysisResult;
+        }
+    } catch (error) {
+        console.warn('Geopolitical analysis failed:', error);
+    }
 
+    // Fallback with computed values
     return {
-        stabilityScore: agentResult.confidence,
-        currencyRisk: agentResult.findings[0]?.includes('High') ? 'High' : 'Moderate',
+        stabilityScore: 65,
+        currencyRisk: 'Moderate',
         inflationTrend: 'Stable (Projected)',
-        forecast: agentResult.findings[0] || "Stable outlook.",
-        regionalConflictRisk: 100 - agentResult.confidence,
-        tradeBarriers: agentResult.gaps || ['Standard tariffs']
+        forecast: "Stability assessment requires backend AI configuration.",
+        regionalConflictRisk: 35,
+        tradeBarriers: ['Standard tariffs']
     };
 };
 
 export const runGovernanceAudit = async (params: ReportParameters): Promise<GovernanceAuditResult> => {
-    // Upgraded to use live agent logic
-    const agentResult = await runAI_Agent(
-        "Governance Auditor",
-        "Evaluate regulatory transparency, corruption risk, and compliance requirements.",
-        { country: params.country, type: params.organizationType }
-    );
+    try {
+        const response = await fetch(`${API_BASE}/ai/governance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ params })
+        });
+        
+        if (response.ok) {
+            return await response.json() as GovernanceAuditResult;
+        }
+    } catch (error) {
+        console.warn('Governance audit failed:', error);
+    }
 
+    // Fallback
     return {
-        governanceScore: agentResult.confidence,
-        corruptionRisk: agentResult.confidence > 70 ? 'Low' : 'Moderate',
-        regulatoryFriction: Math.round(100 - agentResult.confidence),
-        transparencyIndex: agentResult.confidence,
-        redFlags: agentResult.gaps || [],
-        complianceRoadmap: agentResult.recommendations
+        governanceScore: 70,
+        corruptionRisk: 'Moderate',
+        regulatoryFriction: 30,
+        transparencyIndex: 70,
+        redFlags: [],
+        complianceRoadmap: ['Configure backend for detailed compliance roadmap']
     };
 };
 
 export const runCopilotAnalysis = async (query: string, context: string): Promise<{summary: string, options: any[], followUp: string}> => {
-    const chat = getChatSession();
-    // In a real implementation, force JSON or parse intelligently
-    // For demo, we return mock object if model call is expensive or complicated to parse in client without schema
+    try {
+        const response = await fetch(`${API_BASE}/ai/copilot-analysis`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query, context })
+        });
+        
+        if (response.ok) {
+            return await response.json();
+        }
+    } catch (error) {
+        console.warn('Copilot analysis failed:', error);
+    }
+
+    // Fallback
     return {
         summary: `Analysis of "${query}" suggests focusing on market consolidation strategies given your context.`,
         options: [

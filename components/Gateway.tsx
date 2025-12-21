@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ReportParameters, SkillLevel } from '../types';
 import { ORGANIZATION_TYPES, ORGANIZATION_SUBTYPES, REGIONS_AND_COUNTRIES, INDUSTRIES, STRATEGIC_OBJECTIVES, STRATEGIC_LENSES, INDUSTRY_NICHES, INTELLIGENCE_CATEGORIES, GLOBAL_DEPARTMENTS, GLOBAL_ROLES } from '../constants';
-import { Zap, BrainCircuit, CheckCircle, Globe, X, Network, ShieldCheck, Users, FileText, MapPin, Target, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Zap, BrainCircuit, CheckCircle, Globe, X, Network, ShieldCheck, Users, FileText, MapPin, Target, TrendingUp, AlertTriangle, Shield } from 'lucide-react';
 import { ManualInputModal } from './ManualInputModal';
 import { MissionCalibrationStep } from './MissionCalibrationStep';
 
@@ -376,6 +376,283 @@ export const Gateway: React.FC<GatewayProps> = ({ params, onUpdate, onComplete }
         if (!params.strategicMode) update('strategicMode', 'discovery');
     }, [params.strategicMode, update]);
 
+    const renderStrategyAndDealStep = () => (
+        <div className="animate-in fade-in duration-500 space-y-10">
+            <div className="border-b border-stone-100 pb-6">
+                <h2 className="text-2xl font-bold text-stone-900">Step 2: Strategy &amp; Deal Architecture</h2>
+                <p className="text-stone-500">Configure your market entry and partner search scope. AI will generate cultural intelligence and competitive landscape analysis.</p>
+            </div>
+
+            <div className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <label className={labelStyles}>Target Region / Market</label>
+                        <select
+                            value={params.region}
+                            onChange={(e) => {
+                                if (e.target.value === 'Custom') {
+                                    openManualModal('Enter Target Region', 'Target Jurisdiction', 'region');
+                                } else {
+                                    update('region', e.target.value);
+                                }
+                            }}
+                            className={inputStyles}
+                        >
+                            <option value="">Select Target Region...</option>
+                            {REGIONS_AND_COUNTRIES.map((r) => (
+                                <option key={r.name} value={r.name}>{r.name}</option>
+                            ))}
+                            <option value="Custom">Other / Custom...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className={labelStyles}>Primary Sector</label>
+                        <select
+                            className={inputStyles}
+                            onChange={(e) => {
+                                if (e.target.value === 'Custom') {
+                                    openManualModal('Enter Industry', 'Primary Sector', 'industry');
+                                } else {
+                                    update('industry', [e.target.value]);
+                                }
+                            }}
+                            value={params.industry[0] || ''}
+                        >
+                            <option value="">Select Industry...</option>
+                            {INDUSTRIES.map((ind) => (
+                                <option key={ind.id} value={ind.id}>{ind.title}</option>
+                            ))}
+                            <option value="Custom">Other / Custom...</option>
+                        </select>
+                    </div>
+                </div>
+
+                {params.industry.length > 0 && (
+                    <div className="bg-stone-50 p-6 rounded-xl border border-stone-200">
+                        <MegaMultiSelect
+                            label="Niche Specialization (Refine Focus)"
+                            options={allNiches}
+                            selected={params.nicheAreas || []}
+                            onToggle={(val) => toggleArrayItem('nicheAreas', val)}
+                            placeholder="Search 100+ specialized niches..."
+                        />
+                    </div>
+                )}
+            </div>
+
+            <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm mt-6 space-y-6">
+                <div>
+                    <label className="block text-sm font-bold text-stone-900 mb-4 flex items-center gap-2">
+                        <Target className="w-5 h-5 text-black" /> Strategic Mode
+                    </label>
+                    <div className="grid md:grid-cols-3 gap-4">
+                        {[{ id: 'specific', title: 'Analyze Specific Target', desc: 'Deep due diligence on a known entity.' }, { id: 'discovery', title: 'Discover Partners', desc: 'Find new matches & opportunities.' }, { id: 'expansion', title: 'Market Expansion', desc: 'Relocation & ecosystem analysis.' }].map((mode) => (
+                            <button
+                                key={mode.id}
+                                onClick={() => update('strategicMode', mode.id as any)}
+                                className={`p-4 rounded-lg border text-left transition-all break-words ${params.strategicMode === mode.id ? 'bg-blue-50 border-blue-600 ring-1 ring-blue-600' : 'bg-white border-stone-200 hover:bg-stone-50'}`}
+                            >
+                                <div className={`font-bold text-sm mb-1 break-words ${params.strategicMode === mode.id ? 'text-blue-800' : 'text-stone-900'}`}>{mode.title}</div>
+                                <div className="text-xs text-stone-500 break-words">{mode.desc}</div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="p-5 bg-stone-50 rounded-lg border border-stone-200 animate-in fade-in space-y-6">
+                    {params.strategicMode === 'specific' && (
+                        <div className="space-y-5">
+                            <div>
+                                <label className={labelStyles}>Target Entity Name</label>
+                                <input
+                                    type="text"
+                                    value={params.targetPartner || ''}
+                                    onChange={(e) => update('targetPartner', e.target.value)}
+                                    className={inputStyles}
+                                    placeholder="e.g. Tesla, Ministry of Energy..."
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {params.strategicMode === 'discovery' && (
+                        <div className="space-y-5">
+                            <div className="grid md:grid-cols-3 gap-8">
+                                <div>
+                                    <label className={labelStyles}>Search Scope</label>
+                                    <select value={params.searchScope || 'Regional'} onChange={(e) => update('searchScope', e.target.value)} className={inputStyles}>
+                                        <option value="Local">Local (Selected Country)</option>
+                                        <option value="Regional">Regional ({params.region})</option>
+                                        <option value="Global">Global Search</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className={labelStyles}>Deal Size / Scope</label>
+                                    <select value={params.dealSize || ''} onChange={(e) => update('dealSize', e.target.value)} className={inputStyles}>
+                                        <option value="">Select scale...</option>
+                                        <option value="<100k">Pilot (&lt; $100k)</option>
+                                        <option value="100k-1M">Micro ($100k - $1M)</option>
+                                        <option value="1M-10M">Small ($1M - $10M)</option>
+                                        <option value="10M-50M">Medium ($10M - $50M)</option>
+                                        <option value="50M-250M">Large ($50M - $250M)</option>
+                                        <option value="250M-1B">Major ($250M - $1B)</option>
+                                        <option value=">1B">Mega (&gt; $1B)</option>
+                                        <option value="Other">Other (Specify)</option>
+                                    </select>
+                                    {params.dealSize === 'Other' && (
+                                        <input
+                                            type="text"
+                                            onChange={(e) => update('customDealSize', e.target.value)}
+                                            className={`${inputStyles} mt-2 bg-yellow-50`}
+                                            placeholder="Specify deal size..."
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="mt-6 pt-6 border-t border-stone-200 space-y-4">
+                        <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+                            <Network className="w-4 h-4 text-purple-600" /> Strategic Intent &amp; Context
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                            {INTENT_TAGS.map((tag) => (
+                                <button
+                                    key={tag}
+                                    onClick={() => toggleArrayItem('intentTags', tag)}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                                        (params.intentTags || []).includes(tag)
+                                            ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                                            : 'bg-white text-stone-600 border-stone-200 hover:border-purple-300'
+                                    }`}
+                                >
+                                    {tag}
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => setShowCustomIntent(!showCustomIntent)}
+                                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                                    showCustomIntent ? 'bg-gray-700 text-white border-gray-700' : 'bg-gray-100 text-gray-600 border-gray-200 hover:border-gray-400'
+                                }`}
+                            >
+                                Other...
+                            </button>
+                        </div>
+
+                        {showCustomIntent && (
+                            <div className="flex gap-2 p-3 bg-gray-100 rounded-lg animate-in fade-in duration-300">
+                                <input
+                                    type="text"
+                                    value={customIntentValue}
+                                    onChange={(e) => setCustomIntentValue(e.target.value)}
+                                    className="flex-grow p-2 border border-stone-300 rounded-md text-sm"
+                                    placeholder="Specify custom intent..."
+                                />
+                                <button
+                                    onClick={() => {
+                                        if (customIntentValue.trim()) {
+                                            toggleArrayItem('intentTags', customIntentValue.trim());
+                                            setCustomIntentValue('');
+                                            setShowCustomIntent(false);
+                                        }
+                                    }}
+                                    className="px-4 py-2 bg-stone-800 text-white text-sm font-bold rounded-md hover:bg-stone-900"
+                                >
+                                    Add
+                                </button>
+                            </div>
+                        )}
+
+                        <div>
+                            <label className={labelStyles}>Mission Context (Tell the System)</label>
+                            <textarea
+                                value={params.additionalContext || ''}
+                                onChange={(e) => update('additionalContext', e.target.value)}
+                                className="w-full p-3 bg-white border border-stone-200 rounded-lg text-sm min-h-[100px] resize-none focus:ring-2 focus:ring-stone-800"
+                                placeholder="Describe specific goals, constraints, or unique requirements... (e.g. 'We need a partner with strong ESG credentials for a joint venture in renewable energy.')"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="mt-6 pt-6 border-t border-stone-200 space-y-6">
+                        <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-red-600" /> Strategic Risk &amp; Priority Framework
+                        </h3>
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label className={labelStyles}>Priority Themes</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {['Digital Transformation', 'Sustainability (ESG)', 'Innovation', 'Cost Leadership', 'Customer Experience', 'Operational Excellence', 'Talent Development', 'Regulatory Compliance'].map((theme) => (
+                                        <button
+                                            key={theme}
+                                            onClick={() => toggleArrayItem('priorityThemes', theme)}
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                                                (params.priorityThemes || []).includes(theme)
+                                                    ? 'bg-red-600 text-white border-red-600'
+                                                    : 'bg-white text-stone-600 border-stone-200 hover:border-red-300'
+                                            }`}
+                                        >
+                                            {theme}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <label className={labelStyles}>Political Sensitivities</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {['Data Sovereignty', 'National Security', 'Labor Rights', 'Environmental Impact', 'Cultural Heritage', 'Political Stability', 'Sanctions Exposure'].map((sensitivity) => (
+                                        <button
+                                            key={sensitivity}
+                                            onClick={() => toggleArrayItem('politicalSensitivities', sensitivity)}
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                                                (params.politicalSensitivities || []).includes(sensitivity)
+                                                    ? 'bg-orange-600 text-white border-orange-600'
+                                                    : 'bg-white text-stone-600 border-stone-200 hover:border-orange-300'
+                                            }`}
+                                        >
+                                            {sensitivity}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={labelStyles}>Partnership Support Needs</label>
+                            <div className="flex flex-wrap gap-2">
+                                {['Legal & Regulatory Support', 'Financial Advisory', 'Technical Expertise', 'Market Intelligence', 'Cultural Integration', 'Operational Support', 'Government Relations', 'Risk Management'].map((need) => (
+                                    <button
+                                        key={need}
+                                        onClick={() => toggleArrayItem('partnershipSupportNeeds', need)}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                                            (params.partnershipSupportNeeds || []).includes(need)
+                                                ? 'bg-blue-600 text-white border-blue-600'
+                                                : 'bg-white text-stone-600 border-stone-200 hover:border-blue-300'
+                                        }`}
+                                    >
+                                        {need}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="pt-6 border-t border-stone-100 flex justify-between">
+                <button onClick={() => setStep(1)} className="text-stone-500 hover:text-stone-900 text-sm font-medium">&larr; Back to Identity</button>
+                <button
+                    onClick={() => setStep(3)}
+                    disabled={!params.region || !params.industry.length}
+                    className="px-8 py-3 bg-stone-900 text-white font-bold rounded-lg hover:bg-stone-800 disabled:opacity-50 transition-all shadow-md"
+                >
+                    Next: Calibration &rarr;
+                </button>
+            </div>
+        </div>
+    );
+
     return (
         <div ref={containerRef} className="h-full w-full flex flex-col items-center justify-start bg-stone-50 p-6 md:p-10 lg:p-16 pb-32 overflow-y-auto overflow-x-hidden">
             <div className="max-w-4xl md:max-w-5xl lg:max-w-6xl w-full bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden mb-16 shrink-0">
@@ -383,7 +660,7 @@ export const Gateway: React.FC<GatewayProps> = ({ params, onUpdate, onComplete }
                 <div className="bg-stone-900 text-white p-6 px-8 flex justify-between items-center">
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight">Nexus Intelligence Report Generator</h1>
-                        <p className="text-stone-400 text-sm">Strategic Configuration & Setup</p>
+                        <p className="text-stone-400 text-sm">AI-Powered Setup with Document Intelligence & BW Consultant</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className={`w-3 h-3 rounded-full ${step >= 1 ? 'bg-white' : 'bg-stone-700'}`} />
@@ -403,7 +680,7 @@ export const Gateway: React.FC<GatewayProps> = ({ params, onUpdate, onComplete }
                         <div className="animate-in fade-in duration-500 space-y-10">
                             <div className="border-b border-stone-100 pb-6">
                                 <h2 className="text-2xl font-bold text-stone-900">Step 1: Organization Identity</h2>
-                                <p className="text-stone-500">Establish the identity driving this analysis.</p>
+                                <p className="text-stone-500">Establish the identity driving this analysis. Upload supporting documents for deeper AI insights.</p>
                             </div>
 
                             <div className="bg-stone-50 p-6 rounded-xl border border-stone-200">
@@ -591,270 +868,7 @@ export const Gateway: React.FC<GatewayProps> = ({ params, onUpdate, onComplete }
                     )}
 
                     {/* STEP 2: STRATEGY & DEAL ARCHITECTURE */}
-                    {step === 2 && (
-                        <div className="animate-in fade-in duration-500 space-y-10">
-                            <div className="border-b border-stone-100 pb-6">
-                                <h2 className="text-2xl font-bold text-stone-900">Step 2: Strategy & Deal Architecture</h2>
-                                <p className="text-stone-500">Configure your market entry, partner search scope, and deal support ecosystem.</p>
-                            </div>
-
-                            {/* 1. Market Scope */}
-                            <div className="space-y-4">
-                                <div className="grid md:grid-cols-2 gap-8">
-                                    <div>
-                                        <label className={labelStyles}>Target Region / Market</label>
-                                        <select 
-                                            value={params.region} 
-                                            onChange={e => {
-                                                if (e.target.value === 'Custom') {
-                                                    openManualModal('Enter Target Region', 'Target Jurisdiction', 'region');
-                                                } else {
-                                                    update('region', e.target.value);
-                                                }
-                                            }} 
-                                            className={inputStyles}
-                                        >
-                                            <option value="">Select Target Region...</option>
-                                            {REGIONS_AND_COUNTRIES.map(r => <option key={r.name} value={r.name}>{r.name}</option>)}
-                                            <option value="Custom">Other / Custom...</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className={labelStyles}>Primary Sector</label>
-                                        <select 
-                                            className={inputStyles} 
-                                            onChange={(e) => {
-                                                if (e.target.value === 'Custom') {
-                                                    openManualModal('Enter Industry', 'Primary Sector', 'industry');
-                                                } else {
-                                                    update('industry', [e.target.value]);
-                                                }
-                                            }} 
-                                            value={params.industry[0] || ''}
-                                        >
-                                            <option value="">Select Industry...</option>
-                                            {INDUSTRIES.map(ind => <option key={ind.id} value={ind.id}>{ind.title}</option>)}
-                                            <option value="Custom">Other / Custom...</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {params.industry.length > 0 && (
-                                    <div className="bg-stone-50 p-6 rounded-xl border border-stone-200">
-                                        <MegaMultiSelect 
-                                            label="Niche Specialization (Refine Focus)" 
-                                            options={allNiches} 
-                                            selected={params.nicheAreas || []} 
-                                            onToggle={(val) => toggleArrayItem('nicheAreas', val)}
-                                            placeholder="Search 100+ specialized niches..."
-                                        />
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* 2. Strategic Mode Selector */}
-                            <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm mt-6">
-                                <label className="block text-sm font-bold text-stone-900 mb-4 flex items-center gap-2">
-                                    <Target className="w-5 h-5 text-black" /> Strategic Mode
-                                </label>
-                                <div className="grid md:grid-cols-3 gap-4">
-                                    {[
-                                        { id: 'specific', title: 'Analyze Specific Target', desc: 'Deep due diligence on a known entity.' },
-                                        { id: 'discovery', title: 'Discover Partners', desc: 'Find new matches & opportunities.' },
-                                        { id: 'expansion', title: 'Market Expansion', desc: 'Relocation & ecosystem analysis.' }
-                                    ].map(mode => (
-                                        <button
-                                            key={mode.id}
-                                            onClick={() => update('strategicMode', mode.id as any)}
-                                            className={`p-4 rounded-lg border text-left transition-all break-words ${params.strategicMode === mode.id ? 'bg-blue-50 border-blue-600 ring-1 ring-blue-600' : 'bg-white border-stone-200 hover:bg-stone-50'}`}
-                                        >
-                                            <div className={`font-bold text-sm mb-1 break-words ${params.strategicMode === mode.id ? 'text-blue-800' : 'text-stone-900'}`}>{mode.title}</div>
-                                            <div className="text-xs text-stone-500 break-words">{mode.desc}</div>
-                                        </button>
-                                    ))}
-                                </div>
-
-                                {/* DYNAMIC MODE CONTENT */}
-                                <div className="mt-6 p-5 bg-stone-50 rounded-lg border border-stone-200 animate-in fade-in">
-                                    
-                                    {/* MODE 1: SPECIFIC TARGET */}
-                                    {params.strategicMode === 'specific' && (
-                                        <div className="space-y-5">
-                                            <div>
-                                                <label className={labelStyles}>Target Entity Name</label>
-                                                <input 
-                                                    type="text" 
-                                                    value={params.targetPartner || ''} 
-                                                    onChange={e => update('targetPartner', e.target.value)} 
-                                                    className={inputStyles} 
-                                                    placeholder="e.g. Tesla, Ministry of Energy..." 
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* MODE 2: DISCOVER PARTNERS */}
-                                    {params.strategicMode === 'discovery' && (
-                                        <div className="space-y-5">
-                                            <div className="grid md:grid-cols-3 gap-8">
-                                                <div>
-                                                    <label className={labelStyles}>Search Scope</label>
-                                                    <select value={params.searchScope || 'Regional'} onChange={e => update('searchScope', e.target.value)} className={inputStyles}>
-                                                        <option value="Local">Local (Selected Country)</option>
-                                                        <option value="Regional">Regional ({params.region})</option>
-                                                        <option value="Global">Global Search</option>
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label className={labelStyles}>Deal Size / Scope</label>
-                                                    <select value={params.dealSize || ''} onChange={e => update('dealSize', e.target.value)} className={inputStyles}>
-                                                        <option value="">Select scale...</option>
-                                                        <option value="<100k">Pilot (&lt; $100k)</option>
-                                                        <option value="100k-1M">Micro ($100k - $1M)</option>
-                                                        <option value="1M-10M">Small ($1M - $10M)</option>
-                                                        <option value="10M-50M">Medium ($10M - $50M)</option>
-                                                        <option value="50M-250M">Large ($50M - $250M)</option>
-                                                        <option value="250M-1B">Major ($250M - $1B)</option>
-                                                        <option value=">1B">Mega (&gt; $1B)</option>
-                                                        <option value="Other">Other (Specify)</option>
-                                                    </select>
-                                                    {params.dealSize === 'Other' && <input type="text" onChange={(e) => update('customDealSize', e.target.value)} className={`${inputStyles} mt-2 bg-yellow-50`} placeholder="Specify deal size..." />}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* INTEGRATED INTENT & CONTEXT */}
-                                    <div className="mt-6 pt-6 border-t border-stone-200">
-                                        <h3 className="text-sm font-bold text-stone-900 mb-3 flex items-center gap-2"><Network className="w-4 h-4 text-purple-600" /> Strategic Intent & Context</h3>
-                                        
-                                        <div className="flex flex-wrap gap-2 mb-4">
-                                            {INTENT_TAGS.map(tag => (
-                                                <button 
-                                                    key={tag}
-                                                    onClick={() => toggleArrayItem('intentTags', tag)}
-                                                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                                                        (params.intentTags || []).includes(tag) 
-                                                        ? 'bg-purple-600 text-white border-purple-600 shadow-sm' 
-                                                        : 'bg-white text-stone-600 border-stone-200 hover:border-purple-300'
-                                                    }`}
-                                                >
-                                                    {tag}
-                                                </button>
-                                            ))}
-                                            <button 
-                                                onClick={() => setShowCustomIntent(!showCustomIntent)}
-                                                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${showCustomIntent ? 'bg-gray-700 text-white border-gray-700' : 'bg-gray-100 text-gray-600 border-gray-200 hover:border-gray-400'}`}
-                                            >
-                                                Other...
-                                            </button>
-                                        </div>
-
-                                        {showCustomIntent && (
-                                            <div className="flex gap-2 p-3 bg-gray-100 rounded-lg animate-in fade-in duration-300">
-                                                <input 
-                                                    type="text" 
-                                                    value={customIntentValue}
-                                                    onChange={e => setCustomIntentValue(e.target.value)}
-                                                    className="flex-grow p-2 border border-stone-300 rounded-md text-sm"
-                                                    placeholder="Specify custom intent..."
-                                                />
-                                                <button onClick={() => { if(customIntentValue.trim()) { toggleArrayItem('intentTags', customIntentValue.trim()); setCustomIntentValue(''); setShowCustomIntent(false); } }} className="px-4 py-2 bg-stone-800 text-white text-sm font-bold rounded-md hover:bg-stone-900">Add</button>
-                                            </div>
-                                        </div>
-                                        
-                                        <div>
-                                            <label className={labelStyles}>Mission Context (Tell the System)</label>
-                                            <textarea
-                                                value={params.additionalContext || ''}
-                                                onChange={e => update('additionalContext', e.target.value)}
-                                                className="w-full p-3 bg-white border border-stone-200 rounded-lg text-sm min-h-[100px] resize-none focus:ring-2 focus:ring-stone-800"
-                                                placeholder="Describe specific goals, constraints, or unique requirements... (e.g. 'We need a partner with strong ESG credentials for a joint venture in renewable energy.')"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* ADDITIONAL STRATEGIC PARAMETERS */}
-                                    <div className="mt-6 pt-6 border-t border-stone-200">
-                                        <h3 className="text-sm font-bold text-stone-900 mb-4 flex items-center gap-2"><Shield className="w-4 h-4 text-red-600" /> Strategic Risk & Priority Framework</h3>
-
-                                        <div className="grid md:grid-cols-2 gap-6">
-                                            <div>
-                                                <label className={labelStyles}>Priority Themes</label>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {[
-                                                        'Digital Transformation', 'Sustainability (ESG)', 'Innovation', 'Cost Leadership',
-                                                        'Customer Experience', 'Operational Excellence', 'Talent Development', 'Regulatory Compliance'
-                                                    ].map(theme => (
-                                                        <button
-                                                            key={theme}
-                                                            onClick={() => toggleArrayItem('priorityThemes', theme)}
-                                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                                                                (params.priorityThemes || []).includes(theme)
-                                                                ? 'bg-red-600 text-white border-red-600'
-                                                                : 'bg-white text-stone-600 border-stone-200 hover:border-red-300'
-                                                            }`}
-                                                        >
-                                                            {theme}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label className={labelStyles}>Political Sensitivities</label>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {[
-                                                        'Data Sovereignty', 'National Security', 'Labor Rights', 'Environmental Impact',
-                                                        'Cultural Heritage', 'Political Stability', 'Sanctions Exposure'
-                                                    ].map(sensitivity => (
-                                                        <button
-                                                            key={sensitivity}
-                                                            onClick={() => toggleArrayItem('politicalSensitivities', sensitivity)}
-                                                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                                                                (params.politicalSensitivities || []).includes(sensitivity)
-                                                                ? 'bg-orange-600 text-white border-orange-600'
-                                                                : 'bg-white text-stone-600 border-stone-200 hover:border-orange-300'
-                                                            }`}
-                                                        >
-                                                            {sensitivity}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-6">
-                                            <label className={labelStyles}>Partnership Support Needs</label>
-                                            <div className="flex flex-wrap gap-2">
-                                                {[
-                                                    'Legal & Regulatory Support', 'Financial Advisory', 'Technical Expertise',
-                                                    'Market Intelligence', 'Cultural Integration', 'Operational Support',
-                                                    'Government Relations', 'Risk Management'
-                                                ].map(need => (
-                                                    <button
-                                                        key={need}
-                                                        onClick={() => toggleArrayItem('partnershipSupportNeeds', need)}
-                                                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                                                            (params.partnershipSupportNeeds || []).includes(need)
-                                                            ? 'bg-blue-600 text-white border-blue-600'
-                                                            : 'bg-white text-stone-600 border-stone-200 hover:border-blue-300'
-                                                        }`}
-                                                    >
-                                                        {need}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                            </div>
-
-                            <div className="pt-6 border-t border-stone-100 flex justify-between">
-                                <button onClick={() => setStep(1)} className="text-stone-500 hover:text-stone-900 text-sm font-medium">&larr; Back to Identity</button>
-                                <button onClick={() => setStep(3)} disabled={!params.region || !params.industry.length} className="px-8 py-3 bg-stone-900 text-white font-bold rounded-lg hover:bg-stone-800 disabled:opacity-50 transition-all shadow-md">Next: Calibration &rarr;</button>
-                            </div>
-                        </div>
-                    )}
+                    {step === 2 && renderStrategyAndDealStep()}
 
                     {/* STEP 3: CALIBRATION */}
                     {step === 3 && (
@@ -873,7 +887,7 @@ export const Gateway: React.FC<GatewayProps> = ({ params, onUpdate, onComplete }
                         <div className="animate-in fade-in duration-500 space-y-10">
                             <div className="border-b border-stone-100 pb-6">
                                 <h2 className="text-2xl font-bold text-stone-900">Step 4: Strategic Intelligence</h2>
-                                <p className="text-stone-500">Define objectives and analytical methodologies. Deliverables are configured in the next step.</p>
+                                <p className="text-stone-500">Define objectives and analytical methodologies. Access 100+ reference deals and partnership intelligence library.</p>
                             </div>
 
                             <div className="bg-stone-50 p-6 rounded-xl border border-stone-200">
@@ -888,7 +902,7 @@ export const Gateway: React.FC<GatewayProps> = ({ params, onUpdate, onComplete }
 
                             <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-xl border border-indigo-100 shadow-sm mb-8">
                                 <label className="block text-lg font-bold text-indigo-900 mb-2 flex items-center gap-2"><BrainCircuit className="w-6 h-6 text-indigo-600" /> Analytical Lenses</label>
-                                <p className="text-sm text-indigo-700 mb-4">Select multiple methodologies for the Nexus Brain.</p>
+                                <p className="text-sm text-indigo-700 mb-4">Select multiple methodologies for the Nexus Brain. BW Consultant will provide real-time guidance.</p>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {[
                                         ...STRATEGIC_LENSES,
@@ -922,7 +936,7 @@ export const Gateway: React.FC<GatewayProps> = ({ params, onUpdate, onComplete }
                             <div className="pt-8 flex justify-between items-center border-t border-stone-100">
                                 <button onClick={() => setStep(3)} className="text-stone-500 hover:text-stone-900 text-sm font-medium">&larr; Back to Calibration</button>
                                 <button onClick={onComplete} className="px-10 py-4 bg-stone-900 text-white font-bold text-lg rounded-xl hover:bg-stone-800 transition-all shadow-lg transform hover:-translate-y-0.5">
-                                    Proceed to Mission Briefing &rarr;
+                                    Proceed to 9-Step Guided Intake &rarr;
                                 </button>
                             </div>
                         </div>

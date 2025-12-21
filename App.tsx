@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   ReportParameters, 
   CopilotInsight, 
@@ -10,16 +10,11 @@ import {
 import { INITIAL_PARAMETERS } from './constants';
 import CommandCenter from './components/CommandCenter'; 
 import MonitorDashboard from './components/MonitorDashboard';
-import LeftSidebar from './components/LeftSidebar';
-import RightSidebar from './components/RightSidebar';
-import { ReportViewer } from './components/ReportViewer';
 import { LandingPage } from './components/LandingPage';
 import AdminDashboard from './components/AdminDashboard';
 import { LegalInfoHub } from './components/LegalInfoHub';
 import { ArchitectPage } from './components/ArchitectPage';
 import { PartnerManagement } from './components/PartnerManagement';
-import { Gateway } from './components/Gateway';
-import { StrategicCanvas } from './components/StrategicCanvas';
 import MainCanvas from './components/MainCanvas';
 import EntityDefinitionBuilder from './components/EntityDefinitionBuilder';
 import GlobalMarketComparison from './components/GlobalMarketComparison';
@@ -37,14 +32,18 @@ import PartnershipRepository from './components/PartnershipRepository';
 import AIPoweredDealRecommendation from './components/AIPoweredDealRecommendation';
 import LowCostRelocationTools from './components/LowCostRelocationTools';
 import IntegrationExportFramework from './components/IntegrationExportFramework';
+import { DeepReasoningEngine } from './components/DeepReasoningEngine';
+import CompetitorMap from './components/CompetitorMap';
+import AlternativeLocationMatcher from './components/AlternativeLocationMatcher';
+import EthicsPanel from './components/EthicsPanel';
 import useEscapeKey from './hooks/useEscapeKey';
-import { generateCopilotInsights, generateReportSectionStream, askCopilot } from './services/geminiService';
+import { generateCopilotInsights, generateReportSectionStream } from './services/geminiService';
+import { config } from './services/config';
 import { generateBenchmarkData } from './services/mockDataGenerator';
-import { calculateSPI } from './services/engine';
 import { ReportOrchestrator } from './services/ReportOrchestrator';
-import { ReportPayload } from './types';
-import { LayoutGrid, Globe, ShieldCheck, Layers, LayoutDashboard, Plus } from 'lucide-react';
+import { LayoutGrid, Globe, ShieldCheck, LayoutDashboard, Plus } from 'lucide-react';
 import DemoIndicator from './components/DemoIndicator';
+// Note: report-generator sidebar is rendered inside MainCanvas.
 
 // --- TYPES & INITIAL STATE ---
 const initialSection: ReportSection = { id: '', title: '', content: '', status: 'pending' };
@@ -58,7 +57,7 @@ const initialReportData: ReportData = {
   risks: { ...initialSection, id: 'risk', title: 'Risk Mitigation Strategy' },
 };
 
-type ViewMode = 'command-center' | 'live-feed' | 'admin-dashboard' | 'legal-hub' | 'architect' | 'report-generator' | 'partner-management' | 'gateway' | 'strategic-canvas' | 'entity-builder' | 'market-comparison' | 'compatibility-engine' | 'deal-marketplace' | 'summary-generator' | 'business-intelligence' | 'document-generation' | 'partnership-analyzer' | 'relationship-planner' | 'scenario-planning' | 'support-programs' | 'advanced-expansion' | 'partnership-repository' | 'ai-recommendations' | 'low-cost-tools' | 'integration-export';
+type ViewMode = 'command-center' | 'live-feed' | 'admin-dashboard' | 'legal-hub' | 'architect' | 'report-generator' | 'partner-management' | 'gateway' | 'strategic-canvas' | 'entity-builder' | 'market-comparison' | 'compatibility-engine' | 'deal-marketplace' | 'summary-generator' | 'business-intelligence' | 'document-generation' | 'partnership-analyzer' | 'relationship-planner' | 'scenario-planning' | 'support-programs' | 'advanced-expansion' | 'partnership-repository' | 'ai-recommendations' | 'low-cost-tools' | 'integration-export' | 'intelligence-library' | 'deep-reasoning' | 'cultural-intelligence' | 'competitive-map' | 'alternative-locations' | 'ethics-panel' | 'risk-scoring' | 'benchmark-comparison' | 'document-suite';
 
 const App: React.FC = () => {
     // --- STATE ---
@@ -66,8 +65,8 @@ const App: React.FC = () => {
     const [viewMode, setViewMode] = useState<ViewMode>('command-center');
     const [hasEntered, setHasEntered] = useState(false);
     
-    // Load saved reports OR generate benchmarks if empty
-    const [savedReports, setSavedReports] = useState<ReportParameters[]>(() => {
+        // Load saved reports without injecting demo benchmarks
+        const [savedReports, setSavedReports] = useState<ReportParameters[]>(() => {
         try {
           console.log("DEBUG: Loading saved reports from localStorage");
           const saved = localStorage.getItem('bw-nexus-reports-unified');
@@ -79,15 +78,13 @@ const App: React.FC = () => {
                   return parsed;
               }
           }
-          // If no data exists, inject the 100 benchmark events
-          console.log("DEBUG: No saved data, initializing Nexus Benchmark Data...");
-          const benchmarks = generateBenchmarkData(100);
-          console.log("DEBUG: Generated benchmarks, count:", benchmarks.length);
-          return benchmarks;
+                    // No saved data: start with an empty repository for production
+                    console.log("DEBUG: No saved data, starting empty repository");
+                    return [];
         } catch (e) {
           console.error("DEBUG: Error loading saved reports:", e);
-          console.log("DEBUG: Falling back to benchmark data");
-          return generateBenchmarkData(100);
+                    console.log("DEBUG: Falling back to empty repository");
+                    return [];
         }
     });
     
@@ -95,11 +92,12 @@ const App: React.FC = () => {
 
     // Generation State
     const [insights, setInsights] = useState<CopilotInsight[]>([]);
-    const [isCopilotLoading, setIsCopilotLoading] = useState(false);
     const [reportData, setReportData] = useState<ReportData>(initialReportData);
     const [isGeneratingReport, setIsGeneratingReport] = useState(false);
     const [genPhase, setGenPhase] = useState<GenerationPhase>('idle');
     const [genProgress, setGenProgress] = useState(0);
+
+
 
     // --- EFFECTS ---
     useEffect(() => {
@@ -111,24 +109,21 @@ const App: React.FC = () => {
         console.log("DEBUG: Copilot useEffect triggered", { viewMode, orgName: params.organizationName, country: params.country, insightsLength: insights.length });
         const timer = setTimeout(async () => {
           // STRICT CHECK: Do not run if fields are empty
-          if ((viewMode === 'report-generator') && params.organizationName && params.country && params.organizationName.length > 2 && insights.length === 0) {
+                    if (config.useRealAI && (viewMode === 'report-generator') && params.organizationName && params.country && params.organizationName.length > 2 && insights.length === 0) {
             console.log("DEBUG: Starting copilot generation");
-            setIsCopilotLoading(true);
             try {
               const newInsights = await generateCopilotInsights(params);
               console.log("DEBUG: Copilot insights generated:", newInsights.length);
               setInsights(newInsights);
-              setIsCopilotLoading(false);
             } catch (error) {
               console.error("DEBUG: Error in copilot generation:", error);
-              setIsCopilotLoading(false);
             }
           } else {
             console.log("DEBUG: Copilot conditions not met");
           }
         }, 1500);
         return () => clearTimeout(timer);
-    }, [params.organizationName, params.country, params.strategicIntent, viewMode]);
+        }, [params, viewMode, insights.length]);
 
     // --- ACTIONS ---
     const handleEscape = useCallback(() => {
@@ -184,18 +179,6 @@ const App: React.FC = () => {
         setLegalSection(section);
         setViewMode('legal-hub');
         setHasEntered(true);
-    };
-
-    const handleAskCopilot = async (query: string) => {
-        setIsCopilotLoading(true);
-        try {
-          const response = await askCopilot(query, params);
-          setInsights(prev => [response, ...prev]);
-        } catch (e) {
-          console.error("Copilot error", e);
-        } finally {
-          setIsCopilotLoading(false);
-        }
     };
 
     const handleGenerateReport = useCallback(async () => {
@@ -271,7 +254,7 @@ const App: React.FC = () => {
 
     // --- RENDER ---
     if (!hasEntered) {
-        return <LandingPage onEnter={handleEnterApp} onOpenLegal={openLegal} />;
+        return <LandingPage onEnter={handleEnterApp} />;
     }
 
     if (viewMode === 'admin-dashboard') {
@@ -516,6 +499,100 @@ const App: React.FC = () => {
                 {/* 20. INTEGRATION & EXPORT FRAMEWORK */}
                 {viewMode === 'integration-export' && (
                     <IntegrationExportFramework />
+                )}
+
+                {/* 21. INTELLIGENCE LIBRARY (HIDDEN FEATURE) */}
+                {viewMode === 'intelligence-library' && (
+                    <PartnershipRepository />
+                )}
+
+                {/* 22. DEEP REASONING ENGINE (HIDDEN FEATURE) */}
+                {viewMode === 'deep-reasoning' && (
+                    <DeepReasoningEngine 
+                        userOrg={params.organizationName || 'Your Organization'}
+                        targetEntity={params.partnerPersonas?.[0] || 'Potential Partner'}
+                        context={`Exploring partnership opportunities in ${params.country || 'target market'}`}
+                    />
+                )}
+
+                {/* 23. CULTURAL INTELLIGENCE (HIDDEN FEATURE) */}
+                {viewMode === 'cultural-intelligence' && (
+                    <BusinessPracticeIntelligenceModule 
+                        selectedCountry={params.country || 'Vietnam'}
+                        onCountrySelected={(country) => setParams(prev => ({ ...prev, country }))}
+                    />
+                )}
+
+                {/* 24. COMPETITIVE MAP (HIDDEN FEATURE) */}
+                {viewMode === 'competitive-map' && (
+                    <CompetitorMap clientName={params.organizationName} />
+                )}
+
+                {/* 25. ALTERNATIVE LOCATIONS (HIDDEN FEATURE) */}
+                {viewMode === 'alternative-locations' && (
+                    <AlternativeLocationMatcher 
+                        originalLocation={{
+                            city: params.userCity || 'Ho Chi Minh City',
+                            country: params.country || 'Vietnam',
+                            population: 9000000,
+                            region: 'Southeast Asia',
+                            talentPool: {
+                                laborCosts: 50,
+                                educationLevel: 75,
+                                skillsAvailability: 80
+                            },
+                            infrastructure: {
+                                transportation: 70,
+                                digital: 75,
+                                utilities: 80
+                            },
+                            businessEnvironment: {
+                                easeOfDoingBusiness: 70,
+                                corruptionIndex: 60,
+                                regulatoryQuality: 65
+                            },
+                            marketAccess: {
+                                domesticMarket: 85,
+                                exportPotential: 75,
+                                regionalConnectivity: 80
+                            },
+                            gdp: {
+                                totalBillionUSD: 450,
+                                perCapitaUSD: 4500
+                            }
+                        }}
+                        requirements={{
+                            minPopulation: 1000000,
+                            maxCost: 80,
+                            minInfrastructure: 70,
+                            preferredRegion: 'Southeast Asia',
+                            businessFocus: Array.isArray(params.industry) ? params.industry : [params.industry || 'Technology']
+                        }}
+                    />
+                )}
+
+                {/* 26. ETHICS PANEL (HIDDEN FEATURE) */}
+                {viewMode === 'ethics-panel' && (
+                    <EthicsPanel params={params} />
+                )}
+
+                {/* 27. RISK SCORING (HIDDEN FEATURE) */}
+                {viewMode === 'risk-scoring' && (
+                    <MonitorDashboard reports={savedReports} />
+                )}
+
+                {/* 28. BENCHMARK COMPARISON (HIDDEN FEATURE) */}
+                {viewMode === 'benchmark-comparison' && (
+                    <GlobalMarketComparison />
+                )}
+
+                {/* 29. DOCUMENT SUITE (QUICK ACCESS) */}
+                {viewMode === 'document-suite' && (
+                    <DocumentGenerationSuite
+                        entityName={params.organizationName}
+                        targetMarket={params.country}
+                        dealValue={50000000}
+                    />
                 )}
             </main>
 
