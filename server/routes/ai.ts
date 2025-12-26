@@ -576,4 +576,289 @@ NEVER:
 - Ignore historical precedent
 `;
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// OPENAI GPT-4 INTEGRATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+router.post('/openai', async (req: Request, res: Response) => {
+  try {
+    const { prompt, context, model = 'gpt-4-turbo-preview' } = req.body;
+    
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+    
+    if (!OPENAI_API_KEY) {
+      return res.status(503).json({ 
+        error: 'OpenAI service unavailable',
+        message: 'OPENAI_API_KEY not configured',
+        fallback: true
+      });
+    }
+    
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: MULTI_AGENT_SYSTEM_INSTRUCTION
+          },
+          {
+            role: 'user',
+            content: context 
+              ? `Context: ${JSON.stringify(context)}\n\nQuery: ${prompt}`
+              : prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const text = data.choices?.[0]?.message?.content || '';
+    
+    res.json({
+      text,
+      response: text,
+      model: data.model,
+      usage: data.usage
+    });
+  } catch (error) {
+    console.error('OpenAI error:', error);
+    res.status(500).json({ error: 'OpenAI request failed' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ANTHROPIC CLAUDE INTEGRATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+router.post('/claude', async (req: Request, res: Response) => {
+  try {
+    const { prompt, context, model = 'claude-3-opus-20240229' } = req.body;
+    
+    const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+    
+    if (!ANTHROPIC_API_KEY) {
+      return res.status(503).json({ 
+        error: 'Claude service unavailable',
+        message: 'ANTHROPIC_API_KEY not configured',
+        fallback: true
+      });
+    }
+    
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 2000,
+        system: MULTI_AGENT_SYSTEM_INSTRUCTION,
+        messages: [
+          {
+            role: 'user',
+            content: context 
+              ? `Context: ${JSON.stringify(context)}\n\nQuery: ${prompt}`
+              : prompt
+          }
+        ]
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Claude API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const text = data.content?.[0]?.text || '';
+    
+    res.json({
+      text,
+      response: text,
+      model: data.model,
+      usage: data.usage
+    });
+  } catch (error) {
+    console.error('Claude error:', error);
+    res.status(500).json({ error: 'Claude request failed' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PERPLEXITY AI SEARCH INTEGRATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
+router.post('/perplexity', async (req: Request, res: Response) => {
+  try {
+    const { query, context, model = 'pplx-7b-online' } = req.body;
+    
+    const PERPLEXITY_API_KEY = process.env.PERPLEXITY_API_KEY;
+    
+    if (!PERPLEXITY_API_KEY) {
+      return res.status(503).json({ 
+        error: 'Perplexity service unavailable',
+        message: 'PERPLEXITY_API_KEY not configured',
+        fallback: true
+      });
+    }
+    
+    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${PERPLEXITY_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a research assistant. Provide accurate, well-sourced answers with citations.'
+          },
+          {
+            role: 'user',
+            content: context ? `Context: ${JSON.stringify(context)}\n\nQuery: ${query}` : query
+          }
+        ],
+        max_tokens: 1024,
+        temperature: 0.2,
+        return_citations: true
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Perplexity API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    res.json({
+      text: data.choices?.[0]?.message?.content || '',
+      response: data.choices?.[0]?.message?.content || '',
+      citations: data.citations || [],
+      model: data.model
+    });
+  } catch (error) {
+    console.error('Perplexity error:', error);
+    res.status(500).json({ error: 'Perplexity request failed' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REACTIVE INTELLIGENCE ENDPOINT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+router.post('/reactive', requireApiKey, async (req: Request, res: Response) => {
+  try {
+    const { situation, params, options } = req.body;
+    
+    const model = genAI!.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',
+      systemInstruction: `You are a reactive intelligence engine that thinks on its feet.
+      
+Analyze the situation and provide:
+1. Rapid assessment (2-3 sentences)
+2. Key opportunities detected
+3. Critical risks identified
+4. Recommended immediate actions
+5. Confidence level (0-1)
+
+Be decisive and actionable. No hedging.`
+    });
+    
+    const prompt = `SITUATION: ${situation}
+
+CONTEXT: ${JSON.stringify(params)}
+
+OPTIONS: ${JSON.stringify(options)}
+
+Provide reactive intelligence analysis with specific, actionable recommendations.`;
+    
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    
+    res.json({
+      analysis: text,
+      timestamp: new Date().toISOString(),
+      confidence: 0.85
+    });
+  } catch (error) {
+    console.error('Reactive intelligence error:', error);
+    res.status(500).json({ error: 'Reactive analysis failed' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SELF-SOLVE ENDPOINT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+router.post('/solve', requireApiKey, async (req: Request, res: Response) => {
+  try {
+    const { problem, context } = req.body;
+    
+    const model = genAI!.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',
+      systemInstruction: `You are a self-solving AI system. Given a problem, you:
+1. Analyze the root cause
+2. Search your knowledge for similar solved problems
+3. Generate 3-5 specific, actionable solutions
+4. Rank solutions by confidence and feasibility
+
+Return JSON with:
+{
+  "analysis": "Root cause analysis",
+  "solutions": [
+    {
+      "action": "Specific action to take",
+      "reasoning": "Why this will work",
+      "expectedOutcome": "What will happen",
+      "confidence": 0.85
+    }
+  ],
+  "recommendedSolution": 0
+}`
+    });
+    
+    const prompt = `PROBLEM: ${problem}
+
+CONTEXT: ${JSON.stringify(context)}
+
+Solve this problem. Be specific and actionable.`;
+    
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return res.json(JSON.parse(jsonMatch[0]));
+      }
+    } catch {
+      // Continue with raw response
+    }
+    
+    res.json({
+      analysis: text,
+      solutions: [],
+      recommendedSolution: null
+    });
+  } catch (error) {
+    console.error('Self-solve error:', error);
+    res.status(500).json({ error: 'Self-solve failed' });
+  }
+});
+
 export default router;

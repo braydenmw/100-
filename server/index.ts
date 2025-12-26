@@ -12,6 +12,7 @@ dotenv.config();
 // Import routes
 import aiRoutes from './routes/ai.js';
 import reportsRoutes from './routes/reports.js';
+import searchRoutes from './routes/search.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -45,6 +46,7 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 // API Routes
 app.use('/api/ai', aiRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/search', searchRoutes);
 
 // Health check
 app.get('/api/health', (_req: Request, res: Response) => {
