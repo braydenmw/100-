@@ -14,6 +14,9 @@ import {
   RNIResult,
   SRAResult,
   IDVResult,
+  RDBIResult,
+  AFCResult,
+  FRSResult,
   CompositeScoreResult,
   InsightBand
 } from '../types';
@@ -73,7 +76,10 @@ class AdvancedIndexService {
       osi: this.computeOSI(params, composite),
       rni: this.computeRNI(params, composite),
       sra: this.computeSRA(params, composite, liveData.economics?.inflation),
-      idv: this.computeIDV(params, composite, liveData.profile?.region)
+      idv: this.computeIDV(params, composite, liveData.profile?.region),
+      rdbi: this.computeRDBI(params, composite),
+      afc: this.computeAFC(params, composite),
+      frs: this.computeFRS(params, composite)
     };
   }
 
@@ -421,6 +427,252 @@ class AdvancedIndexService {
       distanceScore: distance,
       culturalBridges,
       alignmentPlaybook
+    };
+  }
+
+  private static computeRDBI(params: ReportParameters, composite: CompositeScoreResult): RDBIResult {
+    let rawBias = 48;
+    const drivers: string[] = [];
+    const pressurePoints: string[] = [];
+
+    if (params.userCountry && params.country) {
+      if (params.userCountry === params.country) {
+        rawBias += 22;
+        pressurePoints.push('Requester and target market are identical; confirmation bias likely.');
+      } else {
+        rawBias -= 8;
+        drivers.push('Cross-border mandate forces alternate defaults.');
+      }
+    }
+
+    if ((params.comparativeContext?.length || 0) >= 2) {
+      rawBias -= 6;
+      drivers.push('Multiple comparative regions supplied.');
+    }
+
+    if (!params.stakeholderAlignment?.some(alignment => /local|municipal|community/i.test(alignment || ''))) {
+      rawBias += 6;
+      pressurePoints.push('No explicit local stakeholder alignment recorded.');
+    } else {
+      drivers.push('Local stakeholder alignment declared.');
+    }
+
+    if ((params.partnerPersonas?.length || 0) === 0) {
+      rawBias += 5;
+      pressurePoints.push('Partner personas absent; home heuristics go unchallenged.');
+    }
+
+    if ((params.ingestedDocuments?.length || 0) >= 4) {
+      rawBias -= 4;
+      drivers.push('Diverse reference packets temper bias.');
+    }
+
+    if ((params.strategicLens || []).some(lens => /divers/i.test(lens) || /regional/i.test(lens))) {
+      rawBias -= 5;
+      drivers.push('Diversification lens explicitly selected.');
+    }
+
+    if (params.neuroSymbolicState?.formulas?.some(formula => /regional|bias/i.test(formula.name))) {
+      rawBias -= 3;
+      drivers.push('Neuro-symbolic circuit already monitoring regional bias.');
+    }
+
+    const score = clamp(100 - rawBias, 0, 100);
+    const direction: RDBIResult['direction'] = rawBias >= 60 ? 'home-biased' : rawBias <= 40 ? 'outbound' : 'balanced';
+
+    const overrideSwitches = direction === 'home-biased'
+      ? ['Route briefing through external geography reviewer', 'Inject contrarian dataset before approvals']
+      : direction === 'outbound'
+        ? ['Pair expansion pod with resident operators', 'Impose cultural guardrails on rapid pivots']
+        : ['Rotate comparative dataset quarterly', 'Keep alternating reviewers from outside the region'];
+
+    return {
+      score,
+      band: determineBand(score),
+      drivers,
+      pressurePoints,
+      recommendation: direction === 'home-biased'
+        ? 'Pause capital lock until an external reviewer signs off on regional assumptions.'
+        : direction === 'outbound'
+          ? 'Counter over-corrections by anchoring each loop with a local operating partner.'
+          : 'Maintain alternating review cadences to keep baselines neutral.',
+      dataSources: composite.dataSources,
+      direction,
+      referenceRegion: params.region || params.country || 'Target region',
+      overrideSwitches
+    };
+  }
+
+  private static computeAFC(params: ReportParameters, composite: CompositeScoreResult): AFCResult {
+    const dragFactors: string[] = [];
+    const accelerationLevers: string[] = [];
+    let coefficient = 0.25;
+
+    const regulatoryDrag = Math.max(0, (75 - composite.components.regulatory) / 150);
+    if (regulatoryDrag > 0.01) {
+      coefficient += regulatoryDrag;
+      dragFactors.push('Regulatory readiness below 75/100.');
+      accelerationLevers.push('Embed advance permitting squad with host agency.');
+    }
+
+    const infrastructureDrag = Math.max(0, (70 - composite.components.infrastructure) / 150);
+    if (infrastructureDrag > 0.01) {
+      coefficient += infrastructureDrag;
+      dragFactors.push('Infrastructure score below 70/100.');
+      accelerationLevers.push('Pre-contract shared infrastructure or neutral host facilities.');
+    }
+
+    const talentDrag = Math.max(0, (65 - composite.components.talent) / 150);
+    if (talentDrag > 0.01) {
+      coefficient += talentDrag;
+      dragFactors.push('Specialized talent coverage under 65/100.');
+      accelerationLevers.push('Stage talent bridge via JV or managed services.');
+    }
+
+    const needs = params.calibration?.capabilitiesNeed?.length || 0;
+    const haves = params.calibration?.capabilitiesHave?.length || 0;
+    if (needs > haves) {
+      const gapPenalty = Math.min(0.18, (needs - haves) * 0.03);
+      coefficient += gapPenalty;
+      dragFactors.push(`${needs - haves} capability gaps declared.`);
+      accelerationLevers.push('Borrow missing capabilities from regional shared services.');
+    }
+
+    const partnerCoverage = params.partnerCapabilities?.length || 0;
+    if (partnerCoverage >= 3) {
+      coefficient -= 0.04;
+      accelerationLevers.push('Partner capability stack absorbs onboarding drag.');
+    } else if (partnerCoverage === 0) {
+      dragFactors.push('No partner capabilities mapped to absorb launch tasks.');
+    }
+
+    const timeline = params.expansionTimeline || '';
+    if (timeline.includes('0_6')) {
+      coefficient += 0.12;
+      dragFactors.push('Aggressive 0-6 month activation target.');
+    } else if (timeline.includes('6_12')) {
+      coefficient += 0.05;
+    } else if (timeline.includes('18') || timeline.includes('24')) {
+      coefficient -= 0.03;
+    }
+
+    if (params.dueDiligenceDepth === 'Deep') {
+      coefficient += 0.06;
+      dragFactors.push('Enhanced diligence sequencing adds drag.');
+    } else if (params.dueDiligenceDepth === 'Light') {
+      coefficient -= 0.02;
+    }
+
+    coefficient = clamp(coefficient, 0.05, 0.95);
+    const score = clamp(Math.round((1 - coefficient) * 100), 5, 100);
+    const timePenaltyMonths = Math.max(1, Math.round(coefficient * 12));
+
+    const drivers = [
+      `Regulatory readiness ${Math.round(composite.components.regulatory)}/100`,
+      `Infrastructure ${Math.round(composite.components.infrastructure)}/100`,
+      `Talent coverage ${Math.round(composite.components.talent)}/100`
+    ];
+
+    const pressurePoints = dragFactors.length ? dragFactors : ['Friction within expected envelope'];
+
+    const recommendation = coefficient > 0.45
+      ? 'Stage go-live with kill switches and pre-signed contingencies before scaling spend.'
+      : 'Proceed with current pacing; keep friction log to preserve advantage.';
+
+    if (!accelerationLevers.length) {
+      accelerationLevers.push('Maintain activation SWAT cadence; no immediate hardening required.');
+    }
+
+    return {
+      score,
+      band: determineBand(score),
+      drivers,
+      pressurePoints,
+      recommendation,
+      dataSources: composite.dataSources,
+      coefficient,
+      dragFactors,
+      accelerationLevers,
+      timePenaltyMonths
+    };
+  }
+
+  private static computeFRS(params: ReportParameters, composite: CompositeScoreResult): FRSResult {
+    let score = 58;
+    const drivers: string[] = [];
+    const pressurePoints: string[] = [];
+    const loopDesign: string[] = [];
+    const energySources: string[] = [];
+    const signals: string[] = [];
+
+    const innovation = composite.components.innovation;
+    const digital = composite.components.digitalReadiness;
+    const marketAccess = composite.components.marketAccess;
+    const talent = composite.components.talent;
+
+    score += (innovation - 60) * 0.25;
+    score += (digital - 55) * 0.2;
+    score += (marketAccess - 55) * 0.15;
+
+    if ((params.partnerCapabilities?.length || 0) >= 3) {
+      score += 5;
+      drivers.push('Partner capability lattice can sustain multiple flywheel legs.');
+    } else {
+      pressurePoints.push('Partner capability coverage thin; loop energy may dissipate.');
+    }
+
+    if ((params.priorityThemes || []).some(theme => /data|platform|ecosystem/i.test(theme))) {
+      score += 4;
+      drivers.push('Platform/data themes unlock telemetry-driven loops.');
+    } else {
+      pressurePoints.push('No platform or data priorities flagged.');
+    }
+
+    if ((params.strategicObjectives?.length || 0) >= 3) {
+      score += 4;
+      drivers.push('Multi-stage objectives documented for compounding motion.');
+    }
+
+    if (!params.targetPartner && !params.partnerPersonas?.length) {
+      pressurePoints.push('No anchor partner identified to prime the loop.');
+      score -= 4;
+    }
+
+    score = clamp(score, 0, 100);
+    const sustainingRisk = clamp(100 - score, 5, 85);
+    const compoundingHalfLifeMonths = Math.max(6, Math.round(24 - score / 4));
+
+    if (params.targetPartner) {
+      loopDesign.push(`Partner onboarding → shared telemetry → reinvest in ${params.targetPartner} corridor → repeat`);
+      energySources.push(`Anchor partner trust: ${params.targetPartner}`);
+    } else {
+      loopDesign.push('Market entry → activation telemetry → localized reinvestment → expanded demand');
+    }
+    loopDesign.push('Outcome tracing → playbook refresh → redeploy capital');
+
+    energySources.push(`Innovation signal ${Math.round(innovation)}/100`);
+    energySources.push(`Talent depth ${Math.round(talent)}/100`);
+
+    signals.push(`Digital readiness ${Math.round(digital)}/100`);
+    signals.push(`Market access ${Math.round(marketAccess)}/100`);
+    signals.push(`${params.partnerCapabilities?.length || 0} partner capabilities instrumented`);
+
+    const recommendation = sustainingRisk > 40
+      ? 'Instrument closed-loop KPIs and assign single-threaded owners before scaling spend.'
+      : 'Codify compounding playbook, then feed telemetry directly into reinvestment committee.';
+
+    return {
+      score,
+      band: determineBand(score),
+      drivers,
+      pressurePoints,
+      recommendation,
+      dataSources: composite.dataSources,
+      loopDesign,
+      energySources,
+      sustainingRisk,
+      compoundingHalfLifeMonths,
+      signals
     };
   }
 }

@@ -487,6 +487,27 @@ export interface IDVResult extends DerivedIndexBase {
   alignmentPlaybook: string[];
 }
 
+export interface RDBIResult extends DerivedIndexBase {
+  direction: 'home-biased' | 'balanced' | 'outbound';
+  referenceRegion: string;
+  overrideSwitches: string[];
+}
+
+export interface AFCResult extends DerivedIndexBase {
+  coefficient: number;
+  dragFactors: string[];
+  accelerationLevers: string[];
+  timePenaltyMonths: number;
+}
+
+export interface FRSResult extends DerivedIndexBase {
+  loopDesign: string[];
+  energySources: string[];
+  sustainingRisk: number;
+  compoundingHalfLifeMonths: number;
+  signals: string[];
+}
+
 export interface AdvancedIndexResults {
   barna: BARNAResult;
   nvi: NVIResult;
@@ -500,6 +521,9 @@ export interface AdvancedIndexResults {
   rni: RNIResult;
   sra: SRAResult;
   idv: IDVResult;
+  rdbi: RDBIResult;
+  afc: AFCResult;
+  frs: FRSResult;
 }
 
 export interface AdversarialInputCheck {
@@ -516,6 +540,21 @@ export interface AdversarialShieldResult {
   checks: AdversarialInputCheck[];
   escalations: string[];
   reviewedAt: string;
+}
+
+export interface AdversarialConfidenceResult {
+  score: number;
+  band: InsightBand;
+  coverage: {
+    shieldDepth: number;
+    personaBreadth: number;
+    counterfactualStress: number;
+    motivationClarity: number;
+    outcomeLearning: number;
+  };
+  degradationFlags: string[];
+  recommendedHardening: string[];
+  rationale: string;
 }
 
 export type PersonaRole = 'Skeptic' | 'Advocate' | 'Regulator' | 'Accountant' | 'Operator';
@@ -780,6 +819,7 @@ export interface ReportData {
     motivationAnalysis?: MotivationAnalysis;
     counterfactuals?: CounterfactualLabResult;
     outcomeLearning?: OutcomeLearningSnapshot;
+    adversarialConfidence?: AdversarialConfidenceResult;
   };
 }
 
@@ -874,6 +914,7 @@ export interface ReportPayload {
     motivationAnalysis?: MotivationAnalysis;
     counterfactuals?: CounterfactualLabResult;
     outcomeLearning?: OutcomeLearningSnapshot;
+    adversarialConfidence?: AdversarialConfidenceResult;
   };
 }
 

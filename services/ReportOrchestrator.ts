@@ -102,7 +102,8 @@ export class ReportOrchestrator {
         personaPanel: adversarialStack.personaPanel,
         motivationAnalysis: adversarialStack.motivation,
         counterfactuals: adversarialStack.counterfactuals,
-        outcomeLearning: adversarialStack.outcomeLearning
+        outcomeLearning: adversarialStack.outcomeLearning,
+        adversarialConfidence: adversarialStack.adversarialConfidence
       }
     };
 

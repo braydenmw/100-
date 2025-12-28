@@ -9,7 +9,8 @@ import {
   CounterfactualLabResult,
   CounterfactualScenario,
   OutcomeLearningSnapshot,
-  OutcomeAlignment
+  OutcomeAlignment,
+  AdversarialConfidenceResult
 } from '../types';
 import { InputShieldService, ShieldReport, ValidationResult } from './InputShieldService';
 import { PersonaEngine, FullPersonaAnalysis, PersonaFinding } from './PersonaEngine';
@@ -23,6 +24,7 @@ export interface AdversarialOutputs {
   motivation: MotivationAnalysis;
   counterfactuals: CounterfactualLabResult;
   outcomeLearning: OutcomeLearningSnapshot;
+  adversarialConfidence: AdversarialConfidenceResult;
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
@@ -34,13 +36,21 @@ class AdversarialReasoningService {
     const motivation = MotivationDetector.analyze(params);
     const counterfactualAnalysis = CounterfactualEngine.analyze(params);
     const outcomeLearning = this.buildOutcomeSnapshot(params);
+    const adversarialConfidence = this.computeAdversarialConfidence({
+      shield: shieldReport,
+      persona: personaAnalysis,
+      counterfactual: counterfactualAnalysis,
+      motivation,
+      outcomeLearning
+    });
 
     return {
       adversarialShield: this.mapShield(shieldReport),
       personaPanel: this.mapPersonaPanel(personaAnalysis),
       motivation,
       counterfactuals: this.mapCounterfactuals(counterfactualAnalysis),
-      outcomeLearning
+      outcomeLearning,
+      adversarialConfidence
     };
   }
 
@@ -177,6 +187,95 @@ class AdversarialReasoningService {
       learningActions,
       lastUpdated: new Date().toISOString()
     };
+  }
+
+  private static computeAdversarialConfidence(args: {
+    shield: ShieldReport;
+    persona: FullPersonaAnalysis;
+    counterfactual: CounterfactualAnalysis;
+    motivation: MotivationAnalysis;
+    outcomeLearning: OutcomeLearningSnapshot;
+  }): AdversarialConfidenceResult {
+    const { shield, persona, counterfactual, motivation, outcomeLearning } = args;
+
+    const shieldDepth = clamp(
+      55 + shield.validationResults.length * 3 - Math.max(0, 80 - shield.overallTrust) * 0.4,
+      25,
+      95
+    );
+    const personaBreadth = clamp(
+      persona.synthesis.confidenceLevel - persona.synthesis.disagreements.length * 5 + 35,
+      25,
+      95
+    );
+    const counterfactualStress = clamp(counterfactual.robustness.score, 25, 95);
+    const averageRedFlag = motivation.redFlags.reduce((sum, flag) => sum + flag.probability, 0) /
+      Math.max(1, motivation.redFlags.length);
+    const motivationClarity = clamp(90 - averageRedFlag / 2, 25, 95);
+    const outcomeLearningScore = clamp(
+      outcomeLearning.predictions.reduce((sum, prediction) => sum + (prediction.predicted || 0), 0) /
+        Math.max(1, outcomeLearning.predictions.length),
+      30,
+      95
+    );
+
+    const score = Math.round(
+      shieldDepth * 0.25 +
+      personaBreadth * 0.2 +
+      counterfactualStress * 0.2 +
+      motivationClarity * 0.2 +
+      outcomeLearningScore * 0.15
+    );
+
+    const degradationFlags: string[] = [];
+    if (shield.overallTrust < 60) {
+      degradationFlags.push('Input shield trust below 60% – upstream data needs remediation.');
+    }
+    if (persona.synthesis.disagreements.length > 2) {
+      degradationFlags.push('Persona debate unresolved on multiple topics.');
+    }
+    if (motivation.redFlags.length >= 2) {
+      degradationFlags.push('Motivation analysis flagged multiple adverse incentives.');
+    }
+    if (counterfactual.robustness.score < 50) {
+      degradationFlags.push('Counterfactual robustness score below 50/100.');
+    }
+
+    const recommendedHardening: string[] = [];
+    if (shield.overallTrust < 70) {
+      recommendedHardening.push('Trigger enhanced provenance review on critical fields.');
+    }
+    if (persona.synthesis.disagreements.length) {
+      recommendedHardening.push('Schedule red-team replay on disputed persona topics.');
+    }
+    if (motivation.redFlags.length) {
+      recommendedHardening.push('Run live reference or background calls to validate motives.');
+    }
+    if (!recommendedHardening.length) {
+      recommendedHardening.push('Maintain current adversarial cadence; no immediate hardening required.');
+    }
+
+    return {
+      score,
+      band: this.toInsightBand(score),
+      coverage: {
+        shieldDepth: Math.round(shieldDepth),
+        personaBreadth: Math.round(personaBreadth),
+        counterfactualStress: Math.round(counterfactualStress),
+        motivationClarity: Math.round(motivationClarity),
+        outcomeLearning: Math.round(outcomeLearningScore)
+      },
+      degradationFlags,
+      recommendedHardening,
+      rationale: `Shield depth ${shieldDepth.toFixed(0)}, persona breadth ${personaBreadth.toFixed(0)}, counterfactual stress ${counterfactualStress.toFixed(0)} underpin adversarial confidence.`
+    };
+  }
+
+  private static toInsightBand(score: number): AdversarialConfidenceResult['band'] {
+    if (score >= 80) return 'high';
+    if (score >= 60) return 'medium';
+    if (score >= 40) return 'low';
+    return 'critical';
   }
 
   private static computeContradictionLevel(flag: ValidationResult['flag']): number {
