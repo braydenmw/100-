@@ -45,7 +45,7 @@ CONTEXT:
 `;
 
 // Middleware to check API key
-const requireApiKey = (req: Request, res: Response, next: Function) => {
+const requireApiKey = (_req: Request, res: Response, next: () => void) => {
   if (!genAI) {
     return res.status(503).json({ 
       error: 'AI service unavailable', 
@@ -423,7 +423,8 @@ router.post('/copilot-analysis', requireApiKey, async (req: Request, res: Respon
 
 router.post('/multi-agent', requireApiKey, async (req: Request, res: Response) => {
   try {
-    const { model: requestedModel, prompt, context, systemInstruction } = req.body;
+    const { model: _requestedModel, prompt, context, systemInstruction } = req.body;
+    void _requestedModel; // Reserved for future multi-model support
     
     // Use Gemini as primary agent (can be extended for GPT/Claude)
     const model = genAI!.getGenerativeModel({ 
@@ -468,7 +469,7 @@ Return structured JSON response with:
           model: 'gemini'
         });
       }
-    } catch (parseError) {
+    } catch {
       // Return as plain text response
     }
     
@@ -504,7 +505,7 @@ router.post('/learning/outcome', async (req: Request, res: Response) => {
 // Regional cities endpoint
 router.post('/regional-cities', requireApiKey, async (req: Request, res: Response) => {
   try {
-    const { region, industries, params } = req.body;
+    const { region, industries } = req.body;
     
     const model = genAI!.getGenerativeModel({ 
       model: 'gemini-1.5-flash',
@@ -531,7 +532,7 @@ Return as JSON array.`;
       if (jsonMatch) {
         return res.json(JSON.parse(jsonMatch[0]));
       }
-    } catch (parseError) {
+    } catch {
       // Continue with fallback
     }
     

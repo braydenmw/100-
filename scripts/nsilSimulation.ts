@@ -94,7 +94,7 @@ async function runSimulation(queueFile: string, outputFile: string, mode: string
   await writeFile(outputPath, JSON.stringify({ summary, results }, null, 2), 'utf8');
 
   console.log('\n📄 Simulation summary saved to', outputPath);
-  console.table(results.map(({ error, ...rest }) => rest));
+  console.table(results.map(({ error: _unusedError, ...rest }) => { void _unusedError; return rest; }));
   console.log('\nDone.');
 }
 
