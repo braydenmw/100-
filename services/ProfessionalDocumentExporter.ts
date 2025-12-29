@@ -691,21 +691,23 @@ export class ProfessionalDocumentExporter {
   private static renderSections(sections: DocumentSection[]): string {
     return sections.map(section => {
       switch (section.type) {
-        case 'heading':
+        case 'heading': {
           const tag = section.level === 1 ? 'h1' : section.level === 2 ? 'h2' : 'h3';
           const pageBreak = section.level === 1 ? 'class="page-break"' : '';
           return `<${tag} ${pageBreak}>${section.title}</${tag}>`;
+        }
           
         case 'paragraph':
           return `<h3>${section.title}</h3><p>${section.content}</p>`;
           
-        case 'list':
+        case 'list': {
           const items = Array.isArray(section.content) ? section.content : [section.content];
           return `
             <h3>${section.title}</h3>
             <ul>
                 ${items.map(item => `<li>${item}</li>`).join('')}
             </ul>`;
+        }
           
         case 'table':
           if (!section.tableData) return '';

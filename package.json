@@ -1,15 +1,19 @@
 {
-  "name": "bw-nexus-ai-final-11",
+  "name": "bw-nexus-ai",
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "dev:server": "tsx watch server/index.ts",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "vite build",
-    "build:server": "tsc -p tsconfig.server.json",
-    "start": "node dist-server/index.js",
+    "build:server": "node scripts/build-server.js",
+    "build:all": "npm run build && npm run build:server",
+    "start": "node dist-server/server/index.js",
     "preview": "vite preview",
     "test:nsil": "tsx scripts/nsilSimulation.ts"
   },
@@ -48,6 +52,7 @@
     "@typescript-eslint/parser": "^8.49.0",
     "@vitejs/plugin-react": "^5.0.0",
     "concurrently": "^8.2.2",
+    "esbuild": "^0.27.2",
     "eslint": "^9.39.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",

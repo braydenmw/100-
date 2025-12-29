@@ -72,7 +72,7 @@ export class AutonomousOrchestrator {
         if (compliant) {
           if (options.autoAct) {
             // Execute real-world action
-            const execResult = await executeRealWorldAction(action.action, action);
+            const execResult = await executeRealWorldAction(action.action, action as unknown as Record<string, unknown>);
             actionsTaken.push({ ...action, autoExecute: true });
             auditTrail.push({ step: 'actionExecuted', action, execResult });
           } else {

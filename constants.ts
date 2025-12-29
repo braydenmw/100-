@@ -29,12 +29,17 @@ export const INITIAL_PARAMETERS: ReportParameters = {
   
   // Strategy
   strategicIntent: [], 
+    intentScope: [],
+    developmentOutcomes: [],
+    visionStatement: '',
+    missionStatement: '',
   strategicMode: 'analysis',
   problemStatement: '',
   idealPartnerProfile: '',
   analysisTimeframe: '12 months',
   strategicObjectives: [],
   strategicLens: [],
+  priorityThemes: [],
   specificOpportunity: '', 
   targetIncentives: [], 
   partnerPersonas: [],
@@ -46,6 +51,10 @@ export const INITIAL_PARAMETERS: ReportParameters = {
     partnerFitCriteria: [],
     relationshipGoals: [],
     partnerEngagementNotes: '',
+    governanceModels: [],
+        politicalSensitivities: [],
+        riskPrimaryConcerns: '',
+        riskAppetiteStatement: '',
   
   // Execution
   relationshipStage: 'New',
@@ -54,10 +63,62 @@ export const INITIAL_PARAMETERS: ReportParameters = {
   operationalPriority: 'Efficiency',
     riskTolerance: '',
   expansionTimeline: '1-2 Years',
+    milestonePlan: '',
+    currency: '',
+    fxAssumption: '',
+        totalInvestment: '',
+        capitalAllocation: '',
+        cashFlowTiming: '',
+        revenueStreams: '',
+        revenueYear1: '',
+        revenueYear3: '',
+        revenueYear5: '',
+        unitEconomics: '',
+        cogsYear1: '',
+        opexYear1: '',
+        costBreakdown: '',
+        headcountPlan: '',
+        ebitdaMarginYear1: '',
+        breakEvenYear: '',
+        targetExitMultiple: '',
+        expectedIrr: '',
+        paybackPeriod: '',
+        npv: '',
+        downsideCase: '',
+        baseCase: '',
+        upsideCase: '',
+        sensitivityDrivers: '',
+        financialStages: [],
+        financialScenarios: [],
   partnershipSupportNeeds: [],
   targetCounterpartType: [],
   fundingSource: '',
   procurementMode: '',
+    macroFactors: [],
+    regulatoryFactors: [],
+    economicFactors: [],
+    corridorFocus: '',
+        riskRegister: [],
+        riskMitigationSummary: '',
+        contingencyPlans: '',
+        contingencyBudget: '',
+        riskKriNotes: '',
+        riskReportingCadence: '',
+        riskOwners: [],
+        riskMonitoringProcess: '',
+        capabilityAssessments: [],
+        executiveLead: '',
+        cfoLead: '',
+        opsLead: '',
+        teamBenchAssessment: '',
+        vendorStack: '',
+        complianceEvidence: '',
+        capabilityNotes: '',
+        technologyStack: '',
+        integrationSystems: '',
+        technologyRisks: '',
+        capabilityGaps: '',
+        buildBuyPartnerPlan: '',
 
   // Metadata
   id: '',
@@ -230,7 +291,86 @@ export const GLOBAL_STRATEGIC_INTENTS = [
     'Brand Expansion',
     'Humanitarian Aid Logistics',
     'Sovereign Wealth Deployment',
-    'National Security Initiative'
+    'National Security Initiative',
+    'National Digital Economy Build-out',
+    'Industrial Policy & Localization',
+    'Regional Corridor Development',
+    'Special Economic Zone (SEZ) Build-Out',
+    'Smart Cities / Urban Revitalization',
+    'Climate Adaptation & Resilience',
+    'Energy Transition & Grid Modernization',
+    'Health Systems Strengthening',
+    'Education / Talent Mobility',
+    'Food Security & Agri Modernization',
+    'Tourism / Creative Economy',
+    'Financial Inclusion & SME Growth',
+    'Disaster Recovery & Continuity',
+    'Cross-Border Trade Facilitation',
+    'FDI Attraction & Promotion'
+];
+
+export const INTENT_SCOPE_OPTIONS = [
+    'Global (multi-region program)',
+    'Regional Bloc (e.g., EU, ASEAN, GCC, AU)',
+    'National Program',
+    'State / Provincial',
+    'City / Metropolitan',
+    'Economic Corridor / Trade Route',
+    'Special Economic Zone / Freeport',
+    'Sector-Wide (industry transformation)',
+    'Cross-Border Cluster / Value Chain'
+];
+
+export const DEVELOPMENT_OUTCOME_OPTIONS = [
+    'GDP Growth & FDI Attraction',
+    'Industrial Diversification / Localization',
+    'Job Creation & Workforce Upskilling',
+    'Digital Economy & Data Infrastructure',
+    'Infrastructure & Logistics Capacity',
+    'Energy Transition & Climate Resilience',
+    'Health Systems Strengthening',
+    'Education, Talent Mobility & STEM Pipelines',
+    'Food Security & Agri Modernization',
+    'Financial Inclusion & SME Acceleration',
+    'Tourism / Creative & Cultural Economy',
+    'Security, Resilience & Disaster Recovery'
+];
+
+export const MACRO_FACTOR_OPTIONS = [
+    'GDP growth trajectory',
+    'Inflation outlook',
+    'FX volatility',
+    'Interest rate environment',
+    'Commodity exposure',
+    'Trade balance & current account',
+    'Sanctions / export controls',
+    'Political stability & governance index'
+];
+
+export const REGULATORY_FACTOR_OPTIONS = [
+    'Licensing & permits',
+    'Data sovereignty / privacy',
+    'Foreign ownership caps',
+    'Tariffs / customs',
+    'Environmental & ESG disclosures',
+    'Labor law constraints',
+    'Competition / antitrust',
+    'Standards & certification (e.g., ISO, GMP)'
+];
+
+export const ECONOMIC_FACTOR_OPTIONS = [
+    'SEZ / Freeport incentives',
+    'FTZ / customs efficiency',
+    'Tax holidays / incentives',
+    'Subsidies & grants',
+    'Infrastructure readiness',
+    'Logistics corridor connectivity',
+    'Access to capital & credit',
+    'Local content / localization rules'
+];
+
+export const CURRENCY_OPTIONS = [
+    'USD', 'EUR', 'GBP', 'JPY', 'CNY', 'SGD', 'AED', 'SAR', 'AUD', 'CAD'
 ];
 
 export const GLOBAL_COUNTERPARTS = [
@@ -253,6 +393,8 @@ export const GLOBAL_COUNTERPARTS = [
     'Royal Family Office',
     'Paramilitary / Security Firm'
 ];
+
+export const GLOBAL_COUNTERPART_TYPES = GLOBAL_COUNTERPARTS;
 
 export const GLOBAL_INCENTIVES = [
     'Corporate Tax Holiday',
@@ -417,6 +559,8 @@ export const TIME_HORIZONS = [
   { value: '5_plus_years', label: '5+ Years (Strategic)' }
 ];
 
+export const TIME_HORIZON_OPTIONS = TIME_HORIZONS.map(t => t.label);
+
 export const INDUSTRIES = GLOBAL_INDUSTRIES_EXTENDED.map(i => ({ id: i, title: i }));
 
 export const GLOBAL_CITY_DATABASE: Record<string, GlobalCityData> = {
@@ -479,7 +623,16 @@ export const DECISION_AUTHORITY_LEVELS = [
 ];
 
 export const PRIORITY_THEMES = [
-    'Digital Transformation', 'Sustainability (ESG)', 'Innovation', 'Cost Leadership', 'Customer Experience', 'Operational Excellence'
+    'Digital Transformation', 'Sustainability (ESG)', 'Innovation', 'Cost Leadership', 'Customer Experience', 'Operational Excellence',
+    'Revenue Growth', 'Margin Improvement', 'Asset Optimization', 'Risk Reduction', 'Talent Development', 'Supply Chain Resilience',
+    'Regulatory Compliance', 'Brand & Reputation', 'Social Impact', 'Geographic Expansion', 'Technology Modernization', 'Data Monetization'
+];
+
+export const TARGET_INCENTIVES = [
+    'Tax Holidays / Exemptions', 'Investment Grants', 'Land / Infrastructure Subsidies', 'SEZ Access', 'Training Subsidies',
+    'R&D Tax Credits', 'Accelerated Depreciation', 'Blended Finance / Concessional Loans', 'Export Incentives', 'Energy Subsidies',
+    'Public Procurement Preferences', 'Visa / Work Permit Fast-Track', 'One-Stop Licensing', 'Free Trade Zone Benefits', 'Tariff Waivers',
+    'Green / ESG Incentives', 'Innovation Matching Funds', 'Government Co-Investment'
 ];
 
 export const TARGET_COUNTERPART_TYPES = GLOBAL_COUNTERPARTS;

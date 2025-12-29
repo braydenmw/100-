@@ -3,9 +3,18 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const router = Router();
 
-// Initialize Gemini with server-side API key (secure)
-const API_KEY = process.env.GEMINI_API_KEY;
-const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
+// Lazy initialize Gemini - API key is read at request time, not module load time
+let genAI: GoogleGenerativeAI | null = null;
+const getGenAI = () => {
+  if (genAI === null) {
+    const API_KEY = process.env.GEMINI_API_KEY;
+    if (API_KEY) {
+      genAI = new GoogleGenerativeAI(API_KEY);
+      console.log('[AI Routes] Gemini AI initialized successfully');
+    }
+  }
+  return genAI;
+};
 
 // System instruction for the AI
 const SYSTEM_INSTRUCTION = `
@@ -46,7 +55,8 @@ CONTEXT:
 
 // Middleware to check API key
 const requireApiKey = (_req: Request, res: Response, next: () => void) => {
-  if (!genAI) {
+  const ai = getGenAI();
+  if (!ai) {
     return res.status(503).json({ 
       error: 'AI service unavailable', 
       message: 'GEMINI_API_KEY not configured on server' 
@@ -60,7 +70,7 @@ router.post('/insights', requireApiKey, async (req: Request, res: Response) => {
   try {
     const { organizationName, country, strategicIntent, specificOpportunity } = req.body;
     
-    const model = genAI!.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = getGenAI()!.getGenerativeModel({ model: 'gemini-2.0-flash' });
     
     const prompt = `Analyze this partnership strategy and provide 3 key insights:
     Organization: ${organizationName}
@@ -98,8 +108,8 @@ router.post('/chat', requireApiKey, async (req: Request, res: Response) => {
   try {
     const { message, context } = req.body;
     
-    const model = genAI!.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+    const model = getGenAI()!.getGenerativeModel({ 
+      model: 'gemini-2.0-flash',
       systemInstruction: SYSTEM_INSTRUCTION
     });
     
@@ -120,7 +130,8 @@ router.post('/chat', requireApiKey, async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('AI chat error:', error);
-    res.status(500).json({ error: 'Failed to process chat' });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({ error: 'Failed to process chat', details: errorMessage });
   }
 });
 
@@ -129,8 +140,8 @@ router.post('/generate-section', requireApiKey, async (req: Request, res: Respon
   try {
     const { section, params } = req.body;
     
-    const model = genAI!.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+    const model = getGenAI()!.getGenerativeModel({ 
+      model: 'gemini-2.0-flash',
       systemInstruction: SYSTEM_INSTRUCTION
     });
     
@@ -156,8 +167,8 @@ router.post('/generate-stream', requireApiKey, async (req: Request, res: Respons
   try {
     const { section, params } = req.body;
     
-    const model = genAI!.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+    const model = getGenAI()!.getGenerativeModel({ 
+      model: 'gemini-2.0-flash',
       systemInstruction: SYSTEM_INSTRUCTION
     });
     
@@ -194,7 +205,7 @@ router.post('/deep-reasoning', requireApiKey, async (req: Request, res: Response
   try {
     const { userOrg, targetEntity, context } = req.body;
     
-    const model = genAI!.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = getGenAI()!.getGenerativeModel({ model: 'gemini-2.0-flash' });
     
     const prompt = `
     Perform a deep reasoning analysis on a potential partnership/deal between ${userOrg} and ${targetEntity}.
@@ -230,7 +241,7 @@ router.post('/geopolitical', requireApiKey, async (req: Request, res: Response) 
   try {
     const { country, region, intent } = req.body;
     
-    const model = genAI!.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = getGenAI()!.getGenerativeModel({ model: 'gemini-2.0-flash' });
     
     const prompt = `Assess geopolitical risks for market entry:
     Country: ${country}
@@ -275,7 +286,7 @@ router.post('/governance', requireApiKey, async (req: Request, res: Response) =>
   try {
     const { country, organizationType } = req.body;
     
-    const model = genAI!.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = getGenAI()!.getGenerativeModel({ model: 'gemini-2.0-flash' });
     
     const prompt = `Perform governance audit for:
     Country: ${country}
@@ -318,7 +329,7 @@ router.post('/agent', requireApiKey, async (req: Request, res: Response) => {
   try {
     const { agentName, roleDefinition, context } = req.body;
     
-    const model = genAI!.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = getGenAI()!.getGenerativeModel({ model: 'gemini-2.0-flash' });
     
     const prompt = `
     ROLE: You are the ${agentName}.
@@ -361,7 +372,7 @@ router.post('/search-grounded', requireApiKey, async (req: Request, res: Respons
   try {
     const { query } = req.body;
     
-    const model = genAI!.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = getGenAI()!.getGenerativeModel({ model: 'gemini-2.0-flash' });
     
     const result = await model.generateContent(query);
     const text = result.response.text();
@@ -381,8 +392,8 @@ router.post('/copilot-analysis', requireApiKey, async (req: Request, res: Respon
   try {
     const { query, context } = req.body;
     
-    const model = genAI!.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+    const model = getGenAI()!.getGenerativeModel({ 
+      model: 'gemini-2.0-flash',
       systemInstruction: SYSTEM_INSTRUCTION
     });
     
@@ -427,8 +438,8 @@ router.post('/multi-agent', requireApiKey, async (req: Request, res: Response) =
     void _requestedModel; // Reserved for future multi-model support
     
     // Use Gemini as primary agent (can be extended for GPT/Claude)
-    const model = genAI!.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+    const model = getGenAI()!.getGenerativeModel({ 
+      model: 'gemini-2.0-flash',
       systemInstruction: systemInstruction || MULTI_AGENT_SYSTEM_INSTRUCTION
     });
     
@@ -507,8 +518,8 @@ router.post('/regional-cities', requireApiKey, async (req: Request, res: Respons
   try {
     const { region, industries } = req.body;
     
-    const model = genAI!.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+    const model = getGenAI()!.getGenerativeModel({ 
+      model: 'gemini-2.0-flash',
       systemInstruction: MULTI_AGENT_SYSTEM_INSTRUCTION
     });
     
@@ -766,8 +777,8 @@ router.post('/reactive', requireApiKey, async (req: Request, res: Response) => {
   try {
     const { situation, params, options } = req.body;
     
-    const model = genAI!.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+    const model = getGenAI()!.getGenerativeModel({ 
+      model: 'gemini-2.0-flash',
       systemInstruction: `You are a reactive intelligence engine that thinks on its feet.
       
 Analyze the situation and provide:
@@ -810,8 +821,8 @@ router.post('/solve', requireApiKey, async (req: Request, res: Response) => {
   try {
     const { problem, context } = req.body;
     
-    const model = genAI!.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+    const model = getGenAI()!.getGenerativeModel({ 
+      model: 'gemini-2.0-flash',
       systemInstruction: `You are a self-solving AI system. Given a problem, you:
 1. Analyze the root cause
 2. Search your knowledge for similar solved problems

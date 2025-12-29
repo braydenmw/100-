@@ -100,6 +100,43 @@ export interface OpportunityScore {
     riskFactors: number;
 }
 
+export interface RiskRegisterEntry {
+  category: string;
+  description?: string;
+  probability?: string;
+  impact?: string;
+  owner?: string;
+  mitigation?: string;
+  residualRisk?: string;
+  kri?: string;
+  status?: string;
+}
+
+export interface FinancialStage {
+  stage: string;
+  capex?: string;
+  opex?: string;
+  fundingMix?: string;
+  timing?: string;
+}
+
+export interface FinancialScenario {
+  name: string;
+  revenue?: string;
+  margin?: string;
+  cashBurn?: string;
+  notes?: string;
+}
+
+export interface CapabilityAssessment {
+  area: string;
+  rating?: number;
+  evidence?: string;
+  owner?: string;
+  remediation?: string;
+  vendorStack?: string;
+}
+
 export interface ReportParameters {
   // Identity
   reportName: string;
@@ -153,6 +190,10 @@ export interface ReportParameters {
   
   // Strategy & Mandate
   strategicIntent: string[]; // UPDATED to array for multi-select
+  intentScope?: string[];
+  developmentOutcomes?: string[];
+  visionStatement?: string;
+  missionStatement?: string;
   strategicMode: string;
   problemStatement: string;
   idealPartnerProfile: string;
@@ -174,6 +215,9 @@ export interface ReportParameters {
   partnerFitCriteria?: string[];
   relationshipGoals?: string[];
   partnerEngagementNotes?: string;
+  governanceModels?: string[];
+  riskPrimaryConcerns?: string;
+  riskAppetiteStatement?: string;
 
   // Execution & Operations
   relationshipStage: string;
@@ -182,12 +226,61 @@ export interface ReportParameters {
   operationalPriority: string;
   riskTolerance: string;
   expansionTimeline: string;
+  milestonePlan?: string;
+  currency?: string;
+  fxAssumption?: string;
   partnershipSupportNeeds: string[];
   fundingSource?: string;
   procurementMode?: string;
+  totalInvestment?: string;
+  capitalAllocation?: string;
+  cashFlowTiming?: string;
+  revenueStreams?: string;
+  revenueYear1?: string;
+  revenueYear3?: string;
+  revenueYear5?: string;
+  unitEconomics?: string;
+  cogsYear1?: string;
+  opexYear1?: string;
+  costBreakdown?: string;
+  headcountPlan?: string;
+  ebitdaMarginYear1?: string;
+  breakEvenYear?: string;
+  targetExitMultiple?: string;
+  expectedIrr?: string;
+  paybackPeriod?: string;
+  npv?: string;
+  downsideCase?: string;
+  baseCase?: string;
+  upsideCase?: string;
+  sensitivityDrivers?: string;
+  financialStages?: FinancialStage[];
+  financialScenarios?: FinancialScenario[];
   politicalSensitivities?: string[];
   dealSize?: string;
   customDealSize?: string;
+  riskRegister?: RiskRegisterEntry[];
+  riskMitigationSummary?: string;
+  contingencyPlans?: string;
+  contingencyBudget?: string;
+  riskKriNotes?: string;
+  riskReportingCadence?: string;
+  riskOwners?: string[];
+  riskMonitoringProcess?: string;
+  riskHorizon?: string[];
+  capabilityAssessments?: CapabilityAssessment[];
+  executiveLead?: string;
+  cfoLead?: string;
+  opsLead?: string;
+  teamBenchAssessment?: string;
+  vendorStack?: string;
+  complianceEvidence?: string;
+  capabilityNotes?: string;
+  technologyStack?: string;
+  integrationSystems?: string;
+  technologyRisks?: string;
+  capabilityGaps?: string;
+  buildBuyPartnerPlan?: string;
 
   // Metadata
   id: string;
@@ -226,6 +319,10 @@ export interface ReportParameters {
   intentTags: string[];
   comparativeContext: string[];
   additionalContext: string;
+  macroFactors?: string[];
+  regulatoryFactors?: string[];
+  economicFactors?: string[];
+  corridorFocus?: string;
   opportunityScore: OpportunityScore;
   calibration?: { 
     constraints?: { budgetCap?: string, capitalMix?: { debt: number, equity: number, grant: number } };

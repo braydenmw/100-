@@ -1,0 +1,25 @@
+# Render Blueprint for BW Nexus AI
+# https://render.com/docs/blueprint-spec
+
+services:
+  # Web Service - Serves both frontend and backend
+  - type: web
+    name: bw-nexus-ai
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build && npm run build:server
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: GEMINI_API_KEY
+        sync: false  # Set this manually in Render dashboard
+      - key: VITE_GEMINI_API_KEY
+        sync: false  # Set this manually in Render dashboard
+      - key: FRONTEND_URL
+        value: https://bw-nexus-ai.onrender.com
+    healthCheckPath: /api/health
+    autoDeploy: true

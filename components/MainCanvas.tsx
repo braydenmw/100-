@@ -16,6 +16,7 @@ import DocumentGenerationSuite from './DocumentGenerationSuite';
 import { DocumentUploadModal } from './DocumentUploadModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ENTITY_TYPES, COUNTRIES, INDUSTRIES } from '../constants/businessData';
+import { GLOBAL_STRATEGIC_INTENTS, INTENT_SCOPE_OPTIONS, DEVELOPMENT_OUTCOME_OPTIONS, GLOBAL_COUNTERPART_TYPES, TIME_HORIZON_OPTIONS, MACRO_FACTOR_OPTIONS, REGULATORY_FACTOR_OPTIONS, ECONOMIC_FACTOR_OPTIONS, CURRENCY_OPTIONS, PRIORITY_THEMES, TARGET_INCENTIVES, STRATEGIC_LENSES, POLITICAL_SENSITIVITIES } from '../constants';
 import { evaluateDocReadiness } from '../services/intakeMapping';
 import useAdvisorSnapshot from '../hooks/useAdvisorSnapshot';
 import useBrainObserver, { BrainSignal } from '../hooks/useBrainObserver';
@@ -72,6 +73,22 @@ const PARTNER_READINESS_LEVELS = [
     'Negotiation',
     'Contracting',
     'Launch / Scaling'
+];
+
+const RISK_CATEGORIES = [
+    'Market Risk',
+    'Operational Risk',
+    'Financial Risk',
+    'Legal Risk',
+    'Relationship Risk'
+];
+
+const CAPABILITY_AREAS = [
+    { name: 'Sales & Business Development', key: 'sales' },
+    { name: 'Operations & Delivery', key: 'ops' },
+    { name: 'Product Development', key: 'product' },
+    { name: 'Finance & Control', key: 'finance' },
+    { name: 'Risk Management', key: 'risk' }
 ];
 
 const ENTITY_CLASSIFICATIONS = [
@@ -283,6 +300,36 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
             : [...currentArray, value];
         setParams({ ...params, [field]: updatedArray } as ReportParameters);
     };
+
+    const upsertRiskRegister = useCallback((category: string, field: keyof ReportParameters['riskRegister'][number], value: string) => {
+        const current = params.riskRegister || [];
+        const idx = current.findIndex(entry => entry.category === category);
+        const existing = idx >= 0 ? current[idx] : { category };
+        const nextEntry = { ...existing, [field]: value };
+        const next = idx >= 0
+            ? current.map((entry, i) => (i === idx ? nextEntry : entry))
+            : [...current, nextEntry];
+        setParams({ ...params, riskRegister: next });
+    }, [params, setParams]);
+
+    const getRiskEntry = useCallback((category: string) => {
+        return (params.riskRegister || []).find(entry => entry.category === category);
+    }, [params.riskRegister]);
+
+    const upsertCapability = useCallback((area: string, updates: Partial<ReportParameters['capabilityAssessments'][number]>) => {
+        const current = params.capabilityAssessments || [];
+        const idx = current.findIndex(item => item.area === area);
+        const existing = idx >= 0 ? current[idx] : { area };
+        const nextEntry = { ...existing, ...updates };
+        const next = idx >= 0
+            ? current.map((item, i) => (i === idx ? nextEntry : item))
+            : [...current, nextEntry];
+        setParams({ ...params, capabilityAssessments: next });
+    }, [params, setParams]);
+
+    const getCapability = useCallback((area: string) => {
+        return (params.capabilityAssessments || []).find(item => item.area === area);
+    }, [params.capabilityAssessments]);
 
     const handleDocumentProcessed = useCallback((docMeta: any) => {
         if (!docMeta) return;
@@ -693,15 +740,15 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                         <p className="text-[11px] text-stone-600 mb-3">Complete comprehensive intake to build any system</p>
                         <div className="space-y-2">
                             {[
-                                {id: 'identity', label: '1. Identity', description: "Organization, capacity, competition", icon: Building2},
-                                {id: 'mandate', label: '2. Mandate', description: 'Vision, strategy, objectives', icon: Target},
-                                {id: 'market', label: '3. Market', description: 'Geography, trends, dynamics', icon: Globe},
-                                {id: 'partner-personas', label: '4. Partners', description: 'Stakeholders, alignment', icon: Users},
-                                {id: 'financial', label: '5. Financial', description: 'Investment, revenue, returns', icon: DollarSign},
-                                {id: 'risks', label: '6. Risks', description: 'Risk register, mitigation', icon: AlertCircle},
-                                {id: 'capabilities', label: '7. Capabilities', description: 'Team, technology, gaps', icon: Cpu},
-                                {id: 'execution', label: '8. Execution', description: 'Timeline, milestones, gates', icon: GitBranch},
-                                {id: 'governance', label: '9. Governance', description: 'Structure, metrics, decisions', icon: Scale},
+                                {id: 'identity', label: '1. Identity', description: 'Org type/stage, capacity bands, competition map', icon: Building2},
+                                {id: 'mandate', label: '2. Mandate', description: 'Vision, horizon, weighted objectives, constraints', icon: Target},
+                                {id: 'market', label: '3. Market', description: 'Geos, trends, barriers, infra, TAM/SAM/SOM', icon: Globe},
+                                {id: 'partner-personas', label: '4. Partners', description: 'Archetypes, influence vs. alignment, dependencies', icon: Users},
+                                {id: 'financial', label: '5. Financial', description: 'Scenarios, capex/opex, incentives, payback window', icon: DollarSign},
+                                {id: 'risks', label: '6. Risks', description: 'Categories, likelihood/impact, mitigation, owners', icon: AlertCircle},
+                                {id: 'capabilities', label: '7. Capabilities', description: 'Team depth, tech maturity, gaps, plan-to-close', icon: Cpu},
+                                {id: 'execution', label: '8. Execution', description: 'Phased roadmap, gates, owners, budgets, buffers', icon: GitBranch},
+                                {id: 'governance', label: '9. Governance', description: 'Decision rights, cadence, KPIs, compliance checks', icon: Scale},
                             ].map((step, idx) => (
                                 <button
                                     key={step.id}
@@ -726,6 +773,17 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                     </div>
                                 </button>
                             ))}
+                        </div>
+                        <div className="mt-3 bg-slate-50 border border-stone-200 rounded-lg p-3 text-[11px] text-stone-700 leading-relaxed">
+                            <div className="font-semibold text-stone-900 text-xs mb-1">Input guidance (no-limits)</div>
+                            <ul className="list-disc list-inside space-y-1">
+                                <li>Multi-select everywhere, with free-text “other”.</li>
+                                <li>Examples/tooltips per field; add evidence/source notes.</li>
+                                <li>Support scenarios (financial, risk) and staged roadmaps.</li>
+                                <li>Use sliders/chips for speed + always a free-text override.</li>
+                                <li>Soft validation: surface missing info gently; show section progress.</li>
+                                <li>Include “known unknowns” and “assumptions” in every section.</li>
+                            </ul>
                         </div>
                     </div>
 
@@ -1103,6 +1161,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
         <AnimatePresence>
             {activeModal && (
                 <motion.div
+                    key={`modal-${activeModal}`}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -1430,19 +1489,127 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         onToggle={() => toggleSubsection('identity-intent')}
                                         color="from-indigo-50 to-blue-100">
                                         <div className="space-y-4">
-                                            <div>
-                                                <label className="block text-xs font-bold text-stone-700 mb-1">Primary Strategic Intent <span className="text-red-500">*</span></label>
-                                                <select value={params.strategicIntent[0] || ''} onChange={(e) => setParams({ ...params, strategicIntent: [e.target.value] })} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent">
-                                                    <option value="">Select primary goal...</option>
-                                                    <option value="Market Expansion">Market Expansion</option>
-                                                    <option value="Partnership Development">Partnership Development</option>
-                                                    <option value="Technology Acquisition">Technology Acquisition</option>
-                                                    <option value="Capital Investment">Capital Investment</option>
-                                                </select>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Primary Strategic Intent <span className="text-red-500">*</span></label>
+                                                    <select
+                                                        value={params.strategicIntent[0] || ''}
+                                                        onChange={(e) => {
+                                                            const primary = e.target.value;
+                                                            const supporting = (params.strategicIntent || []).filter(i => i !== primary);
+                                                            setParams({ ...params, strategicIntent: primary ? [primary, ...supporting] : supporting });
+                                                        }}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent"
+                                                    >
+                                                        <option value="">Select primary goal...</option>
+                                                        {GLOBAL_STRATEGIC_INTENTS.map(intent => (
+                                                            <option key={intent} value={intent}>{intent}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Scope / Level (multi-select)</label>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                        {INTENT_SCOPE_OPTIONS.map(scope => (
+                                                            <label key={scope} className="flex items-center gap-2 p-2 border rounded hover:bg-stone-50 cursor-pointer">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={(params.intentScope || []).includes(scope)}
+                                                                    onChange={() => {
+                                                                        const current = params.intentScope || [];
+                                                                        const next = current.includes(scope) ? current.filter(s => s !== scope) : [...current, scope];
+                                                                        setParams({ ...params, intentScope: next });
+                                                                    }}
+                                                                    className="h-4 w-4 text-indigo-800 focus:ring-amber-600"
+                                                                />
+                                                                <span className="text-xs text-stone-700">{scope}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Supporting Strategic Intents (global library, multi-select)</label>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-64 overflow-y-auto border border-stone-200 rounded p-2">
+                                                    {GLOBAL_STRATEGIC_INTENTS.map(intent => (
+                                                        <label key={intent} className="flex items-start gap-2 p-2 rounded hover:bg-stone-50 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={params.strategicIntent.includes(intent)}
+                                                                onChange={() => {
+                                                                    const exists = params.strategicIntent.includes(intent);
+                                                                    const filtered = params.strategicIntent.filter(i => i !== intent);
+                                                                    const next = exists ? filtered : [...params.strategicIntent, intent];
+                                                                    const primary = params.strategicIntent[0];
+                                                                    const normalized = primary && next.includes(primary)
+                                                                        ? [primary, ...next.filter(i => i !== primary)]
+                                                                        : next;
+                                                                    setParams({ ...params, strategicIntent: Array.from(new Set(normalized)) });
+                                                                }}
+                                                                className="h-4 w-4 mt-0.5 text-indigo-800 focus:ring-amber-600"
+                                                            />
+                                                            <span className="text-xs text-stone-700 leading-snug">{intent}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Vision Narrative (long-term)</label>
+                                                    <textarea
+                                                        value={params.visionStatement || ''}
+                                                        onChange={(e) => setParams({ ...params, visionStatement: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent h-20"
+                                                        placeholder="e.g., Build a pan-regional logistics backbone that doubles trade velocity and lowers cost-to-serve"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Mission / Strategic Objective (3-5 years)</label>
+                                                    <textarea
+                                                        value={params.missionStatement || ''}
+                                                        onChange={(e) => setParams({ ...params, missionStatement: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent h-20"
+                                                        placeholder="e.g., Achieve $5B FDI, 150k jobs, and 35% domestic value-add across the target corridor"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Economic & Development Outcomes (multi-select)</label>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                                    {DEVELOPMENT_OUTCOME_OPTIONS.map(outcome => (
+                                                        <label key={outcome} className="flex items-start gap-2 p-2 border rounded hover:bg-stone-50 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(params.developmentOutcomes || []).includes(outcome)}
+                                                                onChange={() => {
+                                                                    const current = params.developmentOutcomes || [];
+                                                                    const next = current.includes(outcome) ? current.filter(o => o !== outcome) : [...current, outcome];
+                                                                    setParams({ ...params, developmentOutcomes: next });
+                                                                }}
+                                                                className="h-4 w-4 mt-0.5 text-indigo-800 focus:ring-amber-600"
+                                                            />
+                                                            <span className="text-xs text-stone-700 leading-snug">{outcome}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Problem Statement <span className="text-red-500">*</span></label>
                                                 <textarea value={params.problemStatement} onChange={(e) => setParams({ ...params, problemStatement: e.target.value })} className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent h-24 ${isFieldInvalid('problemStatement') ? 'border-red-500' : 'border-stone-200'}`} placeholder="Describe the core problem this strategy aims to solve."/>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Specific Opportunity</label>
+                                                <input
+                                                    type="text"
+                                                    value={params.specificOpportunity || ''}
+                                                    onChange={(e) => setParams({ ...params, specificOpportunity: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent"
+                                                    placeholder="e.g., Solar mini-grid PPP in Kenya, EV charging network JV in Indonesia"
+                                                />
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -1693,27 +1860,70 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         onToggle={() => toggleSubsection('mandate-objectives')}
                                         color="from-indigo-50 to-blue-100"
                                      >
-                                        <div className="space-y-3">
-                                            <label className="block text-xs font-bold text-stone-700 mb-1">Select Strategic Objectives <span className="text-red-500">*</span></label>
-                                            <div className="grid grid-cols-3 gap-2">
-                                                {["Market Expansion", "Partnership Development", "Technology Acquisition", "Capital Investment", "Operational Excellence", "Innovation Leadership", "Supply Chain Optimization", "Talent Acquisition", "Brand Building"].map(intent => (
-                                                    <label key={intent} className="flex items-center gap-2 p-2 border rounded-md hover:bg-stone-50 cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={params.strategicIntent.includes(intent)}
-                                                            onChange={() => {
-                                                                const newIntents = params.strategicIntent.includes(intent)
-                                                                    ? params.strategicIntent.filter(i => i !== intent)
-                                                                    : [...params.strategicIntent, intent];
-                                                                setParams({ ...params, strategicIntent: newIntents });
-                                                            }}
-                                                            className="h-4 w-4 text-indigo-800 focus:ring-amber-600"
-                                                        />
-                                                        <span className="text-sm">{intent}</span>
-                                                    </label>
-                                                ))}
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Strategic Objectives (global library, multi-select) <span className="text-red-500">*</span></label>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-56 overflow-y-auto border border-stone-200 rounded p-2">
+                                                    {GLOBAL_STRATEGIC_INTENTS.map(obj => (
+                                                        <label key={obj} className="flex items-start gap-2 p-2 rounded hover:bg-stone-50 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(params.strategicObjectives || []).includes(obj)}
+                                                                onChange={() => {
+                                                                    const current = params.strategicObjectives || [];
+                                                                    const next = current.includes(obj) ? current.filter(o => o !== obj) : [...current, obj];
+                                                                    setParams({ ...params, strategicObjectives: next });
+                                                                }}
+                                                                className="h-4 w-4 mt-0.5 text-indigo-800 focus:ring-amber-600"
+                                                            />
+                                                            <span className="text-xs text-stone-700 leading-snug">{obj}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <div className="mt-3">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Scope / Level (for objectives)</label>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                        {INTENT_SCOPE_OPTIONS.map(scope => (
+                                                            <label key={scope} className="flex items-center gap-2 p-2 border rounded hover:bg-stone-50 cursor-pointer">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={(params.intentScope || []).includes(scope)}
+                                                                    onChange={() => {
+                                                                        const current = params.intentScope || [];
+                                                                        const next = current.includes(scope) ? current.filter(s => s !== scope) : [...current, scope];
+                                                                        setParams({ ...params, intentScope: next });
+                                                                    }}
+                                                                    className="h-4 w-4 text-indigo-800 focus:ring-amber-600"
+                                                                />
+                                                                <span className="text-xs text-stone-700">{scope}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Economic & Development Outcomes</label>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                        {DEVELOPMENT_OUTCOME_OPTIONS.map(outcome => (
+                                                            <label key={outcome} className="flex items-center gap-2 p-2 border rounded hover:bg-stone-50 cursor-pointer">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={(params.developmentOutcomes || []).includes(outcome)}
+                                                                    onChange={() => {
+                                                                        const current = params.developmentOutcomes || [];
+                                                                        const next = current.includes(outcome) ? current.filter(o => o !== outcome) : [...current, outcome];
+                                                                        setParams({ ...params, developmentOutcomes: next });
+                                                                    }}
+                                                                    className="h-4 w-4 text-indigo-800 focus:ring-amber-600"
+                                                                />
+                                                                <span className="text-xs text-stone-700">{outcome}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-1">
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Problem Statement <span className="text-red-500">*</span></label>
                                                 <textarea
                                                     value={params.problemStatement}
@@ -1742,13 +1952,50 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-bold text-stone-700 mb-1">Target Counterpart Type</label>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Target Counterpart Type (global catalog)</label>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-56 overflow-y-auto border border-stone-200 rounded p-2">
+                                                    {GLOBAL_COUNTERPART_TYPES.map(ct => (
+                                                        <label key={ct} className="flex items-start gap-2 p-2 rounded hover:bg-stone-50 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(params.targetCounterpartType || []).includes(ct)}
+                                                                onChange={() => {
+                                                                    const current = params.targetCounterpartType || [];
+                                                                    const next = current.includes(ct) ? current.filter(c => c !== ct) : [...current, ct];
+                                                                    setParams({ ...params, targetCounterpartType: next });
+                                                                }}
+                                                                className="h-4 w-4 mt-0.5 text-indigo-800 focus:ring-amber-600"
+                                                            />
+                                                            <span className="text-xs text-stone-700 leading-snug">{ct}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
                                                 <input
                                                     type="text"
-                                                    value={params.targetCounterpartType?.join(', ') || ''}
-                                                    onChange={(e) => setParams({ ...params, targetCounterpartType: e.target.value.split(',').map(s => s.trim()) })}
+                                                    value={params.corridorFocus || ''}
+                                                    onChange={(e) => setParams({ ...params, corridorFocus: e.target.value })}
+                                                    className="mt-2 w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent"
+                                                    placeholder="Optional: corridor / zone focus (e.g., ASEAN corridor, SEZ name)"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Partner Capabilities Sought (comma-separated)</label>
+                                                <input
+                                                    type="text"
+                                                    value={(params.partnerCapabilities || []).join(', ')}
+                                                    onChange={(e) => setParams({ ...params, partnerCapabilities: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
                                                     className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent"
-                                                    placeholder="e.g., CEO, Head of Strategy, R&D Lead"
+                                                    placeholder="e.g., Manufacturing, Distribution, Technology, Capital"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Partnership Support Needs (comma-separated)</label>
+                                                <input
+                                                    type="text"
+                                                    value={(params.partnershipSupportNeeds || []).join(', ')}
+                                                    onChange={(e) => setParams({ ...params, partnershipSupportNeeds: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent"
+                                                    placeholder="e.g., Legal structuring, Due diligence, Integration support, Change management"
                                                 />
                                             </div>
                                         </div>
@@ -1761,6 +2008,69 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         color="from-indigo-50 to-blue-100"
                                      >
                                         <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Priority Themes</label>
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto border border-stone-200 rounded p-3">
+                                                    {PRIORITY_THEMES.map(theme => (
+                                                        <label key={theme} className="flex items-center gap-2 p-2 border rounded hover:bg-stone-50 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(params.priorityThemes || []).includes(theme)}
+                                                                onChange={() => {
+                                                                    const current = params.priorityThemes || [];
+                                                                    const next = current.includes(theme) ? current.filter(t => t !== theme) : [...current, theme];
+                                                                    setParams({ ...params, priorityThemes: next });
+                                                                }}
+                                                                className="h-4 w-4 text-indigo-800 focus:ring-amber-600"
+                                                            />
+                                                            <span className="text-xs text-stone-700">{theme}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Strategic Lenses</label>
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                                    {STRATEGIC_LENSES.map(lens => (
+                                                        <label key={lens.id} className="flex items-start gap-2 p-2 border rounded hover:bg-stone-50 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(params.strategicLens || []).includes(lens.id)}
+                                                                onChange={() => {
+                                                                    const current = params.strategicLens || [];
+                                                                    const next = current.includes(lens.id) ? current.filter(l => l !== lens.id) : [...current, lens.id];
+                                                                    setParams({ ...params, strategicLens: next });
+                                                                }}
+                                                                className="h-4 w-4 mt-0.5 text-indigo-800 focus:ring-amber-600"
+                                                            />
+                                                            <div>
+                                                                <span className="text-xs font-semibold text-stone-800">{lens.label}</span>
+                                                                <p className="text-[10px] text-stone-500">{lens.desc}</p>
+                                                            </div>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Target Incentives Sought</label>
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto border border-stone-200 rounded p-3">
+                                                    {TARGET_INCENTIVES.map(incentive => (
+                                                        <label key={incentive} className="flex items-center gap-2 p-2 border rounded hover:bg-stone-50 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(params.targetIncentives || []).includes(incentive)}
+                                                                onChange={() => {
+                                                                    const current = params.targetIncentives || [];
+                                                                    const next = current.includes(incentive) ? current.filter(i => i !== incentive) : [...current, incentive];
+                                                                    setParams({ ...params, targetIncentives: next });
+                                                                }}
+                                                                className="h-4 w-4 text-indigo-800 focus:ring-amber-600"
+                                                            />
+                                                            <span className="text-xs text-stone-700">{incentive}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Success Metrics (comma-separated)</label>
                                                 <textarea
@@ -1800,16 +2110,34 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                      >
                                         <div className="space-y-4">
                                             <div>
-                                                <label className="block text-xs font-bold text-stone-700 mb-1">Preferred Governance Model</label>
-                                                <select className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent">
-                                                    <option value="">Select model...</option> 
-                                                    <option value="Joint Venture (JV)">Joint Venture (JV)</option>
-                                                    <option value="Strategic Alliance">Strategic Alliance</option>
-                                                    <option value="Licensing Agreement">Licensing Agreement</option>
-                                                    <option value="Distribution Partnership">Distribution Partnership</option>
-                                                    <option value="Equity Investment">Equity Investment</option>
-                                                    <option value="Consortium">Consortium</option>
-                                                </select>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Preferred Governance Model(s)</label>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                                    {["Joint Venture (JV)", "Strategic Alliance", "Licensing", "Distribution", "Equity Investment", "Consortium", "PPP / Concession", "SPV / ProjectCo"].map(model => (
+                                                        <label key={model} className="flex items-center gap-2 p-2 border rounded hover:bg-stone-50 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(params.governanceModels || []).includes(model)}
+                                                                onChange={() => {
+                                                                    const current = (params as any).governanceModels || [];
+                                                                    const next = current.includes(model) ? current.filter((m: string) => m !== model) : [...current, model];
+                                                                    setParams({ ...params, governanceModels: next } as any);
+                                                                }}
+                                                                className="h-4 w-4 text-indigo-800 focus:ring-amber-600"
+                                                            />
+                                                            <span className="text-xs text-stone-700">{model}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Decision Rights & Vetoes</label>
+                                                    <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-20" placeholder="Board seats, veto rights, reserved matters, quorum rules" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Operating Cadence & Escalation</label>
+                                                    <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-20" placeholder="Steering committee cadence, SLAs, escalation path, RACI" />
+                                                </div>
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -1829,15 +2157,32 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Expansion Timeline</label>
                                                 <select value={params.expansionTimeline} onChange={(e) => setParams({...params, expansionTimeline: e.target.value})} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent">
                                                     <option value="">Select timeline...</option>
-                                                    <optgroup label="Short-Term">
-                                                        <option value="0-6 Months">0-6 Months</option>
-                                                        <option value="6-12 Months">6-12 Months</option>
-                                                    </optgroup>
-                                                    <optgroup label="Long-Term">
-                                                        <option value="1-2 Years">1-2 Years</option>
-                                                        <option value="2+ Years">2+ Years</option>
-                                                    </optgroup>
+                                                    {TIME_HORIZON_OPTIONS.map(opt => (
+                                                        <option key={opt} value={opt}>{opt}</option>
+                                                    ))}
                                                 </select>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Critical Path / Milestones</label>
+                                                <textarea value={params.milestonePlan || ''} onChange={(e) => setParams({ ...params, milestonePlan: e.target.value })} className="w-full p-2 border border-stone-200 rounded text-sm h-20 focus:ring-1 focus:ring-amber-600 focus:border-transparent" placeholder="Gate reviews, pilot/soft launch, hard launch, stabilization"/>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Base Currency & FX Assumption</label>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <select value={params.currency || ''} onChange={(e) => setParams({ ...params, currency: e.target.value })} className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent">
+                                                        <option value="">Select currency...</option>
+                                                        {CURRENCY_OPTIONS.map(cur => (<option key={cur} value={cur}>{cur}</option>))}
+                                                    </select>
+                                                    <input
+                                                        type="text"
+                                                        value={params.fxAssumption || ''}
+                                                        onChange={(e) => setParams({ ...params, fxAssumption: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent"
+                                                        placeholder="e.g., USD base, ±5% fx swing"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -2143,6 +2488,66 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Regulatory & Compliance Issues</label>
                                                 <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-24" placeholder="e.g., GDPR in Europe, data sovereignty laws, industry-specific certifications required."/>
                                             </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Macro Factors (select all)</label>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                                    {MACRO_FACTOR_OPTIONS.map(item => (
+                                                        <label key={item} className="flex items-start gap-2 p-2 border rounded hover:bg-stone-50 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(params.macroFactors || []).includes(item)}
+                                                                onChange={() => {
+                                                                    const current = params.macroFactors || [];
+                                                                    const next = current.includes(item) ? current.filter(i => i !== item) : [...current, item];
+                                                                    setParams({ ...params, macroFactors: next });
+                                                                }}
+                                                                className="h-4 w-4 mt-0.5 text-indigo-800 focus:ring-amber-600"
+                                                            />
+                                                            <span className="text-xs text-stone-700 leading-snug">{item}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Regulatory Focus Areas</label>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                                    {REGULATORY_FACTOR_OPTIONS.map(item => (
+                                                        <label key={item} className="flex items-start gap-2 p-2 border rounded hover:bg-stone-50 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(params.regulatoryFactors || []).includes(item)}
+                                                                onChange={() => {
+                                                                    const current = params.regulatoryFactors || [];
+                                                                    const next = current.includes(item) ? current.filter(i => i !== item) : [...current, item];
+                                                                    setParams({ ...params, regulatoryFactors: next });
+                                                                }}
+                                                                className="h-4 w-4 mt-0.5 text-indigo-800 focus:ring-amber-600"
+                                                            />
+                                                            <span className="text-xs text-stone-700 leading-snug">{item}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Economic & Incentive Factors</label>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                                    {ECONOMIC_FACTOR_OPTIONS.map(item => (
+                                                        <label key={item} className="flex items-start gap-2 p-2 border rounded hover:bg-stone-50 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(params.economicFactors || []).includes(item)}
+                                                                onChange={() => {
+                                                                    const current = params.economicFactors || [];
+                                                                    const next = current.includes(item) ? current.filter(i => i !== item) : [...current, item];
+                                                                    setParams({ ...params, economicFactors: next });
+                                                                }}
+                                                                className="h-4 w-4 mt-0.5 text-indigo-800 focus:ring-amber-600"
+                                                            />
+                                                            <span className="text-xs text-stone-700 leading-snug">{item}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </div>
                                     </CollapsibleSection>
                                 </div>
@@ -2159,7 +2564,41 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Primary Risk Concerns <span className="text-red-500">*</span></label>
-                                                <textarea className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent h-24 ${isFieldInvalid('riskTolerance') ? 'border-red-500' : 'border-stone-200'}`} placeholder="List main risks: financial, operational, reputational, geopolitical, etc."/>
+                                                <textarea
+                                                    value={params.riskPrimaryConcerns || ''}
+                                                    onChange={(e) => setParams({ ...params, riskPrimaryConcerns: e.target.value })}
+                                                    className={`w-full p-2 border rounded text-sm focus:ring-1 focus:ring-amber-600 focus:border-transparent h-24 ${isFieldInvalid('riskTolerance') ? 'border-red-500' : 'border-stone-200'}`}
+                                                    placeholder="List main risks: financial, operational, reputational, geopolitical, etc."
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Risk Appetite Statement</label>
+                                                <textarea
+                                                    value={params.riskAppetiteStatement || ''}
+                                                    onChange={(e) => setParams({ ...params, riskAppetiteStatement: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-20"
+                                                    placeholder="Describe your organization's overall risk appetite: Conservative, Moderate, Aggressive. What risks are acceptable? Which are zero-tolerance?"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Political Sensitivities</label>
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto border border-stone-200 rounded p-3">
+                                                    {POLITICAL_SENSITIVITIES.map(sens => (
+                                                        <label key={sens} className="flex items-center gap-2 p-2 border rounded hover:bg-stone-50 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(params.politicalSensitivities || []).includes(sens)}
+                                                                onChange={() => {
+                                                                    const current = params.politicalSensitivities || [];
+                                                                    const next = current.includes(sens) ? current.filter(s => s !== sens) : [...current, sens];
+                                                                    setParams({ ...params, politicalSensitivities: next });
+                                                                }}
+                                                                className="h-4 w-4 text-indigo-800 focus:ring-amber-600"
+                                                            />
+                                                            <span className="text-xs text-stone-700">{sens}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -2173,11 +2612,21 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Risk Mitigation Strategies</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-24" placeholder="For each risk identified, what is the plan to reduce its likelihood or impact?"/>
+                                                <textarea
+                                                    value={params.riskMitigationSummary || ''}
+                                                    onChange={(e) => setParams({ ...params, riskMitigationSummary: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-24"
+                                                    placeholder="For each risk identified, what is the plan to reduce its likelihood or impact?"
+                                                />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Contingency Plans</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-24" placeholder="What are the backup plans if a major risk materializes? What are the exit triggers?"/>
+                                                <textarea
+                                                    value={params.contingencyPlans || ''}
+                                                    onChange={(e) => setParams({ ...params, contingencyPlans: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-24"
+                                                    placeholder="What are the backup plans if a major risk materializes? What are the exit triggers?"
+                                                />
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -2191,11 +2640,67 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Key Risk Indicators (KRIs)</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-24" placeholder="What specific metrics will be tracked to monitor risk levels? (e.g., currency fluctuation %, partner dependency ratio)"/>
+                                                <textarea
+                                                    value={params.riskKriNotes || ''}
+                                                    onChange={(e) => setParams({ ...params, riskKriNotes: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-24"
+                                                    placeholder="What specific metrics will be tracked to monitor risk levels? (e.g., currency fluctuation %, partner dependency ratio)"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Reporting Frequency</label>
+                                                    <select
+                                                        value={params.riskReportingCadence || ''}
+                                                        onChange={(e) => setParams({ ...params, riskReportingCadence: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                    >
+                                                        <option value="">Select cadence...</option>
+                                                        <option value="Weekly">Weekly</option>
+                                                        <option value="Monthly">Monthly</option>
+                                                        <option value="Quarterly">Quarterly</option>
+                                                        <option value="Semi-Annual">Semi-Annual</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Risk Horizon</label>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {['Short-term (0-6mo)', 'Medium (6-18mo)', 'Long-term (18mo+)', 'Tail risk'].map(h => (
+                                                            <label key={h} className="flex items-center gap-1 text-xs bg-stone-50 px-2 py-1 rounded border cursor-pointer">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={(params.riskHorizon || []).includes(h)}
+                                                                    onChange={() => {
+                                                                        const current = params.riskHorizon || [];
+                                                                        const next = current.includes(h) ? current.filter(x => x !== h) : [...current, h];
+                                                                        setParams({ ...params, riskHorizon: next });
+                                                                    }}
+                                                                    className="h-3 w-3 text-indigo-800"
+                                                                />
+                                                                <span>{h}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-bold text-stone-700 mb-1">Reporting Frequency</label>
-                                                <select className="w-full p-2 border border-stone-200 rounded text-sm"><option>Weekly</option><option>Monthly</option><option>Quarterly</option></select>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Risk Owners (comma-separated)</label>
+                                                <input
+                                                    type="text"
+                                                    value={(params.riskOwners || []).join(', ')}
+                                                    onChange={(e) => setParams({ ...params, riskOwners: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                    placeholder="e.g., CFO, Head of Legal, Risk Committee"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Risk Monitoring Process</label>
+                                                <textarea
+                                                    value={params.riskMonitoringProcess || ''}
+                                                    onChange={(e) => setParams({ ...params, riskMonitoringProcess: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-20"
+                                                    placeholder="Describe the ongoing risk monitoring process, escalation procedures, and governance structure"
+                                                />
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -2213,27 +2718,103 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="space-y-4">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Total Investment Required ($)</label>
-                                                    <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 5000000"/>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Total Investment Required</label>
+                                                    <input
+                                                        type="text"
+                                                        value={params.totalInvestment || ''}
+                                                        onChange={(e) => setParams({ ...params, totalInvestment: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="e.g., 5,000,000"
+                                                    />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Funding Source</label>
-                                                    <select className="w-full p-2 border border-stone-200 rounded text-sm">
-                                                        <option>Own Capital</option>
-                                                        <option>Partner Capital</option>
-                                                        <option>External Debt</option>
-                                                        <option>Equity Investment</option>
-                                                        <option>Mixed Sources</option>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Currency</label>
+                                                    <select
+                                                        value={params.currency || ''}
+                                                        onChange={(e) => setParams({ ...params, currency: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                    >
+                                                        <option value="">Select currency...</option>
+                                                        {CURRENCY_OPTIONS.map(cur => (
+                                                            <option key={cur.value} value={cur.value}>{cur.label}</option>
+                                                        ))}
                                                     </select>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Funding Source</label>
+                                                    <select
+                                                        value={params.fundingSource || ''}
+                                                        onChange={(e) => setParams({ ...params, fundingSource: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                    >
+                                                        <option value="">Select funding source...</option>
+                                                        <option value="Own Capital">Own Capital</option>
+                                                        <option value="Partner Capital">Partner Capital</option>
+                                                        <option value="External Debt">External Debt</option>
+                                                        <option value="Equity Investment">Equity Investment</option>
+                                                        <option value="Mixed Sources">Mixed Sources</option>
+                                                        <option value="Sovereign Wealth">Sovereign Wealth</option>
+                                                        <option value="Government Grant">Government Grant</option>
+                                                        <option value="Venture Capital">Venture Capital</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Procurement Mode</label>
+                                                    <select
+                                                        value={params.procurementMode || ''}
+                                                        onChange={(e) => setParams({ ...params, procurementMode: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                    >
+                                                        <option value="">Select procurement mode...</option>
+                                                        <option value="Competitive Bidding">Competitive Bidding</option>
+                                                        <option value="Direct Negotiation">Direct Negotiation</option>
+                                                        <option value="Sole Source">Sole Source</option>
+                                                        <option value="Public-Private Partnership (PPP)">Public-Private Partnership (PPP)</option>
+                                                        <option value="G2G Framework">G2G Framework</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Deal Size (Transaction Value)</label>
+                                                    <input
+                                                        type="text"
+                                                        value={params.dealSize || ''}
+                                                        onChange={(e) => setParams({ ...params, dealSize: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="e.g., 50,000,000"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">FX Assumption / Hedging</label>
+                                                    <input
+                                                        type="text"
+                                                        value={params.fxAssumption || ''}
+                                                        onChange={(e) => setParams({ ...params, fxAssumption: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="e.g., USD/MXN 18.5, hedged at 70%"
+                                                    />
                                                 </div>
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Capital Allocation Breakdown</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-20" placeholder="e.g., Technology: 40%, Operations: 35%, Marketing: 15%, Contingency: 10%"/>
+                                                <textarea
+                                                    value={params.capitalAllocation || ''}
+                                                    onChange={(e) => setParams({ ...params, capitalAllocation: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-20"
+                                                    placeholder="e.g., Technology: 40%, Operations: 35%, Marketing: 15%, Contingency: 10%"
+                                                />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Cash Flow Timing (Monthly/Quarterly)</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-20" placeholder="When will capital be deployed? e.g., Month 1-3: $1M setup, Month 4-12: $2M operations"/>
+                                                <textarea
+                                                    value={params.cashFlowTiming || ''}
+                                                    onChange={(e) => setParams({ ...params, cashFlowTiming: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-20"
+                                                    placeholder="When will capital be deployed? e.g., Month 1-3: $1M setup, Month 4-12: $2M operations"
+                                                />
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -2247,25 +2828,53 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Primary Revenue Streams</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-20" placeholder="e.g., Licensing fees, Transaction commissions, Subscription model, Equity upside"/>
+                                                <textarea
+                                                    value={params.revenueStreams || ''}
+                                                    onChange={(e) => setParams({ ...params, revenueStreams: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-20"
+                                                    placeholder="e.g., Licensing fees, Transaction commissions, Subscription model, Equity upside"
+                                                />
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <div>
-                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Year 1 Revenue ($)</label>
-                                                    <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 1000000"/>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Year 1 Revenue ({params.currency || 'currency'})</label>
+                                                    <input
+                                                        type="text"
+                                                        value={params.revenueYear1 || ''}
+                                                        onChange={(e) => setParams({ ...params, revenueYear1: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="e.g., 1,000,000"
+                                                    />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Year 3 Revenue ($)</label>
-                                                    <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 3500000"/>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Year 3 Revenue ({params.currency || 'currency'})</label>
+                                                    <input
+                                                        type="text"
+                                                        value={params.revenueYear3 || ''}
+                                                        onChange={(e) => setParams({ ...params, revenueYear3: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="e.g., 3,500,000"
+                                                    />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Year 5 Revenue ($)</label>
-                                                    <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 7000000"/>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Year 5 Revenue ({params.currency || 'currency'})</label>
+                                                    <input
+                                                        type="text"
+                                                        value={params.revenueYear5 || ''}
+                                                        onChange={(e) => setParams({ ...params, revenueYear5: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="e.g., 7,000,000"
+                                                    />
                                                 </div>
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Unit Economics (if applicable)</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-20" placeholder="e.g., Average transaction value: $50k, Commission rate: 3%, Expected volume: 500 transactions/year"/>
+                                                <textarea
+                                                    value={params.unitEconomics || ''}
+                                                    onChange={(e) => setParams({ ...params, unitEconomics: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-20"
+                                                    placeholder="e.g., Average transaction value: $50k, Commission rate: 3%, Expected volume: 500 transactions/year"
+                                                />
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -2279,21 +2888,43 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="space-y-4">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Year 1 COGS ($)</label>
-                                                    <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 400000"/>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Year 1 COGS ({params.currency || 'currency'})</label>
+                                                    <input
+                                                        type="text"
+                                                        value={params.cogsYear1 || ''}
+                                                        onChange={(e) => setParams({ ...params, cogsYear1: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="e.g., 400,000"
+                                                    />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Year 1 OpEx ($)</label>
-                                                    <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 300000"/>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Year 1 OpEx ({params.currency || 'currency'})</label>
+                                                    <input
+                                                        type="text"
+                                                        value={params.opexYear1 || ''}
+                                                        onChange={(e) => setParams({ ...params, opexYear1: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="e.g., 300,000"
+                                                    />
                                                 </div>
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Cost Breakdown</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-20" placeholder="e.g., Salaries: 40%, Tech/Infrastructure: 25%, Marketing: 20%, G&A: 15%"/>
+                                                <textarea
+                                                    value={params.costBreakdown || ''}
+                                                    onChange={(e) => setParams({ ...params, costBreakdown: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-20"
+                                                    placeholder="e.g., Salaries: 40%, Tech/Infrastructure: 25%, Marketing: 20%, G&A: 15%"
+                                                />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Headcount Plan</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-20" placeholder="e.g., Year 1: 10 staff ($300k), Year 2: 15 staff ($450k), Year 3: 20 staff ($650k)"/>
+                                                <textarea
+                                                    value={params.headcountPlan || ''}
+                                                    onChange={(e) => setParams({ ...params, headcountPlan: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-20"
+                                                    placeholder="e.g., Year 1: 10 staff ($300k), Year 2: 15 staff ($450k), Year 3: 20 staff ($650k)"
+                                                />
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -2308,29 +2939,65 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <div>
                                                     <label className="block text-xs font-bold text-stone-700 mb-1">Year 1 EBITDA Margin (%)</label>
-                                                    <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., -30%"/>
+                                                    <input
+                                                        type="text"
+                                                        value={params.ebitdaMarginYear1 || ''}
+                                                        onChange={(e) => setParams({ ...params, ebitdaMarginYear1: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="e.g., -30%"
+                                                    />
                                                 </div>
                                                 <div>
                                                     <label className="block text-xs font-bold text-stone-700 mb-1">Break-Even Year</label>
-                                                    <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., Year 2"/>
+                                                    <input
+                                                        type="text"
+                                                        value={params.breakEvenYear || ''}
+                                                        onChange={(e) => setParams({ ...params, breakEvenYear: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="e.g., Year 2"
+                                                    />
                                                 </div>
                                                 <div>
                                                     <label className="block text-xs font-bold text-stone-700 mb-1">Target Exit Multiple</label>
-                                                    <input type="number" step="0.1" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 4.5x EBITDA"/>
+                                                    <input
+                                                        type="text"
+                                                        value={params.targetExitMultiple || ''}
+                                                        onChange={(e) => setParams({ ...params, targetExitMultiple: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="e.g., 4.5x EBITDA"
+                                                    />
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <div>
                                                     <label className="block text-xs font-bold text-stone-700 mb-1">Expected IRR (%)</label>
-                                                    <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 35%"/>
+                                                    <input
+                                                        type="text"
+                                                        value={params.expectedIrr || ''}
+                                                        onChange={(e) => setParams({ ...params, expectedIrr: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="e.g., 35%"
+                                                    />
                                                 </div>
                                                 <div>
                                                     <label className="block text-xs font-bold text-stone-700 mb-1">Payback Period (Years)</label>
-                                                    <input type="number" step="0.5" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 3.5"/>
+                                                    <input
+                                                        type="text"
+                                                        value={params.paybackPeriod || ''}
+                                                        onChange={(e) => setParams({ ...params, paybackPeriod: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="e.g., 3.5"
+                                                    />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs font-bold text-stone-700 mb-1">NPV @ 12% Discount (5yr)</label>
-                                                    <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 2500000"/>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">NPV @ Discount Rate (5yr)</label>
+                                                    <input
+                                                        type="text"
+                                                        value={params.npv || ''}
+                                                        onChange={(e) => setParams({ ...params, npv: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="e.g., 2,500,000"
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -2345,19 +3012,151 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Downside Case (-25% revenue)</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-16" placeholder="Year 3 Revenue: $2.6M, Break-even: Year 3, IRR: 18%"/>
+                                                <textarea
+                                                    value={params.downsideCase || ''}
+                                                    onChange={(e) => setParams({ ...params, downsideCase: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-16"
+                                                    placeholder="Year 3 Revenue: $2.6M, Break-even: Year 3, IRR: 18%"
+                                                />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Base Case</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-16" placeholder="Year 3 Revenue: $3.5M, Break-even: Year 2, IRR: 35%"/>
+                                                <textarea
+                                                    value={params.baseCase || ''}
+                                                    onChange={(e) => setParams({ ...params, baseCase: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-16"
+                                                    placeholder="Year 3 Revenue: $3.5M, Break-even: Year 2, IRR: 35%"
+                                                />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Upside Case (+25% revenue)</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-16" placeholder="Year 3 Revenue: $4.4M, Break-even: Year 1.5, IRR: 52%"/>
+                                                <textarea
+                                                    value={params.upsideCase || ''}
+                                                    onChange={(e) => setParams({ ...params, upsideCase: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-16"
+                                                    placeholder="Year 3 Revenue: $4.4M, Break-even: Year 1.5, IRR: 52%"
+                                                />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Key Sensitivity Drivers</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-16" placeholder="Critical assumptions: Achieve 50% market share targets by Year 2 (sensitivity: ±10% swings IRR 15pp), Partner investment timing (sensitivity: delays increase cost 8-12%), Currency fluctuations (10% swing = $200k impact)"/>
+                                                <textarea
+                                                    value={params.sensitivityDrivers || ''}
+                                                    onChange={(e) => setParams({ ...params, sensitivityDrivers: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-16"
+                                                    placeholder="Critical assumptions: Achieve 50% market share targets by Year 2; partner investment timing; currency swings"
+                                                />
+                                            </div>
+                                        </div>
+                                    </CollapsibleSection>
+                                    <CollapsibleSection
+                                        title="5.4 Financial Stages (Phased Funding)"
+                                        description="Define capital requirements by project phase"
+                                        isExpanded={!!expandedSubsections['financial-stages']}
+                                        onToggle={() => toggleSubsection('financial-stages')}
+                                        color="from-indigo-50 to-blue-100"
+                                    >
+                                        <div className="space-y-4">
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-xs border-collapse">
+                                                    <thead>
+                                                        <tr className="bg-stone-100">
+                                                            <th className="border border-stone-200 p-2 text-left">Stage</th>
+                                                            <th className="border border-stone-200 p-2 text-left">CapEx</th>
+                                                            <th className="border border-stone-200 p-2 text-left">OpEx</th>
+                                                            <th className="border border-stone-200 p-2 text-left">Funding Mix</th>
+                                                            <th className="border border-stone-200 p-2 text-left">Timing</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {['Pre-Investment', 'Investment', 'Operations', 'Scale-Up'].map(stage => {
+                                                            const existing = (params.financialStages || []).find(s => s.stage === stage);
+                                                            const updateStage = (field: keyof typeof existing, value: string) => {
+                                                                const stages = params.financialStages || [];
+                                                                const idx = stages.findIndex(s => s.stage === stage);
+                                                                if (idx >= 0) {
+                                                                    const updated = [...stages];
+                                                                    updated[idx] = { ...updated[idx], [field]: value };
+                                                                    setParams({ ...params, financialStages: updated });
+                                                                } else {
+                                                                    setParams({ ...params, financialStages: [...stages, { stage, [field]: value }] });
+                                                                }
+                                                            };
+                                                            return (
+                                                                <tr key={stage} className="border-t border-stone-200">
+                                                                    <td className="border border-stone-200 p-2 font-bold">{stage}</td>
+                                                                    <td className="border border-stone-200 p-1">
+                                                                        <input type="text" value={existing?.capex || ''} onChange={(e) => updateStage('capex', e.target.value)} className="w-full p-1 border rounded text-xs" placeholder="e.g., $500k"/>
+                                                                    </td>
+                                                                    <td className="border border-stone-200 p-1">
+                                                                        <input type="text" value={existing?.opex || ''} onChange={(e) => updateStage('opex', e.target.value)} className="w-full p-1 border rounded text-xs" placeholder="e.g., $100k/mo"/>
+                                                                    </td>
+                                                                    <td className="border border-stone-200 p-1">
+                                                                        <input type="text" value={existing?.fundingMix || ''} onChange={(e) => updateStage('fundingMix', e.target.value)} className="w-full p-1 border rounded text-xs" placeholder="e.g., 60% equity / 40% debt"/>
+                                                                    </td>
+                                                                    <td className="border border-stone-200 p-1">
+                                                                        <input type="text" value={existing?.timing || ''} onChange={(e) => updateStage('timing', e.target.value)} className="w-full p-1 border rounded text-xs" placeholder="e.g., Q1 2025"/>
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </CollapsibleSection>
+                                    <CollapsibleSection
+                                        title="5.5 Financial Scenarios (Stress Testing)"
+                                        description="Define multiple financial scenarios for stress testing"
+                                        isExpanded={!!expandedSubsections['financial-scenarios']}
+                                        onToggle={() => toggleSubsection('financial-scenarios')}
+                                        color="from-indigo-50 to-blue-100"
+                                    >
+                                        <div className="space-y-4">
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-xs border-collapse">
+                                                    <thead>
+                                                        <tr className="bg-stone-100">
+                                                            <th className="border border-stone-200 p-2 text-left">Scenario</th>
+                                                            <th className="border border-stone-200 p-2 text-left">Revenue</th>
+                                                            <th className="border border-stone-200 p-2 text-left">Margin</th>
+                                                            <th className="border border-stone-200 p-2 text-left">Cash Burn</th>
+                                                            <th className="border border-stone-200 p-2 text-left">Notes</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {['Bear Case', 'Base Case', 'Bull Case', 'Black Swan'].map(name => {
+                                                            const existing = (params.financialScenarios || []).find(s => s.name === name);
+                                                            const updateScenario = (field: keyof typeof existing, value: string) => {
+                                                                const scenarios = params.financialScenarios || [];
+                                                                const idx = scenarios.findIndex(s => s.name === name);
+                                                                if (idx >= 0) {
+                                                                    const updated = [...scenarios];
+                                                                    updated[idx] = { ...updated[idx], [field]: value };
+                                                                    setParams({ ...params, financialScenarios: updated });
+                                                                } else {
+                                                                    setParams({ ...params, financialScenarios: [...scenarios, { name, [field]: value }] });
+                                                                }
+                                                            };
+                                                            return (
+                                                                <tr key={name} className="border-t border-stone-200">
+                                                                    <td className="border border-stone-200 p-2 font-bold">{name}</td>
+                                                                    <td className="border border-stone-200 p-1">
+                                                                        <input type="text" value={existing?.revenue || ''} onChange={(e) => updateScenario('revenue', e.target.value)} className="w-full p-1 border rounded text-xs" placeholder="e.g., $2M"/>
+                                                                    </td>
+                                                                    <td className="border border-stone-200 p-1">
+                                                                        <input type="text" value={existing?.margin || ''} onChange={(e) => updateScenario('margin', e.target.value)} className="w-full p-1 border rounded text-xs" placeholder="e.g., 15%"/>
+                                                                    </td>
+                                                                    <td className="border border-stone-200 p-1">
+                                                                        <input type="text" value={existing?.cashBurn || ''} onChange={(e) => updateScenario('cashBurn', e.target.value)} className="w-full p-1 border rounded text-xs" placeholder="e.g., $50k/mo"/>
+                                                                    </td>
+                                                                    <td className="border border-stone-200 p-1">
+                                                                        <input type="text" value={existing?.notes || ''} onChange={(e) => updateScenario('notes', e.target.value)} className="w-full p-1 border rounded text-xs" placeholder="Key assumptions"/>
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -2381,19 +3180,78 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                                             <th className="border border-stone-200 p-2 text-left">Description</th>
                                                             <th className="border border-stone-200 p-2">Probability</th>
                                                             <th className="border border-stone-200 p-2">Impact ($)</th>
-                                                            <th className="border border-stone-200 p-2">Expected Loss</th>
+                                                            <th className="border border-stone-200 p-2">Owner</th>
+                                                            <th className="border border-stone-200 p-2">Mitigation</th>
+                                                            <th className="border border-stone-200 p-2">Residual Risk / KRI</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {['Market Risk', 'Operational Risk', 'Financial Risk', 'Legal Risk', 'Relationship Risk'].map(cat => (
-                                                            <tr key={cat} className="border-t border-stone-200">
-                                                                <td className="border border-stone-200 p-2 font-bold">{cat}</td>
-                                                                <td className="border border-stone-200 p-2"><input type="text" className="w-full p-1 border rounded text-xs" placeholder="Describe risk..."/></td>
-                                                                <td className="border border-stone-200 p-2"><input type="number" max="100" className="w-full p-1 border rounded text-xs" placeholder="e.g., 30%"/></td>
-                                                                <td className="border border-stone-200 p-2"><input type="number" className="w-full p-1 border rounded text-xs" placeholder="e.g., 500000"/></td>
-                                                                <td className="border border-stone-200 p-2 text-center text-stone-500">Auto-calculated</td>
-                                                            </tr>
-                                                        ))}
+                                                        {RISK_CATEGORIES.map(cat => {
+                                                            const entry = getRiskEntry(cat);
+                                                            return (
+                                                                <tr key={cat} className="border-t border-stone-200">
+                                                                    <td className="border border-stone-200 p-2 font-bold">{cat}</td>
+                                                                    <td className="border border-stone-200 p-2">
+                                                                        <input
+                                                                            type="text"
+                                                                            value={entry?.description || ''}
+                                                                            onChange={(e) => upsertRiskRegister(cat, 'description', e.target.value)}
+                                                                            className="w-full p-1 border rounded text-xs"
+                                                                            placeholder="Describe risk..."
+                                                                        />
+                                                                    </td>
+                                                                    <td className="border border-stone-200 p-2">
+                                                                        <select
+                                                                            value={entry?.probability || ''}
+                                                                            onChange={(e) => upsertRiskRegister(cat, 'probability', e.target.value)}
+                                                                            className="w-full p-1 border rounded text-xs"
+                                                                        >
+                                                                            <option value="">-</option>
+                                                                            <option value="Low">Low</option>
+                                                                            <option value="Medium">Medium</option>
+                                                                            <option value="High">High</option>
+                                                                        </select>
+                                                                    </td>
+                                                                    <td className="border border-stone-200 p-2">
+                                                                        <input
+                                                                            type="text"
+                                                                            value={entry?.impact || ''}
+                                                                            onChange={(e) => upsertRiskRegister(cat, 'impact', e.target.value)}
+                                                                            className="w-full p-1 border rounded text-xs"
+                                                                            placeholder="e.g., $500k or qualitative"
+                                                                        />
+                                                                    </td>
+                                                                    <td className="border border-stone-200 p-2">
+                                                                        <input
+                                                                            type="text"
+                                                                            value={entry?.owner || ''}
+                                                                            onChange={(e) => upsertRiskRegister(cat, 'owner', e.target.value)}
+                                                                            className="w-full p-1 border rounded text-xs"
+                                                                            placeholder="Accountable owner"
+                                                                        />
+                                                                    </td>
+                                                                    <td className="border border-stone-200 p-2">
+                                                                        <textarea
+                                                                            value={entry?.mitigation || ''}
+                                                                            onChange={(e) => upsertRiskRegister(cat, 'mitigation', e.target.value)}
+                                                                            className="w-full p-1 border rounded text-xs h-16"
+                                                                            placeholder="Primary mitigations"
+                                                                        />
+                                                                    </td>
+                                                                    <td className="border border-stone-200 p-2">
+                                                                        <textarea
+                                                                            value={entry?.residualRisk || entry?.kri || ''}
+                                                                            onChange={(e) => {
+                                                                                upsertRiskRegister(cat, 'residualRisk', e.target.value);
+                                                                                upsertRiskRegister(cat, 'kri', e.target.value);
+                                                                            }}
+                                                                            className="w-full p-1 border rounded text-xs h-16"
+                                                                            placeholder="Residual risk & KRI"
+                                                                        />
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
                                                     </tbody>
                                                 </table>
                                             </div>
@@ -2407,18 +3265,42 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         color="from-indigo-50 to-blue-100"
                                     >
                                         <div className="space-y-4">
-                                            <div>
-                                                <label className="block text-xs font-bold text-stone-700 mb-1">Market Risk Mitigation</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-16" placeholder="e.g., Diversify partner base, build long-term contracts with minimum volume commitments"/>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold text-stone-700 mb-1">Operational Risk Mitigation</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-16" placeholder="e.g., Build redundancy in supply chain, establish clear escalation procedures"/>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold text-stone-700 mb-1">Financial Risk Mitigation</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-16" placeholder="e.g., Maintain 6-month cash reserve, establish credit facilities before launch"/>
-                                            </div>
+                                            {RISK_CATEGORIES.map(cat => {
+                                                const entry = getRiskEntry(cat);
+                                                return (
+                                                    <div key={cat} className="space-y-2">
+                                                        <label className="block text-xs font-bold text-stone-700 mb-1">{cat} Mitigation</label>
+                                                        <textarea
+                                                            value={entry?.mitigation || ''}
+                                                            onChange={(e) => upsertRiskRegister(cat, 'mitigation', e.target.value)}
+                                                            className="w-full p-2 border border-stone-200 rounded text-sm h-16"
+                                                            placeholder="Specific mitigation steps, controls, and insurance/hedging plans"
+                                                        />
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                            <div>
+                                                                <label className="block text-[11px] font-semibold text-stone-700 mb-1">Residual Risk / KRI</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={entry?.residualRisk || ''}
+                                                                    onChange={(e) => upsertRiskRegister(cat, 'residualRisk', e.target.value)}
+                                                                    className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                                    placeholder="Residual risk rating or KRI trigger"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[11px] font-semibold text-stone-700 mb-1">Owner</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={entry?.owner || ''}
+                                                                    onChange={(e) => upsertRiskRegister(cat, 'owner', e.target.value)}
+                                                                    className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                                    placeholder="Named accountable owner"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </CollapsibleSection>
                                     <CollapsibleSection
@@ -2431,11 +3313,22 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Contingency Budget Reserve</label>
-                                                <input type="number" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., 500000 (10% of investment)"/>
+                                                                <input
+                                                                    type="text"
+                                                                    value={params.contingencyBudget || ''}
+                                                                    onChange={(e) => setParams({ ...params, contingencyBudget: e.target.value })}
+                                                                    className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                                    placeholder="e.g., 500000 (10% of investment)"
+                                                                />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Exit Triggers & Conditions</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-20" placeholder="e.g., If revenue falls >40% below projection for 2 consecutive quarters, trigger exit review; If key partner exits, 30-day contingency evaluation"/>
+                                                                <textarea
+                                                                    value={params.contingencyPlans || ''}
+                                                                    onChange={(e) => setParams({ ...params, contingencyPlans: e.target.value })}
+                                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-20"
+                                                                    placeholder="e.g., If revenue falls >40% below projection for 2 consecutive quarters, trigger exit review; If key partner exits, 30-day contingency evaluation"
+                                                                />
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -2453,21 +3346,44 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Executive Sponsor / Leader</label>
-                                                <input type="text" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="e.g., John Smith, VP Strategy"/>
+                                                <input
+                                                    type="text"
+                                                    value={params.executiveLead || ''}
+                                                    onChange={(e) => setParams({ ...params, executiveLead: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                    placeholder="e.g., John Smith, VP Strategy"
+                                                />
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
                                                     <label className="block text-xs font-bold text-stone-700 mb-1">CFO / Financial Lead</label>
-                                                    <input type="text" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="Name and background"/>
+                                                    <input
+                                                        type="text"
+                                                        value={params.cfoLead || ''}
+                                                        onChange={(e) => setParams({ ...params, cfoLead: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="Name and background"
+                                                    />
                                                 </div>
                                                 <div>
                                                     <label className="block text-xs font-bold text-stone-700 mb-1">Operations / Delivery Lead</label>
-                                                    <input type="text" className="w-full p-2 border border-stone-200 rounded text-sm" placeholder="Name and background"/>
+                                                    <input
+                                                        type="text"
+                                                        value={params.opsLead || ''}
+                                                        onChange={(e) => setParams({ ...params, opsLead: e.target.value })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="Name and background"
+                                                    />
                                                 </div>
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Team Bench Strength Assessment</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-16" placeholder="e.g., Sponsor: 20 years M&A, strong board credibility, Limited ops experience. CFO: Big 4 background, strong financial modeling. Bench: Only 2 backups for critical roles."/>
+                                                <textarea
+                                                    value={params.teamBenchAssessment || ''}
+                                                    onChange={(e) => setParams({ ...params, teamBenchAssessment: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-16"
+                                                    placeholder="e.g., Sponsor: 20 years M&A, strong board credibility, limited ops experience; CFO: Big 4 background; Bench depth"
+                                                />
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -2479,24 +3395,33 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         color="from-indigo-50 to-blue-100"
                                     >
                                         <div className="space-y-3">
-                                            {[
-                                                { name: 'Sales & Business Development', key: 'sales' },
-                                                { name: 'Operations & Delivery', key: 'ops' },
-                                                { name: 'Product Development', key: 'product' },
-                                                { name: 'Finance & Control', key: 'finance' },
-                                                { name: 'Risk Management', key: 'risk' }
-                                            ].map(cap => (
-                                                <div key={cap.key} className="flex items-center justify-between p-3 border border-stone-200 rounded bg-stone-50">
-                                                    <span className="text-sm font-bold text-stone-700">{cap.name}</span>
-                                                    <div className="flex gap-1">
-                                                        {[1, 2, 3, 4, 5].map(rating => (
-                                                            <button key={rating} className="px-3 py-1 border rounded text-xs hover:bg-purple-100 hover:border-purple-500">
-                                                                {rating}
-                                                            </button>
-                                                        ))}
+                                            {CAPABILITY_AREAS.map(cap => {
+                                                const assessment = getCapability(cap.name);
+                                                return (
+                                                    <div key={cap.key} className="p-3 border border-stone-200 rounded bg-stone-50 space-y-2">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-sm font-bold text-stone-700">{cap.name}</span>
+                                                            <div className="flex gap-1">
+                                                                {[1, 2, 3, 4, 5].map(rating => (
+                                                                    <button
+                                                                        key={rating}
+                                                                        onClick={() => upsertCapability(cap.name, { rating })}
+                                                                        className={`px-3 py-1 border rounded text-xs ${assessment?.rating === rating ? 'bg-purple-600 text-white border-purple-600' : 'hover:bg-purple-100 hover:border-purple-500'}`}
+                                                                    >
+                                                                        {rating}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        <textarea
+                                                            value={assessment?.evidence || ''}
+                                                            onChange={(e) => upsertCapability(cap.name, { evidence: e.target.value })}
+                                                            className="w-full p-2 border border-stone-200 rounded text-xs"
+                                                            placeholder="Evidence, certifications, vendors, remediation actions"
+                                                        />
                                                     </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     </CollapsibleSection>
                                     <CollapsibleSection
@@ -2509,15 +3434,39 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Core Technology Stack</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-16" placeholder="e.g., Cloud (AWS), APIs for integrations, Data warehouse (Snowflake), BI (Tableau)"/>
+                                                <textarea
+                                                    value={params.vendorStack || ''}
+                                                    onChange={(e) => setParams({ ...params, vendorStack: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-16"
+                                                    placeholder="e.g., Cloud (AWS), APIs for integrations, Data warehouse (Snowflake), BI (Tableau)"
+                                                />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Key Systems & Integrations</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-16" placeholder="e.g., ERP (SAP), CRM (Salesforce), Financial systems (NetSuite)"/>
+                                                <textarea
+                                                    value={params.integrationSystems || ''}
+                                                    onChange={(e) => setParams({ ...params, integrationSystems: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-16"
+                                                    placeholder="e.g., ERP (SAP), CRM (Salesforce), Financial systems (NetSuite)"
+                                                />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Technology Gaps & Risks</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-16" placeholder="e.g., Limited API capabilities, legacy system integrations, data governance challenges"/>
+                                                <textarea
+                                                    value={params.technologyRisks || ''}
+                                                    onChange={(e) => setParams({ ...params, technologyRisks: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-16"
+                                                    placeholder="e.g., Limited API capabilities, legacy system integrations, data governance challenges"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Compliance Evidence / Certifications</label>
+                                                <textarea
+                                                    value={params.complianceEvidence || ''}
+                                                    onChange={(e) => setParams({ ...params, complianceEvidence: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-16"
+                                                    placeholder="e.g., ISO 27001, SOC2, data residency controls, audit cadence"
+                                                />
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -2531,11 +3480,30 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                         <div className="space-y-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Critical Capability Gaps</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-20" placeholder="e.g., 1. International tax expertise (hire Big 4 advisor), 2. Supply chain ops (partner with 3PL), 3. Market entry skills (hire regional GM)"/>
+                                                <textarea
+                                                    value={params.capabilityGaps || ''}
+                                                    onChange={(e) => setParams({ ...params, capabilityGaps: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-20"
+                                                    placeholder="e.g., 1. International tax expertise (hire Big 4 advisor), 2. Supply chain ops (partner with 3PL), 3. Market entry skills (hire regional GM)"
+                                                />
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Build vs. Buy vs. Partner Decisions</label>
-                                                <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-20" placeholder="e.g., Build: Internal analytics capability (12-month timeline). Buy: MarTech tools ($200k/year). Partner: Go-to-market with regional distributor."/>
+                                                <textarea
+                                                    value={params.buildBuyPartnerPlan || ''}
+                                                    onChange={(e) => setParams({ ...params, buildBuyPartnerPlan: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-20"
+                                                    placeholder="e.g., Build: Internal analytics capability (12-month timeline). Buy: MarTech tools ($200k/year). Partner: Go-to-market with regional distributor."
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Capability Notes & Evidence</label>
+                                                <textarea
+                                                    value={params.capabilityNotes || ''}
+                                                    onChange={(e) => setParams({ ...params, capabilityNotes: e.target.value })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm h-16"
+                                                    placeholder="Link to audits, certifications, vendor SLAs, or remediation timelines"
+                                                />
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -2616,6 +3584,116 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                                             <div>
                                                 <label className="block text-xs font-bold text-stone-700 mb-1">Schedule Buffers & Risk Buffers</label>
                                                 <textarea className="w-full p-2 border border-stone-200 rounded text-sm h-16" placeholder="e.g., Schedule buffer: 20% (3 weeks in 15-week phase). Financial buffer: 15% contingency. Key person backup: Identified for all critical roles."/>
+                                            </div>
+                                        </div>
+                                    </CollapsibleSection>
+                                    <CollapsibleSection
+                                        title="8.5 Calibration & Constraints"
+                                        description="Fine-tune AI analysis with capabilities and constraints"
+                                        isExpanded={!!expandedSubsections['execution-calibration']}
+                                        onToggle={() => toggleSubsection('execution-calibration')}
+                                        color="from-indigo-50 to-blue-100"
+                                    >
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Budget Cap (Max Investment)</label>
+                                                <input
+                                                    type="text"
+                                                    value={params.calibration?.constraints?.budgetCap || ''}
+                                                    onChange={(e) => setParams({ ...params, calibration: { ...params.calibration, constraints: { ...params.calibration?.constraints, budgetCap: e.target.value } } })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                    placeholder="e.g., $10,000,000"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-3">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Debt % (Capital Mix)</label>
+                                                    <input
+                                                        type="number"
+                                                        value={params.calibration?.constraints?.capitalMix?.debt ?? 0}
+                                                        onChange={(e) => setParams({ ...params, calibration: { ...params.calibration, constraints: { ...params.calibration?.constraints, capitalMix: { ...params.calibration?.constraints?.capitalMix, debt: Number(e.target.value), equity: params.calibration?.constraints?.capitalMix?.equity ?? 0, grant: params.calibration?.constraints?.capitalMix?.grant ?? 0 } } } })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="0-100"
+                                                        min={0}
+                                                        max={100}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Equity %</label>
+                                                    <input
+                                                        type="number"
+                                                        value={params.calibration?.constraints?.capitalMix?.equity ?? 0}
+                                                        onChange={(e) => setParams({ ...params, calibration: { ...params.calibration, constraints: { ...params.calibration?.constraints, capitalMix: { ...params.calibration?.constraints?.capitalMix, debt: params.calibration?.constraints?.capitalMix?.debt ?? 0, equity: Number(e.target.value), grant: params.calibration?.constraints?.capitalMix?.grant ?? 0 } } } })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="0-100"
+                                                        min={0}
+                                                        max={100}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Grant %</label>
+                                                    <input
+                                                        type="number"
+                                                        value={params.calibration?.constraints?.capitalMix?.grant ?? 0}
+                                                        onChange={(e) => setParams({ ...params, calibration: { ...params.calibration, constraints: { ...params.calibration?.constraints, capitalMix: { ...params.calibration?.constraints?.capitalMix, debt: params.calibration?.constraints?.capitalMix?.debt ?? 0, equity: params.calibration?.constraints?.capitalMix?.equity ?? 0, grant: Number(e.target.value) } } } })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                        placeholder="0-100"
+                                                        min={0}
+                                                        max={100}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Capabilities We Have (comma-separated)</label>
+                                                <input
+                                                    type="text"
+                                                    value={(params.calibration?.capabilitiesHave || []).join(', ')}
+                                                    onChange={(e) => setParams({ ...params, calibration: { ...params.calibration, capabilitiesHave: e.target.value.split(',').map(s => s.trim()).filter(Boolean) } })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                    placeholder="e.g., Strong brand, Local relationships, Technical expertise"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-stone-700 mb-1">Capabilities We Need (comma-separated)</label>
+                                                <input
+                                                    type="text"
+                                                    value={(params.calibration?.capabilitiesNeed || []).join(', ')}
+                                                    onChange={(e) => setParams({ ...params, calibration: { ...params.calibration, capabilitiesNeed: e.target.value.split(',').map(s => s.trim()).filter(Boolean) } })}
+                                                    className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                    placeholder="e.g., Regulatory access, Distribution network, Funding"
+                                                />
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Preferred Tax Structure</label>
+                                                    <select
+                                                        value={params.calibration?.operationalChassis?.taxStructure || ''}
+                                                        onChange={(e) => setParams({ ...params, calibration: { ...params.calibration, operationalChassis: { ...params.calibration?.operationalChassis, taxStructure: e.target.value } } })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                    >
+                                                        <option value="">Select structure...</option>
+                                                        <option value="Onshore Standard">Onshore Standard</option>
+                                                        <option value="Tax Treaty Optimized">Tax Treaty Optimized</option>
+                                                        <option value="Holding Company">Holding Company</option>
+                                                        <option value="SEZ / Free Zone">SEZ / Free Zone</option>
+                                                        <option value="Regional HQ">Regional HQ</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-stone-700 mb-1">Entity Preference</label>
+                                                    <select
+                                                        value={params.calibration?.operationalChassis?.entityPreference || ''}
+                                                        onChange={(e) => setParams({ ...params, calibration: { ...params.calibration, operationalChassis: { ...params.calibration?.operationalChassis, entityPreference: e.target.value } } })}
+                                                        className="w-full p-2 border border-stone-200 rounded text-sm"
+                                                    >
+                                                        <option value="">Select preference...</option>
+                                                        <option value="JV">Joint Venture (JV)</option>
+                                                        <option value="SPV">Special Purpose Vehicle (SPV)</option>
+                                                        <option value="Branch">Branch Office</option>
+                                                        <option value="Subsidiary">Wholly-Owned Subsidiary</option>
+                                                        <option value="LLP">Limited Liability Partnership</option>
+                                                    </select>
+                                                </div>
                                             </div>
                                         </div>
                                     </CollapsibleSection>
@@ -3469,6 +4547,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
         <AnimatePresence>
             {showFinalizationModal && (
                 <motion.div
+                    key="finalization-modal"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -3518,6 +4597,7 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
         <AnimatePresence>
             {showDocGenSuite && (
                 <motion.div
+                    key="doc-gen-suite-modal"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -3710,11 +4790,11 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
 
             {/* Document Scroll Area */}
             <div className="flex-1 w-full overflow-y-auto custom-scrollbar p-8 flex justify-center relative">
-
+                
                 {/* The Page Itself */}
                 <motion.div
                     layout
-                    className="bg-white w-full max-w-[794px] min-h-[1123px] shadow-2xl shadow-slate-900/10 flex flex-col relative"
+                    className="bg-white w-full max-w-4xl min-h-[1123px] shadow-2xl shadow-slate-900/10 flex flex-col relative"
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.5 }}
@@ -3738,6 +4818,25 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
 
                     {/* Doc Body */}
                     <div className="p-12 flex-1 font-serif text-stone-900">
+                        {/* Introduction */}
+                        <div className="mb-12 text-center">
+                            <h1 className="text-3xl font-bold text-stone-900 mb-2">A New Era for Regional Development Intelligence</h1>
+                            <p className="text-sm text-stone-600 leading-relaxed max-w-2xl mx-auto">
+                                Around the world, a persistent **Global Understanding Gap** obscures genuine opportunity. Fueled by fragmented data, outdated perceptions, and a lack of investor-grade tools, this gap systematically hinders development in the regional economies that form the backbone of national prosperity.
+                            </p>
+                        </div>
+
+                        {/* The Entire Meadow Philosophy */}
+                        <div className="mb-12 p-6 bg-slate-50 border border-slate-200 rounded-lg">
+                            <h2 className="text-xl font-bold text-slate-800 mb-2">The Entire Meadow Philosophy: A New Way to See</h2>
+                            <p className="text-sm text-slate-700 leading-relaxed">
+                                Most tools focus on the "bee and the flower"—the immediate transaction. This is dangerously incomplete.
+                            </p>
+                            <p className="text-sm text-slate-700 leading-relaxed mt-2">
+                                Nexus AI models the **entire meadow**: the full ecosystem, the hidden context, and all stakeholders. Real-world success depends on alignment with culture, regulation, and incentives—not just the deal itself. We built a system that sees the whole picture, because that’s the only way to deliver outcomes that last.
+                            </p>
+                        </div>
+
                         {/* 1. Identity Section */}
                         <div className="mb-12">
                             <h2 className="text-[10px] font-sans font-bold text-stone-400 uppercase tracking-widest mb-4 border-b border-stone-100 pb-2">01. Principal Entity</h2>
@@ -3784,6 +4883,22 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
                             ) : (
                                 <p className="text-sm text-stone-400 italic">Awaiting partner personas...</p>
                             )}
+                        </div>
+
+                        {/* Example in Action */}
+                        <div className="mb-12 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                            <h3 className="text-lg font-bold text-blue-900 mb-2">Example in Action: The 5-Persona Adversarial Debate</h3>
+                            <p className="text-sm text-blue-800 leading-relaxed">
+                                To eliminate bias and uncover blind spots, your strategy is debated by a team of five specialist AI personas. Imagine you propose a $10M investment in Vietnamese solar:
+                            </p>
+                            <ul className="list-disc list-inside text-sm text-blue-800 mt-3 space-y-1">
+                                <li>The **Advocate** highlights a 25% IRR...</li>
+                                <li>...but the **Accountant** immediately flags that your model misses currency hedging costs...</li>
+                                <li>...while the **Regulator** warns that new import tariffs could delay the project by 6 months.</li>
+                            </ul>
+                            <p className="text-sm text-blue-800 leading-relaxed mt-3 font-semibold">
+                                You see the full, unvarnished picture, not just the optimistic one.
+                            </p>
                         </div>
 
                         {/* 3. Market Context Section */}
@@ -3907,8 +5022,3 @@ const MainCanvas: React.FC<MainCanvasProps> = ({
 
 
 export default MainCanvas;
-
-
-
-
-
