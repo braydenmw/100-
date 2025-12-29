@@ -2,6 +2,7 @@
 // Tracks system performance, user feedback, and automatically improves
 
 import { ReportParameters } from '../types';
+import { EventBus } from './EventBus';
 
 interface LearningData {
   timestamp: string;
@@ -37,6 +38,44 @@ class SelfLearningEngine {
   
   constructor() {
     this.loadLearningData();
+    this.subscribeToEvents();
+  }
+
+  /** Subscribe to EventBus for ecosystem-wide learning */
+  private subscribeToEvents(): void {
+    // Listen for outcome recordings (flower → bee feedback loop)
+    EventBus.subscribe('outcomeRecorded', (event) => {
+      console.log('[SelfLearning] Outcome received:', event.reportId, event.outcome);
+      this.recordOutcome(event.reportId, event.outcome);
+    });
+
+    // Listen for insights to track quality (bee → meadow visibility)
+    EventBus.subscribe('insightsGenerated', (event) => {
+      console.log('[SelfLearning] Insights received:', event.reportId, event.insights.length);
+    });
+
+    // Listen for ecosystem pulse to adjust learning weights (meadow → ecosystem adaptation)
+    EventBus.subscribe('ecosystemPulse', (event) => {
+      if (event.signals.alignment < 50) {
+        console.log('[SelfLearning] Low alignment detected, adjusting weights');
+        // Could trigger recalibration here
+      }
+    });
+  }
+
+  /** Record an outcome and publish learning updates */
+  recordOutcome(reportId: string, outcome: { success: boolean; notes?: string }): void {
+    const metrics = this.analyzeAndImprove();
+    
+    // Publish learning update back to the ecosystem
+    EventBus.publish({
+      type: 'learningUpdate',
+      reportId,
+      message: outcome.success 
+        ? `Success recorded. Current success rate: ${(metrics.successRate * 100).toFixed(1)}%`
+        : `Issue recorded. Analyzing for improvements.`,
+      improvements: metrics.improvementAreas.slice(0, 3)
+    });
   }
 
   // Record a test execution

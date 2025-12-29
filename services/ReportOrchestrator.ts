@@ -7,6 +7,7 @@ import { mapToSPI, mapToIVAS, mapToSCF } from './intakeMapping';
 import DerivedIndexService from './DerivedIndexService';
 import AdvancedIndexService from './MissingFormulasEngine';
 import AdversarialReasoningService from './AdversarialReasoningService';
+import { EventBus } from './EventBus';
 
 const clampValue = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
@@ -108,6 +109,27 @@ export class ReportOrchestrator {
     };
 
     console.log('DEBUG: ReportPayload assembled successfully');
+    // Publish payload and intake mapping for subscribers (consultant, live builder, exporters)
+    try {
+      if (payload.metadata.reportId) {
+        EventBus.publish({ type: 'payloadAssembled', reportId: payload.metadata.reportId, payload });
+        if (payload.computedIntelligence?.intakeMapping) {
+          EventBus.publish({
+            type: 'intakeUpdated',
+            reportId: payload.metadata.reportId,
+            snapshot: payload.computedIntelligence.intakeMapping
+          });
+        }
+        // Ecosystem pulse from SEAM + RROI
+        const alignment = Math.min(100, (seamResult?.overallAlignment || 70));
+        const bottlenecks = (seamResult?.gaps || []).slice(0, 3);
+        const opportunities = [
+          `Infrastructure readiness ${rroiResult.components.infrastructure.score}/100`,
+          `Talent availability ${rroiResult.components.talent.score}/100`
+        ];
+        EventBus.publish({ type: 'ecosystemPulse', reportId: payload.metadata.reportId, signals: { alignment, bottlenecks, opportunities } });
+      }
+    } catch {}
     return payload;
   }
 
@@ -188,10 +210,37 @@ export class ReportOrchestrator {
 
   private static buildRisks(params: ReportParameters, ethicsCheck: EthicalCheckResult): ReportPayload['risks'] {
     const cityData = GLOBAL_CITY_DATABASE[params.country];
+    
+    // Calculate dynamic operational metrics based on actual inputs
+    const baseSupplyChainRisk = params.region === 'Asia-Pacific' ? 35 : 
+                                params.region === 'Europe' ? 25 :
+                                params.region === 'North America' ? 20 :
+                                params.region === 'Emerging Markets' ? 55 : 45;
+    
+    // Adjust for industry
+    const industryRiskModifier = params.industry?.some(i => 
+      i.includes('Manufacturing') || i.includes('Agriculture')
+    ) ? 15 : 0;
+    
+    const supplyChainDependency = Math.min(95, baseSupplyChainRisk + industryRiskModifier);
+    
+    // Calculate currency risk dynamically
+    const currencyRiskMap: Record<string, string> = {
+      'Emerging Markets': 'High volatility expected - consider hedging',
+      'Asia-Pacific': 'Moderate volatility - monitor exchange rates',
+      'Europe': 'Relatively stable - EUR/local currency considerations',
+      'North America': 'Low volatility - USD stability',
+      'Middle East': 'Currency peg risks - oil price sensitivity',
+      'Africa': 'High volatility - local currency exposure risk',
+      'Latin America': 'High volatility - inflation considerations'
+    };
+    
     return {
       political: {
         stabilityScore: cityData?.businessEnvironment.regulatoryQuality || 70,
-        regionalConflictRisk: params.region === 'Middle East' ? 80 : 30
+        regionalConflictRisk: params.region === 'Middle East' ? 80 : 
+                              params.region === 'Africa' ? 60 :
+                              params.region === 'Emerging Markets' ? 45 : 30
       },
       regulatory: {
         corruptionIndex: cityData?.businessEnvironment.corruptionIndex || 50,
@@ -199,8 +248,8 @@ export class ReportOrchestrator {
         complianceRoadmap: ethicsCheck.mitigation.map(m => m.detail)
       },
       operational: {
-        supplyChainDependency: 45, // Mock value
-        currencyRisk: params.region === 'Emerging Markets' ? 'High volatility expected' : 'Moderate stability'
+        supplyChainDependency,
+        currencyRisk: currencyRiskMap[params.region || ''] || 'Moderate stability - assess local conditions'
       }
     };
   }
@@ -227,15 +276,45 @@ export class ReportOrchestrator {
   }
 
   private static async runDiversificationAnalysis(params: ReportParameters): Promise<DiversificationAnalysis> {
-    // Mock market shares for demonstration
-    const mockMarkets: MarketShare[] = [
-      { country: params.country, share: 60 },
-      { country: 'Vietnam', share: 20 },
-      { country: 'India', share: 15 },
-      { country: 'Other', share: 5 }
-    ];
+    // Generate dynamic market shares based on actual parameters
+    const markets: MarketShare[] = [];
+    
+    // Primary market from params
+    if (params.country) {
+      markets.push({ country: params.country, share: 60 });
+    }
+    
+    // Add diversification markets based on region
+    const regionMarkets: Record<string, string[]> = {
+      'Asia-Pacific': ['Vietnam', 'Indonesia', 'Thailand', 'Malaysia'],
+      'Europe': ['Poland', 'Czech Republic', 'Romania', 'Portugal'],
+      'North America': ['Mexico', 'Canada', 'Costa Rica'],
+      'Emerging Markets': ['India', 'Brazil', 'South Africa', 'Turkey'],
+      'Middle East': ['UAE', 'Saudi Arabia', 'Qatar', 'Egypt'],
+      'Africa': ['Morocco', 'Kenya', 'Nigeria', 'Ghana'],
+      'Latin America': ['Chile', 'Colombia', 'Peru', 'Argentina']
+    };
+    
+    const alternativeMarkets = regionMarkets[params.region || 'Asia-Pacific'] || ['Vietnam', 'India'];
+    
+    // Distribute remaining 40% among alternatives
+    const remainingShare = params.country ? 40 : 100;
+    const perMarketShare = remainingShare / alternativeMarkets.length;
+    
+    alternativeMarkets.forEach((country, idx) => {
+      if (country !== params.country) {
+        markets.push({ 
+          country, 
+          share: Math.round(perMarketShare * (1 - idx * 0.15)) // Decreasing shares
+        });
+      }
+    });
+    
+    // Normalize to 100%
+    const total = markets.reduce((sum, m) => sum + m.share, 0);
+    markets.forEach(m => m.share = Math.round((m.share / total) * 100));
 
-    return MarketDiversificationEngine.analyzeConcentration(mockMarkets);
+    return MarketDiversificationEngine.analyzeConcentration(markets);
   }
 
   // Method to validate payload completeness

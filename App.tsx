@@ -36,7 +36,6 @@ import { DeepReasoningEngine } from './components/DeepReasoningEngine';
 import CompetitorMap from './components/CompetitorMap';
 import AlternativeLocationMatcher from './components/AlternativeLocationMatcher';
 import EthicsPanel from './components/EthicsPanel';
-import { ConversationalAIChat, ChatFloatingButton } from './components/ConversationalAIChat';
 import useEscapeKey from './hooks/useEscapeKey';
 import { generateCopilotInsights, generateReportSectionStream } from './services/geminiService';
 import { config } from './services/config';
@@ -47,6 +46,9 @@ import { solveAndAct as autonomousSolve } from './services/autonomousClient';
 import { selfLearningEngine } from './services/selfLearningEngine';
 import { ReactiveIntelligenceEngine } from './services/ReactiveIntelligenceEngine';
 import { MultiAgentOrchestrator } from './services/MultiAgentBrainSystem';
+import { runSmartAgenticWorker, AgenticRun } from './services/agenticWorker';
+// EventBus for ecosystem connectivity
+import { EventBus, type EcosystemPulse } from './services/EventBus';
 import { LayoutGrid, Globe, ShieldCheck, LayoutDashboard, Plus } from 'lucide-react';
 import DemoIndicator from './components/DemoIndicator';
 // Note: report-generator sidebar is rendered inside MainCanvas.
@@ -108,15 +110,52 @@ const App: React.FC = () => {
     const [autonomousInsights, setAutonomousInsights] = useState<CopilotInsight[]>([]);
     const [isAutonomousThinking, setIsAutonomousThinking] = useState(false);
     const [autonomousSuggestions, setAutonomousSuggestions] = useState<string[]>([]);
-
-    // CONVERSATIONAL AI CHAT STATE
-    const [isChatOpen, setIsChatOpen] = useState(false);
-    const [chatHasUnread, setChatHasUnread] = useState(false);
+    // ECOSYSTEM STATE (from EventBus "meadow" signals)
+    const [ecosystemPulse, setEcosystemPulse] = useState<EcosystemPulse | null>(null);
 
     // COMBINED INSIGHTS - Merge regular and autonomous insights
     const combinedInsights = useMemo(() => {
         return [...insights, ...autonomousInsights];
     }, [insights, autonomousInsights]);
+
+    // --- EventBus subscriptions (bee ↔ flower ↔ meadow) ---
+    useEffect(() => {
+        // Subscribe to insights from anywhere in the system
+        const unsubInsights = EventBus.subscribe('insightsGenerated', (event) => {
+            console.log('[App] EventBus → insightsGenerated', event.reportId);
+            // Merge ecosystem insights with existing
+            setAutonomousInsights(prev => {
+                const ids = new Set(prev.map(i => i.id));
+                const newOnes = event.insights.filter(i => !ids.has(i.id));
+                return [...prev, ...newOnes];
+            });
+        });
+
+        // Subscribe to suggestions from anywhere in the system
+        const unsubSuggestions = EventBus.subscribe('suggestionsReady', (event) => {
+            console.log('[App] EventBus → suggestionsReady', event.reportId);
+            setAutonomousSuggestions(event.actions);
+        });
+
+        // Subscribe to ecosystem pulse ("meadow" view)
+        const unsubPulse = EventBus.subscribe('ecosystemPulse', (event) => {
+            console.log('[App] EventBus → ecosystemPulse', event.signals);
+            setEcosystemPulse(event.signals);
+        });
+
+        // Subscribe to learning updates (self-learning feedback)
+        const unsubLearning = EventBus.subscribe('learningUpdate', (event) => {
+            console.log('[App] EventBus → learningUpdate', event.message);
+            // Could show a toast or update a learning status indicator
+        });
+
+        return () => {
+            unsubInsights();
+            unsubSuggestions();
+            unsubPulse();
+            unsubLearning();
+        };
+    }, []);
 
 
 
@@ -148,43 +187,51 @@ const App: React.FC = () => {
 
     // AUTONOMOUS CAPABILITIES EFFECTS
 
-    // Autonomous Analysis Trigger - Runs when user provides basic inputs
+    // Agentic Worker - true digital worker pipeline (plan -> tools -> memory -> verdict)
     useEffect(() => {
         if (autonomousMode && params.organizationName && params.country && params.organizationName.length > 2) {
             const timer = setTimeout(async () => {
-                console.log("🤖 AUTONOMOUS: Starting autonomous analysis");
+                console.log("🤖 AGENTIC WORKER: Starting autonomous digital worker");
                 setIsAutonomousThinking(true);
                 try {
-                    const problem = `Analyze partnership and investment opportunities for ${params.organizationName} in ${params.country}`;
-                    const context = {
-                        region: params.country,
-                        industry: params.industry,
-                        dealSize: params.dealSize,
-                        strategicIntent: params.strategicIntent
-                    };
+                    // Run the full agentic pipeline (tools + memory + payload)
+                    const agenticResult: AgenticRun = await runSmartAgenticWorker(params, { maxSimilarCases: 5 });
 
-                    const result = await autonomousSolve(problem, context, params, { autoAct: false, urgency: 'normal' });
+                    // Merge insights produced by agentic worker
+                    setAutonomousInsights(agenticResult.insights);
 
-                    // Convert autonomous solutions to insights
-                    const autonomousInsights: CopilotInsight[] = result.solutions.map((solution, index) => ({
-                        id: `autonomous-${Date.now()}-${index}`,
-                        type: 'strategy' as const,
-                        title: `Autonomous Discovery: ${solution.action}`,
-                        description: solution.reasoning,
-                        content: `Autonomous analysis suggests: ${solution.action}. Reasoning: ${solution.reasoning}`,
-                        confidence: solution.confidence || 75,
-                        isAutonomous: true
-                    }));
+                    // Proactive suggestions based on next actions
+                    setAutonomousSuggestions(agenticResult.executiveBrief.nextActions);
 
-                    setAutonomousInsights(autonomousInsights);
-
-                    // Add proactive suggestions
-                    const suggestions = result.solutions.map(s => s.action);
-                    setAutonomousSuggestions(suggestions);
-
-                    console.log("🤖 AUTONOMOUS: Analysis complete, generated", autonomousInsights.length, "insights");
+                    console.log("🤖 AGENTIC WORKER: Run complete", {
+                        runId: agenticResult.runId,
+                        signal: agenticResult.executiveBrief.proceedSignal,
+                        memory: agenticResult.memory.similarCases.length
+                    });
                 } catch (error) {
-                    console.error("🤖 AUTONOMOUS: Error in autonomous analysis:", error);
+                    console.error("🤖 AGENTIC WORKER: Error running digital worker:", error);
+                    // Fallback to legacy autonomous solve
+                    try {
+                        const problem = `Analyze partnership and investment opportunities for ${params.organizationName} in ${params.country}`;
+                        const context = {
+                            region: params.country,
+                            industry: params.industry,
+                            dealSize: params.dealSize,
+                            strategicIntent: params.strategicIntent
+                        };
+                        const result = await autonomousSolve(problem, context, params, { autoAct: false, urgency: 'normal' });
+                        const fallbackInsights: CopilotInsight[] = result.solutions.map((solution: any, index: number) => ({
+                            id: `autonomous-${Date.now()}-${index}`,
+                            type: 'strategy' as const,
+                            title: `Autonomous Discovery: ${solution.action}`,
+                            description: solution.reasoning,
+                            content: `Autonomous analysis suggests: ${solution.action}. Reasoning: ${solution.reasoning}`,
+                            confidence: solution.confidence || 75,
+                            isAutonomous: true
+                        }));
+                        setAutonomousInsights(fallbackInsights);
+                        setAutonomousSuggestions(result.solutions.map((s: any) => s.action));
+                    } catch {}
                 } finally {
                     setIsAutonomousThinking(false);
                 }
@@ -486,6 +533,7 @@ const App: React.FC = () => {
                         onLoadReport={loadReport}
                         onOpenInstant={() => setViewMode('partner-management')} 
                         onOpenSimulator={() => setViewMode('live-feed')}
+                        ecosystemPulse={ecosystemPulse}
                     />
                 )}
 
@@ -731,33 +779,6 @@ const App: React.FC = () => {
                     />
                 )}
             </main>
-
-            {/* CONVERSATIONAL AI CHAT - Always available */}
-            <ConversationalAIChat
-                isOpen={isChatOpen}
-                onClose={() => setIsChatOpen(false)}
-                currentContext={params}
-                onActionTriggered={(action, data) => {
-                    console.log('Chat action triggered:', action, data);
-                    // Handle actions from chat
-                    if (action === 'generate-report') {
-                        setViewMode('report-generator');
-                    } else if (action === 'find-partners') {
-                        setViewMode('compatibility-engine');
-                    }
-                }}
-            />
-            
-            {/* Floating Chat Button - Always visible */}
-            {!isChatOpen && (
-                <ChatFloatingButton 
-                    onClick={() => {
-                        setIsChatOpen(true);
-                        setChatHasUnread(false);
-                    }} 
-                    hasUnread={chatHasUnread}
-                />
-            )}
 
             {/* SYSTEM FOOTER */}
             <footer className="bg-white border-t border-stone-200 py-2 px-6 z-40 flex justify-between items-center text-[9px] text-stone-400 uppercase tracking-widest font-medium shrink-0">

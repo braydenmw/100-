@@ -731,37 +731,233 @@ Return as JSON array with: action, reasoning, expectedOutcome, confidence`,
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // SELF-EVOLUTION - Continuous improvement
+  // SELF-EVOLUTION - Continuous improvement with persistence
   // ═══════════════════════════════════════════════════════════════════════════
 
+  private static readonly EVOLUTION_STATE_KEY = 'bw_nexus_evolution_state';
+  private static readonly PATTERN_STORE_KEY = 'bw_nexus_patterns';
+  private static readonly FEEDBACK_HISTORY_KEY = 'bw_nexus_feedback_history';
+
   /**
-   * Evolve the system based on new learnings
+   * Load evolution state from localStorage (browser) or memory
+   */
+  private static loadEvolutionState(): SelfEvolutionState {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem(this.EVOLUTION_STATE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          // Merge with defaults to ensure all fields exist
+          return { ...this.evolutionState, ...parsed };
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load evolution state:', error);
+    }
+    return this.evolutionState;
+  }
+
+  /**
+   * Save evolution state to localStorage (browser)
+   */
+  private static saveEvolutionState(): void {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(this.EVOLUTION_STATE_KEY, JSON.stringify(this.evolutionState));
+      }
+    } catch (error) {
+      console.warn('Failed to save evolution state:', error);
+    }
+  }
+
+  /**
+   * Load learned patterns from storage
+   */
+  private static loadPatterns(): Map<string, { pattern: string; weight: number; lastUsed: string; successRate: number }> {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem(this.PATTERN_STORE_KEY);
+        if (stored) {
+          const obj = JSON.parse(stored);
+          return new Map(Object.entries(obj));
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load patterns:', error);
+    }
+    return new Map();
+  }
+
+  /**
+   * Save learned patterns to storage
+   */
+  private static savePatterns(patterns: Map<string, { pattern: string; weight: number; lastUsed: string; successRate: number }>): void {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const obj = Object.fromEntries(patterns);
+        localStorage.setItem(this.PATTERN_STORE_KEY, JSON.stringify(obj));
+      }
+    } catch (error) {
+      console.warn('Failed to save patterns:', error);
+    }
+  }
+
+  /**
+   * Load feedback history from storage
+   */
+  private static loadFeedbackHistory(): Array<{
+    queryId: string;
+    wasHelpful: boolean;
+    timestamp: string;
+    category?: string;
+  }> {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem(this.FEEDBACK_HISTORY_KEY);
+        if (stored) {
+          return JSON.parse(stored);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load feedback history:', error);
+    }
+    return [];
+  }
+
+  /**
+   * Save feedback history to storage
+   */
+  private static saveFeedbackHistory(history: Array<{
+    queryId: string;
+    wasHelpful: boolean;
+    timestamp: string;
+    category?: string;
+  }>): void {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        // Keep only last 1000 entries
+        const trimmed = history.slice(-1000);
+        localStorage.setItem(this.FEEDBACK_HISTORY_KEY, JSON.stringify(trimmed));
+      }
+    } catch (error) {
+      console.warn('Failed to save feedback history:', error);
+    }
+  }
+
+  /**
+   * Evolve the system based on new learnings with persistence
    */
   static async evolve(feedback: {
     queryId: string;
     wasHelpful: boolean;
     actualOutcome?: string;
     suggestedImprovement?: string;
+    category?: string;
   }): Promise<void> {
+    // Load current state
+    this.evolutionState = this.loadEvolutionState();
+    const patterns = this.loadPatterns();
+    const feedbackHistory = this.loadFeedbackHistory();
+
+    // Update learning cycles
     this.evolutionState.learningCycles++;
     
+    // Adaptive accuracy adjustment with decay
+    const recentFeedback = feedbackHistory.filter(f => {
+      const age = Date.now() - new Date(f.timestamp).getTime();
+      return age < 7 * 24 * 60 * 60 * 1000; // Last 7 days
+    });
+    
+    const recentSuccessRate = recentFeedback.length > 0
+      ? recentFeedback.filter(f => f.wasHelpful).length / recentFeedback.length
+      : 0.5;
+
     if (feedback.wasHelpful) {
-      this.evolutionState.accuracyScore = Math.min(
-        0.99,
-        this.evolutionState.accuracyScore + 0.001
-      );
+      // Exponential moving average for accuracy
+      this.evolutionState.accuracyScore = 
+        0.9 * this.evolutionState.accuracyScore + 0.1 * Math.min(0.99, recentSuccessRate + 0.05);
+      
+      // Record successful pattern
+      const patternKey = feedback.category || feedback.queryId.split('-')[0];
+      const existing = patterns.get(patternKey);
+      if (existing) {
+        existing.successRate = 0.8 * existing.successRate + 0.2;
+        existing.weight = Math.min(2, existing.weight + 0.1);
+        existing.lastUsed = new Date().toISOString();
+      } else {
+        patterns.set(patternKey, {
+          pattern: patternKey,
+          weight: 1.0,
+          lastUsed: new Date().toISOString(),
+          successRate: 1.0
+        });
+      }
+      
+      this.evolutionState.patternsDiscovered = patterns.size;
     } else {
+      // Decrease accuracy but more slowly
       this.evolutionState.accuracyScore = Math.max(
         0.5,
-        this.evolutionState.accuracyScore - 0.002
+        0.95 * this.evolutionState.accuracyScore + 0.05 * recentSuccessRate
       );
       
+      // Record failed pattern
+      const patternKey = feedback.category || feedback.queryId.split('-')[0];
+      const existing = patterns.get(patternKey);
+      if (existing) {
+        existing.successRate = 0.8 * existing.successRate;
+        existing.weight = Math.max(0.1, existing.weight - 0.1);
+        existing.lastUsed = new Date().toISOString();
+      }
+      
+      // Track improvement suggestions
       if (feedback.suggestedImprovement) {
-        this.evolutionState.pendingUpgrades.push(feedback.suggestedImprovement);
+        // Deduplicate suggestions
+        if (!this.evolutionState.pendingUpgrades.includes(feedback.suggestedImprovement)) {
+          this.evolutionState.pendingUpgrades.push(feedback.suggestedImprovement);
+          // Keep only top 50 suggestions
+          this.evolutionState.pendingUpgrades = this.evolutionState.pendingUpgrades.slice(-50);
+        }
       }
     }
 
-    // Record learning
+    // Add to feedback history
+    feedbackHistory.push({
+      queryId: feedback.queryId,
+      wasHelpful: feedback.wasHelpful,
+      timestamp: new Date().toISOString(),
+      category: feedback.category
+    });
+
+    // Check for version upgrade based on learning cycles
+    const cycleThreshold = 100;
+    if (this.evolutionState.learningCycles % cycleThreshold === 0) {
+      const [major, minor, patch] = this.evolutionState.version.split('.').map(Number);
+      this.evolutionState.version = `${major}.${minor}.${patch + 1}`;
+      console.log(`🧬 System evolved to version ${this.evolutionState.version}`);
+      
+      // Clear applied suggestions
+      this.evolutionState.pendingUpgrades = [];
+    }
+
+    // Add new capability if accuracy is high and patterns are rich
+    if (this.evolutionState.accuracyScore > 0.9 && patterns.size > 20) {
+      const newCapability = 'advanced-pattern-matching';
+      if (!this.evolutionState.capabilities.includes(newCapability)) {
+        this.evolutionState.capabilities.push(newCapability);
+        console.log(`🆕 New capability unlocked: ${newCapability}`);
+      }
+    }
+
+    // Update timestamp
+    this.evolutionState.lastEvolution = new Date().toISOString();
+
+    // Save everything
+    this.saveEvolutionState();
+    this.savePatterns(patterns);
+    this.saveFeedbackHistory(feedbackHistory);
+
+    // Record learning to backend if available
     if (feedback.actualOutcome) {
       try {
         await fetch('/api/learning/outcome', {
@@ -771,22 +967,82 @@ Return as JSON array with: action, reasoning, expectedOutcome, confidence`,
             key: feedback.queryId,
             outcome: feedback.wasHelpful ? 'success' : 'failure',
             factors: [feedback.actualOutcome, feedback.suggestedImprovement].filter(Boolean),
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            evolutionState: this.evolutionState
           })
         });
       } catch (error) {
-        console.warn('Failed to record evolution feedback');
+        // Backend logging failed, but local evolution still succeeded
+        console.warn('Failed to record evolution feedback to backend');
       }
     }
 
-    this.evolutionState.lastEvolution = new Date().toISOString();
+    console.log(`🧠 Evolution complete: Cycle ${this.evolutionState.learningCycles}, Accuracy ${(this.evolutionState.accuracyScore * 100).toFixed(1)}%`);
   }
 
   /**
-   * Get current evolution state
+   * Get current evolution state (with persistence check)
    */
   static getEvolutionState(): SelfEvolutionState {
+    // Always load fresh from storage
+    this.evolutionState = this.loadEvolutionState();
     return { ...this.evolutionState };
+  }
+
+  /**
+   * Get learned patterns for decision making
+   */
+  static getLearnedPatterns(): Array<{ pattern: string; weight: number; successRate: number }> {
+    const patterns = this.loadPatterns();
+    return Array.from(patterns.values())
+      .sort((a, b) => b.weight - a.weight)
+      .slice(0, 20);
+  }
+
+  /**
+   * Apply learned patterns to boost relevant queries
+   */
+  static applyPatternBoost(query: string, baseConfidence: number): number {
+    const patterns = this.loadPatterns();
+    let boost = 0;
+    
+    for (const [key, pattern] of patterns) {
+      if (query.toLowerCase().includes(key.toLowerCase())) {
+        boost += pattern.weight * pattern.successRate * 0.05;
+      }
+    }
+    
+    return Math.min(0.99, baseConfidence + boost);
+  }
+
+  /**
+   * Reset evolution state (for testing/debugging)
+   */
+  static resetEvolution(): void {
+    this.evolutionState = {
+      version: '6.0.0',
+      learningCycles: 0,
+      patternsDiscovered: 0,
+      accuracyScore: 0.85,
+      lastEvolution: new Date().toISOString(),
+      capabilities: [
+        'multi-ai-synthesis',
+        'live-web-search',
+        'pattern-recognition',
+        'proactive-opportunity-detection',
+        'risk-monitoring',
+        'self-learning'
+      ],
+      pendingUpgrades: []
+    };
+    
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(this.EVOLUTION_STATE_KEY);
+      localStorage.removeItem(this.PATTERN_STORE_KEY);
+      localStorage.removeItem(this.FEEDBACK_HISTORY_KEY);
+    }
+    
+    console.log('🔄 Evolution state reset');
   }
 
   // ═══════════════════════════════════════════════════════════════════════════

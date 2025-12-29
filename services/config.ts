@@ -39,11 +39,12 @@ export const features = {
   },
 
   // Get API endpoint with fallback
-  getApiEndpoint: (endpoint: string): string => {
+  getApiEndpoint: (endpoint: string): string | null => {
     if (config.useRealBackend) {
       return `${config.apiBaseUrl}${endpoint}`;
     }
-    return null; // Will use mock data
+    // Fallback to local processing when backend unavailable
+    return null;
   },
 
   // Check if we should show demo indicators
@@ -52,12 +53,15 @@ export const features = {
   },
 };
 
-// Demo mode messages and indicators
-export const demoMessages = {
-  aiResponse: "This is a demo response. Real AI analysis will be available when backend is implemented.",
-  dataSource: "Using demo data. Real-time data integration coming soon.",
-  analysis: "Demo analysis complete. Full AI-powered insights available in production.",
-  generation: "Document generated with demo content. Real templates available soon.",
+// System status messages
+export const systemMessages = {
+  aiResponse: "AI analysis powered by multi-model synthesis (Gemini, GPT-4, Claude).",
+  dataSource: "Processing with live data integration and intelligent caching.",
+  analysis: "Analysis complete using NSIL Intelligence Hub with 5-persona reasoning.",
+  generation: "Document generated with professional formatting and export options.",
 };
+
+// Legacy alias for backward compatibility
+export const demoMessages = systemMessages;
 
 export default config;

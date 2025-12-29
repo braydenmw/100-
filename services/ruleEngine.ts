@@ -55,8 +55,8 @@ export class NeuroSymbolicEngine {
                 case 'c6': isSatisfied = !!params.riskTolerance; val = params.riskTolerance; break;
                 case 'c7': isSatisfied = params.industry && params.industry.length > 0; val = params.industry?.[0]; break;
                 case 'c8': isSatisfied = !!params.expansionTimeline; val = params.expansionTimeline; break;
-                case 'c9': isSatisfied = !!params.politicalSensitivities?.length; val = "Checked"; break; // Mock check
-                case 'c10': isSatisfied = !!params.idealPartnerProfile; val = "Defined"; break;
+                case 'c9': isSatisfied = !!params.politicalSensitivities?.length; val = params.politicalSensitivities?.length ? "Assessed" : undefined; break;
+                case 'c10': isSatisfied = !!params.idealPartnerProfile; val = params.idealPartnerProfile ? "Defined" : undefined; break;
                 default: isSatisfied = item.status === 'satisfied'; // Keep manual overrides
             }
 
@@ -69,13 +69,34 @@ export class NeuroSymbolicEngine {
             };
         });
 
-        // Update Variable Store for Math Engine
-        const variableStore: Record<string, any> = {
+        // Update Variable Store for Math Engine - calculate from actual inputs
+        const revenueScoreMap: Record<string, number> = {
+            'under_1m': 20,
+            '1m_10m': 40,
+            '10m_100m': 60,
+            '100m_500m': 80,
+            '500m_1b': 90,
+            'over_1b': 100
+        };
+        
+        const riskScoreMap: Record<string, number> = {
+            'conservative': 25,
+            'moderate': 50,
+            'balanced': 60,
+            'aggressive': 75,
+            'high': 85
+        };
+
+        const variableStore: Record<string, unknown> = {
             ...currentState.variableStore,
-            revenue_score: params.revenueBand === 'over_1b' ? 100 : 50, // Mock mapping
-            risk_score: params.riskTolerance === 'high' ? 80 : 30,
-            market_size: 1000, // Default mock
-            competition_index: 50 // Default mock
+            revenue_score: revenueScoreMap[params.revenueBand || ''] || 50,
+            risk_score: riskScoreMap[params.riskTolerance || ''] || 50,
+            market_size: params.calibration?.constraints?.budgetCap 
+                ? parseFloat(String(params.calibration.constraints.budgetCap).replace(/[^0-9.]/g, '')) / 10000 
+                : 500,
+            competition_index: params.industry?.length 
+                ? Math.min(90, 30 + params.industry.length * 15) 
+                : 50
         };
 
         return {
@@ -86,10 +107,10 @@ export class NeuroSymbolicEngine {
     }
 
     // 2. Execute Dynamic Formula
-    static evaluateFormula(formula: DynamicFormula, variableStore: Record<string, any>): number | string {
+    static evaluateFormula(formula: DynamicFormula, variableStore: Record<string, unknown>): number | string {
         try {
             // Safe evaluation using mathjs
-            const result = compile(formula.expression).evaluate(variableStore);
+            const result = compile(formula.expression).evaluate(variableStore as Record<string, number>);
             return typeof result === 'number' ? parseFloat(result.toFixed(2)) : result;
         } catch (error) {
             console.warn(`Formula ${formula.name} failed:`, error);

@@ -458,17 +458,132 @@ export class UnbiasedAnalysisEngine {
       capabilities?: string[];
     }
   ): ConnectionRating {
-    // Partner profile available for future enhanced matching
-    void partnerProfile;
-    // Calculate dimension scores
+    // Calculate dimension scores based on REAL data-driven analysis
+    
+    // Strategic Alignment: Based on matching intent and partner type
+    let strategicAlignment = 50;
+    const userIntent = (params.strategicIntent || []).join(' ').toLowerCase();
+    const partnerType = (partnerProfile.type || '').toLowerCase();
+    
+    // Intent-type matching logic
+    if (userIntent.includes('market entry') && ['distributor', 'government', 'partner'].some(t => partnerType.includes(t))) {
+      strategicAlignment += 25;
+    }
+    if (userIntent.includes('joint venture') && partnerType.includes('corporation')) {
+      strategicAlignment += 20;
+    }
+    if (userIntent.includes('technology') && partnerType.includes('technology')) {
+      strategicAlignment += 30;
+    }
+    if (userIntent.includes('investment') && partnerType.includes('investor')) {
+      strategicAlignment += 25;
+    }
+    if (params.targetPartner && partnerName.toLowerCase().includes(params.targetPartner.toLowerCase())) {
+      strategicAlignment += 15; // Named target match bonus
+    }
+    strategicAlignment = Math.min(95, Math.max(30, strategicAlignment));
+
+    // Cultural Fit: Based on geographic proximity and organizational type match
+    let culturalFit = 50;
+    const userCountry = (params.country || params.userCountry || '').toLowerCase();
+    const partnerGeo = (partnerProfile.geography || '').toLowerCase();
+    
+    // Same region bonus
+    const regionMap: Record<string, string[]> = {
+      'asia': ['vietnam', 'china', 'japan', 'korea', 'singapore', 'thailand', 'indonesia', 'malaysia', 'philippines', 'india'],
+      'europe': ['germany', 'france', 'uk', 'poland', 'spain', 'italy', 'netherlands', 'sweden', 'switzerland'],
+      'americas': ['usa', 'canada', 'mexico', 'brazil', 'argentina', 'chile', 'colombia'],
+      'mena': ['uae', 'saudi', 'qatar', 'egypt', 'morocco', 'israel', 'turkey']
+    };
+    
+    let sameRegion = false;
+    for (const countries of Object.values(regionMap)) {
+      if (countries.some(c => userCountry.includes(c)) && countries.some(c => partnerGeo.includes(c))) {
+        sameRegion = true;
+        break;
+      }
+    }
+    if (sameRegion) culturalFit += 20;
+    if (userCountry === partnerGeo) culturalFit += 15; // Same country bonus
+    
+    // Org type compatibility
+    const orgType = (params.organizationType || '').toLowerCase();
+    if (orgType.includes('government') && partnerType.includes('government')) culturalFit += 15;
+    if (orgType.includes('enterprise') && partnerType.includes('corporation')) culturalFit += 10;
+    culturalFit = Math.min(95, Math.max(30, culturalFit));
+
+    // Financial Compatibility: Based on deal size and investment capacity
+    let financialCompatibility = 55;
+    const partnerSize = (partnerProfile.size || '').toLowerCase();
+    const dealSize = params.dealSize || '';
+    
+    if (partnerSize.includes('large') || partnerSize.includes('enterprise')) financialCompatibility += 20;
+    if (partnerSize.includes('medium')) financialCompatibility += 10;
+    if (dealSize && parseFloat(dealSize.replace(/[^0-9.]/g, '')) > 10000000) {
+      financialCompatibility += partnerSize.includes('large') ? 15 : -10;
+    }
+    financialCompatibility = Math.min(95, Math.max(30, financialCompatibility));
+
+    // Operational Synergy: Based on capability matches
+    let operationalSynergy = 45;
+    // Use partnerCapabilities as the user's capabilities
+    const userCapabilities = params.partnerCapabilities || [];
+    const partnerCaps = partnerProfile.capabilities || [];
+    
+    // Count complementary capabilities (not overlapping)
+    const userCapsLower = userCapabilities.map(c => c.toLowerCase());
+    const partnerCapsLower = partnerCaps.map(c => c.toLowerCase());
+    const complementary = partnerCapsLower.filter(pc => !userCapsLower.some(uc => uc.includes(pc) || pc.includes(uc)));
+    operationalSynergy += complementary.length * 8;
+    
+    // Industry match bonus
+    if (params.industry?.some(ind => partnerCapsLower.some(cap => cap.includes(ind.toLowerCase())))) {
+      operationalSynergy += 15;
+    }
+    operationalSynergy = Math.min(95, Math.max(30, operationalSynergy));
+
+    // Risk Alignment: Based on risk tolerance matching
+    let riskAlignment = 60;
+    const userRisk = (params.riskTolerance || 'medium').toLowerCase();
+    
+    // Partner size typically correlates with risk preference
+    if (userRisk === 'low' || userRisk === 'conservative') {
+      if (partnerSize.includes('large') || partnerType.includes('government')) riskAlignment += 20;
+    } else if (userRisk === 'high' || userRisk === 'aggressive') {
+      if (partnerType.includes('startup') || partnerType.includes('venture')) riskAlignment += 20;
+    } else {
+      riskAlignment += 10; // Medium risk is compatible with most
+    }
+    riskAlignment = Math.min(95, Math.max(30, riskAlignment));
+
+    // Timeline Compatibility: Based on urgency signals
+    let timelineCompatibility = 65;
+    const timeline = (params.expansionTimeline || '').toLowerCase();
+    
+    if (timeline.includes('immediate') || timeline.includes('0-6') || timeline.includes('urgent')) {
+      timelineCompatibility -= partnerType.includes('government') ? 20 : 0; // Govt is slow
+      timelineCompatibility += partnerType.includes('startup') ? 15 : 0;
+    }
+    if (timeline.includes('3+') || timeline.includes('long')) {
+      timelineCompatibility += partnerType.includes('government') ? 15 : 0;
+    }
+    timelineCompatibility = Math.min(95, Math.max(30, timelineCompatibility));
+
+    // Value Creation Potential: Composite of other factors + market opportunity
+    let valueCreationPotential = Math.round((strategicAlignment + operationalSynergy) / 2);
+    if (params.strategicIntent?.some(i => i.toLowerCase().includes('joint venture') || i.toLowerCase().includes('partnership'))) {
+      valueCreationPotential += 10;
+    }
+    valueCreationPotential = Math.min(95, Math.max(30, valueCreationPotential));
+
     const dimensions = {
-      strategicAlignment: 65 + Math.floor(Math.random() * 25),
-      culturalFit: 55 + Math.floor(Math.random() * 30),
-      financialCompatibility: 60 + Math.floor(Math.random() * 25),
-      operationalSynergy: 50 + Math.floor(Math.random() * 35),
-      riskAlignment: 60 + Math.floor(Math.random() * 25),
-      timelineCompatibility: 70 + Math.floor(Math.random() * 20),
-      valueCreationPotential: 55 + Math.floor(Math.random() * 35)
+      strategicAlignment,
+      culturalFit,
+      financialCompatibility,
+      operationalSynergy,
+      riskAlignment,
+      timelineCompatibility,
+      valueCreationPotential
     };
     
     const overallScore = Math.round(
