@@ -18,10 +18,17 @@ Add these in GitHub → Settings → Secrets & variables → Actions.
 - `FRONTEND_URL` — production URL (e.g., https://app.example.com).
 
 ## Render setup (recommended)
-1. Create a new Web Service on Render (Docker or connect to repo). Note the service id.
-2. In Render service settings, add env vars: `NODE_ENV=production`, `FRONTEND_URL`, `GEMINI_API_KEY` (server), and any DB or API keys you need.
-3. If using the GitHub Actions workflow, add `RENDER_API_KEY` and `RENDER_SERVICE_ID` as repo secrets.
-4. Push to `main`/`master` to start CI -> build -> push image -> trigger Render deploy.
+1. Create a new Web Service on Render (select "Docker" or connect the repo). Note the service id (the numeric id shown in the service URL or the Render dashboard; it appears like `srv-xxxxxxxxxx`).
+2. In Render service settings, add env vars: `NODE_ENV=production`, `FRONTEND_URL` (e.g. `https://your-service.onrender.com`), `GEMINI_API_KEY` (server-only), and any DB or other API keys required.
+3. In GitHub, go to your repo → Settings → Secrets & variables → Actions and add these secrets:
+	- `GHCR_PAT` — personal access token for GHCR (if using GHCR). Scope: `write:packages`.
+	- `RENDER_API_KEY` — Render API key with permission to deploy.
+	- `RENDER_SERVICE_ID` — copy the numeric id for your Render service (without the `srv-` prefix used in some contexts).
+	- `GEMINI_API_KEY` — your server-side AI API key.
+	- `FRONTEND_URL` — production URL string.
+4. Push to the `main` or `master` branch to trigger the GitHub Actions workflow: it will build assets, build/push a Docker image to GHCR, then call the Render deploy API.
+
+Quick note for non-coders: if you prefer not to create a GHCR token, you can skip the GHCR step and configure Render to build from the repo directly (Render will run the build command `npm install && npm run build && npm run build:server`). In that case add the same env vars in the Render service and enable auto-deploy from the connected branch.
 
 ## Netlify alternative (frontend-only)
 - Use `netlify.toml` (already present). Deploy `dist` to Netlify; host API separately on Render or another host.
@@ -53,6 +60,17 @@ docker rm -f bw-test
 Notes:
 - If your server needs `GEMINI_API_KEY`, pass it with `-e GEMINI_API_KEY="your_key"` to `docker run` or set it in Render.
 - The server will serve static files from `dist` when `NODE_ENV=production`.
+
+## One-click Render deploy (local helper)
+If you want to trigger a deploy from your machine once you have a `RENDER_API_KEY` and `RENDER_SERVICE_ID`, use the included helper script `scripts/trigger-render-deploy.sh`:
+
+```bash
+# Make executable and run (replace values or export env vars before running)
+chmod +x scripts/trigger-render-deploy.sh
+RENDER_API_KEY="<your_key>" RENDER_SERVICE_ID="<your_id>" ./scripts/trigger-render-deploy.sh
+```
+
+This script simply calls the Render deploy API and is safe to run from your terminal.
 
 ## Post-deploy validation
 - Visit `https://<your-host>/` and validate UI loads.
